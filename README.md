@@ -5,4 +5,8 @@
 # ONE JUMP
 ramlife - where vertical distance is meaningless - a simple game to test-drive the PixiJS library
 
+# Tech Stack
+<img alt="pixi.js logo" src="/public/assets/pixiLogo.svg" height=100>
+
+
 *all images were created using chat-gpt5 free*
