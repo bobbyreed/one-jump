@@ -6,7 +6,7 @@ import { Application, Assets, Sprite, Graphics, Container, Text } from "pixi.js"
   
   // Initialize the application
   await app.init({ 
-    background: "#1a1a2e", 
+    background: "#0a0a1f", 
     resizeTo: window,
     antialias: true,
     resolution: window.devicePixelRatio || 1
@@ -16,209 +16,330 @@ import { Application, Assets, Sprite, Graphics, Container, Text } from "pixi.js"
   document.getElementById("pixi-container").appendChild(app.canvas);
   
   // Game constants
-  const GRAVITY = 1500;
-  const JUMP_FORCE = -650;
-  const GAME_SPEED = 300;
-  const GROUND_Y = app.screen.height - 100;
+  const GRAVITY = 300;
+  const MAX_FALL_SPEED = 800;
+  const HORIZONTAL_SPEED = 400;
+  const INITIAL_WALK_SPEED = 150;
+  const CLIFF_EDGE = 300;
+  const FALL_START_Y = 200;
+  const CAMERA_OFFSET_Y = 200;
   
   // Game state
   let gameState = {
-    isPlaying: true,
-    isJumping: false,
-    isDead: false,
+    phase: 'walking', // 'walking', 'falling', 'landed', 'crashed'
     score: 0,
     highScore: 0,
-    velocity: { x: 0, y: 0 }
+    distance: 0,
+    velocity: { x: 0, y: 0 },
+    cameraY: 0,
+    fallSpeed: 0,
+    horizontalInput: 0
   };
   
-  // Create main game container
-  const gameContainer = new Container();
-  app.stage.addChild(gameContainer);
+  // Create main game container (this will move with camera)
+  const worldContainer = new Container();
+  app.stage.addChild(worldContainer);
   
   // Create parallax background layers
-  const bgLayer1 = new Container();
-  const bgLayer2 = new Container();
-  const bgLayer3 = new Container();
-  gameContainer.addChild(bgLayer1, bgLayer2, bgLayer3);
+  const bgFar = new Container();
+  const bgMid = new Container();
+  const bgNear = new Container();
+  worldContainer.addChild(bgFar, bgMid, bgNear);
   
-  // Create starfield background
-  function createStarfield(layer, count, size, speed) {
+  // Create vertical starfield/particles
+  function createVerticalParticles(layer, count, size, speedMult, color = 0xffffff) {
     for (let i = 0; i < count; i++) {
-      const star = new Graphics()
+      const particle = new Graphics()
         .circle(0, 0, size)
-        .fill({ color: 0xffffff, alpha: Math.random() * 0.8 + 0.2 });
+        .fill({ color: color, alpha: Math.random() * 0.6 + 0.2 });
       
-      star.x = Math.random() * app.screen.width * 2;
-      star.y = Math.random() * (GROUND_Y - 100);
-      star.speed = speed;
+      particle.x = Math.random() * app.screen.width;
+      particle.y = Math.random() * app.screen.height * 3 - app.screen.height;
+      particle.speedMult = speedMult;
+      particle.baseY = particle.y;
       
-      layer.addChild(star);
+      layer.addChild(particle);
     }
   }
   
-  createStarfield(bgLayer1, 50, 1, 0.2);  // Distant stars
-  createStarfield(bgLayer2, 30, 2, 0.5);  // Mid stars
-  createStarfield(bgLayer3, 20, 3, 1);    // Near stars
+  createVerticalParticles(bgFar, 60, 1, 0.3, 0x4444ff);  // Distant stars
+  createVerticalParticles(bgMid, 40, 2, 0.6, 0x6666ff);  // Mid stars
+  createVerticalParticles(bgNear, 30, 3, 0.9, 0x8888ff); // Near stars
   
-  // Create ground
-  const groundContainer = new Container();
-  gameContainer.addChild(groundContainer);
+  // Create cliff and starting platform
+  const cliffContainer = new Container();
+  worldContainer.addChild(cliffContainer);
   
-  const groundHeight = 100;
-  const groundSegmentWidth = 200;
-  const groundSegments = [];
+  const cliffTop = new Graphics()
+    .rect(0, 0, CLIFF_EDGE, 60)
+    .fill({ color: 0x3d3d5c })
+    .rect(0, 0, CLIFF_EDGE, 10)
+    .fill({ color: 0x4d4d6c });
+  cliffTop.y = FALL_START_Y - 60;
+  cliffContainer.addChild(cliffTop);
   
-  for (let i = 0; i < Math.ceil(app.screen.width / groundSegmentWidth) + 2; i++) {
-    const ground = new Graphics()
-      .rect(0, 0, groundSegmentWidth, groundHeight)
-      .fill({ color: 0x2d2d44 })
-      .rect(0, 0, groundSegmentWidth, 10)
-      .fill({ color: 0x3d3d5c });
+  // Add cliff edge marker
+  const cliffEdgeSign = new Graphics()
+    .rect(CLIFF_EDGE - 10, -40, 10, 40)
+    .fill({ color: 0x666666 })
+    .moveTo(CLIFF_EDGE - 10, -40)
+    .lineTo(CLIFF_EDGE + 20, -30)
+    .lineTo(CLIFF_EDGE + 20, -10)
+    .lineTo(CLIFF_EDGE - 10, -20)
+    .fill({ color: 0xffff00 });
+  cliffEdgeSign.y = FALL_START_Y - 60;
+  cliffContainer.addChild(cliffEdgeSign);
+  
+  // Create cliff walls (for visual during fall)
+  const leftWall = new Graphics();
+  const rightWall = new Graphics();
+  
+  function drawCliffWalls(height) {
+    leftWall.clear();
+    rightWall.clear();
     
-    ground.x = i * groundSegmentWidth;
-    ground.y = GROUND_Y;
-    groundContainer.addChild(ground);
-    groundSegments.push(ground);
+    // Left wall
+    leftWall.rect(-200, FALL_START_Y, 200, height)
+      .fill({ color: 0x2d2d44 });
     
-    // Add ground details
-    for (let j = 0; j < 3; j++) {
-      const detail = new Graphics()
-        .rect(0, 0, Math.random() * 40 + 10, 3)
-        .fill({ color: 0x4d4d6c, alpha: 0.5 });
-      detail.x = Math.random() * groundSegmentWidth;
-      detail.y = 15 + Math.random() * 30;
-      ground.addChild(detail);
+    // Right wall  
+    rightWall.rect(app.screen.width, FALL_START_Y, 200, height)
+      .fill({ color: 0x2d2d44 });
+    
+    // Add some texture
+    for (let i = 0; i < height / 100; i++) {
+      const y = FALL_START_Y + i * 100 + Math.random() * 50;
+      leftWall.rect(-180, y, 150, 5)
+        .fill({ color: 0x1d1d33, alpha: 0.5 });
+      rightWall.rect(app.screen.width + 20, y, 150, 5)
+        .fill({ color: 0x1d1d33, alpha: 0.5 });
     }
   }
+  
+  drawCliffWalls(3000);
+  worldContainer.addChild(leftWall, rightWall);
+  
+  // Create obstacles container
+  const obstaclesContainer = new Container();
+  worldContainer.addChild(obstaclesContainer);
+  const obstacles = [];
+  
+  // Generate obstacles throughout the fall
+  function generateObstacles() {
+    const obstacleTypes = [
+      { type: 'spike', color: 0xff4444 },
+      { type: 'platform', color: 0xff8844 },
+      { type: 'spinner', color: 0xff44ff },
+      { type: 'wall', color: 0x4444ff }
+    ];
+    
+    for (let i = 0; i < 50; i++) {
+      const type = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+      const obstacle = new Container();
+      obstacle.obstacleType = type.type;
+      
+      if (type.type === 'spike') {
+        const spike = new Graphics();
+        const size = 30 + Math.random() * 20;
+        spike.moveTo(0, 0)
+          .lineTo(size/2, -size)
+          .lineTo(size, 0)
+          .fill({ color: type.color });
+        obstacle.addChild(spike);
+        obstacle.width = size;
+        obstacle.height = size;
+      } else if (type.type === 'platform') {
+        const platform = new Graphics()
+          .rect(0, 0, 80 + Math.random() * 100, 20)
+          .fill({ color: type.color });
+        obstacle.addChild(platform);
+        obstacle.width = platform.width;
+        obstacle.height = 20;
+      } else if (type.type === 'spinner') {
+        const spinner = new Graphics()
+          .rect(-60, -8, 120, 16)
+          .fill({ color: type.color })
+          .rect(-8, -60, 16, 120)
+          .fill({ color: type.color });
+        obstacle.addChild(spinner);
+        obstacle.width = 120;
+        obstacle.height = 120;
+        obstacle.spinSpeed = 0.02 + Math.random() * 0.03;
+      } else if (type.type === 'wall') {
+        const side = Math.random() > 0.5 ? 'left' : 'right';
+        const wall = new Graphics()
+          .rect(0, 0, 150, 30)
+          .fill({ color: type.color });
+        obstacle.addChild(wall);
+        obstacle.width = 150;
+        obstacle.height = 30;
+        obstacle.wallSide = side;
+      }
+      
+      // Position obstacles
+      if (obstacle.wallSide === 'left') {
+        obstacle.x = 0;
+      } else if (obstacle.wallSide === 'right') {
+        obstacle.x = app.screen.width - obstacle.width;
+      } else {
+        obstacle.x = 100 + Math.random() * (app.screen.width - 200 - obstacle.width);
+      }
+      obstacle.y = FALL_START_Y + 300 + i * 150 + Math.random() * 100;
+      
+      obstaclesContainer.addChild(obstacle);
+      obstacles.push(obstacle);
+    }
+  }
+  
+  generateObstacles();
+  
+  // Create landing zone at the bottom
+  const landingZone = new Container();
+  const LANDING_Y = FALL_START_Y + 8000; // Long fall!
+  
+  // Create multiple landing pads with different scores
+  const landingPads = [
+    { x: app.screen.width / 2 - 150, width: 60, color: 0x44ff44, points: 1000, label: 'PERFECT' },
+    { x: app.screen.width / 2 - 90, width: 180, color: 0x88ff88, points: 500, label: 'GREAT' },
+    { x: app.screen.width / 2 - 180, width: 360, color: 0xccffcc, points: 100, label: 'GOOD' }
+  ];
+  
+  landingPads.forEach(pad => {
+    const padGraphic = new Graphics()
+      .rect(pad.x, 0, pad.width, 40)
+      .fill({ color: pad.color })
+      .rect(pad.x + 5, 5, pad.width - 10, 30)
+      .fill({ color: pad.color, alpha: 0.5 });
+    
+    padGraphic.y = LANDING_Y;
+    landingZone.addChild(padGraphic);
+    
+    // Add label
+    const label = new Text({
+      text: pad.label,
+      style: {
+        fontFamily: 'Arial',
+        fontSize: 16,
+        fill: 0x000000,
+        fontWeight: 'bold'
+      }
+    });
+    label.anchor.set(0.5);
+    label.x = pad.x + pad.width / 2;
+    label.y = LANDING_Y + 20;
+    landingZone.addChild(label);
+  });
+  
+  // Add ground below landing zone
+  const ground = new Graphics()
+    .rect(0, LANDING_Y + 40, app.screen.width, 200)
+    .fill({ color: 0x2d2d44 });
+  landingZone.addChild(ground);
+  
+  worldContainer.addChild(landingZone);
   
   // Create player character
   const player = new Container();
   const playerBody = new Graphics()
-    .rect(-20, -40, 40, 40)
+    .rect(-15, -20, 30, 40)
     .fill({ color: 0x00ff88 })
-    .rect(-15, -35, 10, 10)
+    .rect(-10, -15, 8, 8)
     .fill({ color: 0x001122 })
-    .rect(5, -35, 10, 10)
+    .rect(2, -15, 8, 8)
+    .fill({ color: 0x001122 })
+    .rect(-5, -5, 10, 3)
     .fill({ color: 0x001122 });
   
   player.addChild(playerBody);
-  player.x = app.screen.width * 0.25;
-  player.y = GROUND_Y;
-  gameContainer.addChild(player);
+  player.x = 100;
+  player.y = FALL_START_Y - 60;
+  worldContainer.addChild(player);
   
-  // Add trail effect
-  const trail = new Container();
-  gameContainer.addChildAt(trail, gameContainer.getChildIndex(player));
+  // Wind streaks effect container
+  const windStreaks = new Container();
+  worldContainer.addChildAt(windStreaks, worldContainer.getChildIndex(player));
   
-  // Create obstacles container
-  const obstaclesContainer = new Container();
-  gameContainer.addChild(obstaclesContainer);
-  const obstacles = [];
-  
-  // Obstacle types
-  function createObstacle(type) {
-    const obstacle = new Container();
-    
-    if (type === 'spike') {
-      const spike = new Graphics()
-        .moveTo(0, 0)
-        .lineTo(25, -50)
-        .lineTo(50, 0)
-        .fill({ color: 0xff4444 });
-      obstacle.addChild(spike);
-      obstacle.width = 50;
-      obstacle.height = 50;
-    } else if (type === 'box') {
-      const box = new Graphics()
-        .rect(0, -60, 40, 60)
-        .fill({ color: 0xff6644 })
-        .rect(5, -55, 30, 10)
-        .fill({ color: 0xff8866 });
-      obstacle.addChild(box);
-      obstacle.width = 40;
-      obstacle.height = 60;
-    } else if (type === 'double') {
-      const spike1 = new Graphics()
-        .moveTo(0, 0)
-        .lineTo(20, -40)
-        .lineTo(40, 0)
-        .fill({ color: 0xff4444 });
-      const spike2 = new Graphics()
-        .moveTo(50, 0)
-        .lineTo(70, -40)
-        .lineTo(90, 0)
-        .fill({ color: 0xff4444 });
-      obstacle.addChild(spike1, spike2);
-      obstacle.width = 90;
-      obstacle.height = 40;
-    }
-    
-    obstacle.x = app.screen.width + 100;
-    obstacle.y = GROUND_Y;
-    obstacle.type = type;
-    
-    return obstacle;
-  }
-  
-  // Spawn obstacles
-  let obstacleTimer = 0;
-  let nextObstacleTime = 2;
-  
-  // Create UI
+  // Create UI (doesn't move with camera)
   const uiContainer = new Container();
   app.stage.addChild(uiContainer);
   
-  const scoreText = new Text({
-    text: 'Score: 0',
+  const speedText = new Text({
+    text: 'Speed: 0',
     style: {
       fontFamily: 'Arial',
-      fontSize: 32,
+      fontSize: 24,
       fill: 0xffffff,
       fontWeight: 'bold'
     }
   });
-  scoreText.x = 20;
-  scoreText.y = 20;
-  uiContainer.addChild(scoreText);
+  speedText.x = 20;
+  speedText.y = 20;
+  uiContainer.addChild(speedText);
   
-  const highScoreText = new Text({
-    text: 'Best: 0',
+  const distanceText = new Text({
+    text: 'Distance: 0m',
     style: {
       fontFamily: 'Arial',
       fontSize: 24,
-      fill: 0x888888
+      fill: 0xffffff,
+      fontWeight: 'bold'
     }
   });
-  highScoreText.x = 20;
-  highScoreText.y = 60;
-  uiContainer.addChild(highScoreText);
+  distanceText.x = 20;
+  distanceText.y = 50;
+  uiContainer.addChild(distanceText);
   
-  // Game over screen
-  const gameOverContainer = new Container();
-  gameOverContainer.visible = false;
-  uiContainer.addChild(gameOverContainer);
+  const instructionText = new Text({
+    text: 'Walk to the edge with →',
+    style: {
+      fontFamily: 'Arial',
+      fontSize: 20,
+      fill: 0xffff00
+    }
+  });
+  instructionText.x = app.screen.width / 2 - 100;
+  instructionText.y = 50;
+  uiContainer.addChild(instructionText);
+  
+  // Game over/success screen
+  const resultContainer = new Container();
+  resultContainer.visible = false;
+  uiContainer.addChild(resultContainer);
   
   const dimmer = new Graphics()
     .rect(0, 0, app.screen.width, app.screen.height)
     .fill({ color: 0x000000, alpha: 0.7 });
-  gameOverContainer.addChild(dimmer);
+  resultContainer.addChild(dimmer);
   
-  const gameOverText = new Text({
-    text: 'GAME OVER',
+  const resultText = new Text({
+    text: '',
     style: {
       fontFamily: 'Arial',
-      fontSize: 64,
-      fill: 0xff4444,
+      fontSize: 48,
+      fill: 0xffffff,
       fontWeight: 'bold'
     }
   });
-  gameOverText.anchor.set(0.5);
-  gameOverText.x = app.screen.width / 2;
-  gameOverText.y = app.screen.height / 2 - 50;
-  gameOverContainer.addChild(gameOverText);
+  resultText.anchor.set(0.5);
+  resultText.x = app.screen.width / 2;
+  resultText.y = app.screen.height / 2 - 50;
+  resultContainer.addChild(resultText);
+  
+  const scoreResultText = new Text({
+    text: '',
+    style: {
+      fontFamily: 'Arial',
+      fontSize: 32,
+      fill: 0xffffff
+    }
+  });
+  scoreResultText.anchor.set(0.5);
+  scoreResultText.x = app.screen.width / 2;
+  scoreResultText.y = app.screen.height / 2 + 20;
+  resultContainer.addChild(scoreResultText);
   
   const restartText = new Text({
-    text: 'Press SPACE or Click to Restart',
+    text: 'Press SPACE to Try Again',
     style: {
       fontFamily: 'Arial',
       fontSize: 24,
@@ -227,71 +348,50 @@ import { Application, Assets, Sprite, Graphics, Container, Text } from "pixi.js"
   });
   restartText.anchor.set(0.5);
   restartText.x = app.screen.width / 2;
-  restartText.y = app.screen.height / 2 + 20;
-  gameOverContainer.addChild(restartText);
+  restartText.y = app.screen.height / 2 + 80;
+  resultContainer.addChild(restartText);
   
   // Input handling
-  function jump() {
-    if (gameState.isDead) {
-      resetGame();
-      return;
-    }
-    
-    if (!gameState.isJumping && gameState.isPlaying) {
-      gameState.velocity.y = JUMP_FORCE;
-      gameState.isJumping = true;
-      
-      // Jump effect
-      const jumpEffect = new Graphics()
-        .circle(0, 0, 30)
-        .stroke({ width: 3, color: 0x00ff88, alpha: 0.5 });
-      jumpEffect.x = player.x;
-      jumpEffect.y = player.y;
-      gameContainer.addChild(jumpEffect);
-      
-      // Animate jump effect
-      const startScale = 1;
-      const endScale = 2;
-      let effectTime = 0;
-      
-      const animateEffect = (delta) => {
-        effectTime += delta.deltaTime;
-        const progress = effectTime / 20;
-        
-        if (progress >= 1) {
-          gameContainer.removeChild(jumpEffect);
-          app.ticker.remove(animateEffect);
-        } else {
-          jumpEffect.scale.set(startScale + (endScale - startScale) * progress);
-          jumpEffect.alpha = 1 - progress;
-        }
-      };
-      
-      app.ticker.add(animateEffect);
-    }
-  }
+  const keys = {};
   
-  // Keyboard controls
   window.addEventListener('keydown', (e) => {
-    if (e.code === 'Space') {
-      e.preventDefault();
-      jump();
+    keys[e.code] = true;
+    
+    if (e.code === 'Space' && (gameState.phase === 'crashed' || gameState.phase === 'landed')) {
+      resetGame();
     }
   });
   
-  // Mouse/Touch controls
-  app.canvas.addEventListener('pointerdown', jump);
-  app.canvas.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    jump();
-  }, { passive: false });
+  window.addEventListener('keyup', (e) => {
+    keys[e.code] = false;
+  });
+  
+  // Update camera to follow player
+  function updateCamera() {
+    if (gameState.phase === 'falling' || gameState.phase === 'landed' || gameState.phase === 'crashed') {
+      const targetY = -(player.y - CAMERA_OFFSET_Y);
+      gameState.cameraY = targetY;
+      worldContainer.y = targetY;
+      
+      // Parallax effect for background
+      bgFar.children.forEach(star => {
+        star.y = star.baseY - gameState.cameraY * star.speedMult;
+      });
+      bgMid.children.forEach(star => {
+        star.y = star.baseY - gameState.cameraY * star.speedMult;
+      });
+      bgNear.children.forEach(star => {
+        star.y = star.baseY - gameState.cameraY * star.speedMult;
+      });
+    }
+  }
   
   // Collision detection
   function checkCollision(player, obstacle) {
     const playerBounds = {
-      x: player.x - 20,
-      y: player.y - 40,
-      width: 40,
+      x: player.x - 15,
+      y: player.y - 20,
+      width: 30,
       height: 40
     };
     
@@ -308,162 +408,189 @@ import { Application, Assets, Sprite, Graphics, Container, Text } from "pixi.js"
            playerBounds.y + playerBounds.height > obstacleBounds.y;
   }
   
-  // Game over
-  function gameOver() {
-    gameState.isDead = true;
-    gameState.isPlaying = false;
-    gameOverContainer.visible = true;
-    
-    if (gameState.score > gameState.highScore) {
-      gameState.highScore = gameState.score;
-      highScoreText.text = `Best: ${gameState.highScore}`;
+  // Check landing
+  function checkLanding() {
+    if (player.y >= LANDING_Y && player.y <= LANDING_Y + 40) {
+      gameState.phase = 'landed';
+      
+      // Check which pad we landed on
+      let landedPad = null;
+      for (const pad of landingPads) {
+        if (player.x >= pad.x && player.x <= pad.x + pad.width) {
+          landedPad = pad;
+          break;
+        }
+      }
+      
+      if (landedPad) {
+        gameState.score = landedPad.points;
+        resultText.text = landedPad.label + '!';
+        resultText.style.fill = landedPad.color;
+        scoreResultText.text = `Score: ${gameState.score}`;
+      } else {
+        resultText.text = 'MISSED!';
+        resultText.style.fill = 0xff4444;
+        scoreResultText.text = 'Try to land on the pads!';
+      }
+      
+      resultContainer.visible = true;
+      
+      // Stop player
+      gameState.velocity.y = 0;
+      gameState.velocity.x = 0;
+    } else if (player.y > LANDING_Y + 40) {
+      // Crashed into ground
+      gameState.phase = 'crashed';
+      resultText.text = 'CRASHED!';
+      resultText.style.fill = 0xff4444;
+      scoreResultText.text = 'Too fast!';
+      resultContainer.visible = true;
     }
-    
-    // Death effect
-    const deathEffect = new Graphics()
-      .circle(0, 0, 50)
-      .fill({ color: 0xff0000, alpha: 0.3 });
-    deathEffect.x = player.x;
-    deathEffect.y = player.y;
-    gameContainer.addChild(deathEffect);
-    
-    // Flash effect
-    player.tint = 0xff0000;
   }
   
   // Reset game
   function resetGame() {
-    gameState.isDead = false;
-    gameState.isPlaying = true;
-    gameState.isJumping = false;
+    gameState.phase = 'walking';
     gameState.score = 0;
-    gameState.velocity.y = 0;
+    gameState.distance = 0;
+    gameState.velocity = { x: 0, y: 0 };
+    gameState.fallSpeed = 0;
+    gameState.cameraY = 0;
     
-    player.y = GROUND_Y;
+    player.x = 100;
+    player.y = FALL_START_Y - 60;
+    player.rotation = 0;
     player.tint = 0xffffff;
     
-    scoreText.text = 'Score: 0';
-    gameOverContainer.visible = false;
+    worldContainer.y = 0;
+    resultContainer.visible = false;
+    instructionText.text = 'Walk to the edge with →';
     
-    // Clear obstacles
+    // Clear wind streaks
+    windStreaks.removeChildren();
+    
+    // Reset obstacles
     obstacles.forEach(obstacle => {
-      obstaclesContainer.removeChild(obstacle);
+      if (obstacle.obstacleType === 'spinner') {
+        obstacle.rotation = 0;
+      }
     });
-    obstacles.length = 0;
-    
-    obstacleTimer = 0;
-    nextObstacleTime = 2;
   }
   
   // Game loop
   app.ticker.add((ticker) => {
-    const deltaTime = ticker.deltaTime / 60; // Convert to seconds
+    const deltaTime = ticker.deltaTime / 60;
     
-    if (gameState.isPlaying && !gameState.isDead) {
-      // Update score
-      gameState.score += Math.floor(deltaTime * 10);
-      scoreText.text = `Score: ${gameState.score}`;
+    // Handle input
+    gameState.horizontalInput = 0;
+    if (keys['KeyA'] || keys['ArrowLeft']) gameState.horizontalInput = -1;
+    if (keys['KeyD'] || keys['ArrowRight']) gameState.horizontalInput = 1;
+    
+    if (gameState.phase === 'walking') {
+      // Walking phase
+      if (gameState.horizontalInput > 0) {
+        player.x += INITIAL_WALK_SPEED * deltaTime;
+        instructionText.text = 'Keep going...';
+      }
+      
+      // Check if walked off cliff
+      if (player.x >= CLIFF_EDGE) {
+        gameState.phase = 'falling';
+        instructionText.text = 'Use A/D or ←/→ to steer!';
+      }
+      
+    } else if (gameState.phase === 'falling') {
+      // Falling phase
       
       // Apply gravity
       gameState.velocity.y += GRAVITY * deltaTime;
+      gameState.velocity.y = Math.min(gameState.velocity.y, MAX_FALL_SPEED);
+      
+      // Horizontal movement
+      gameState.velocity.x = gameState.horizontalInput * HORIZONTAL_SPEED;
+      
+      // Update position
+      player.x += gameState.velocity.x * deltaTime;
       player.y += gameState.velocity.y * deltaTime;
       
-      // Ground collision
-      if (player.y >= GROUND_Y) {
-        player.y = GROUND_Y;
-        gameState.velocity.y = 0;
-        gameState.isJumping = false;
-      }
+      // Keep player in bounds
+      player.x = Math.max(30, Math.min(app.screen.width - 30, player.x));
       
-      // Player animation
-      if (gameState.isJumping) {
-        player.rotation = -0.2;
-      } else {
-        player.rotation = 0;
-      }
+      // Update distance
+      gameState.distance = Math.floor((player.y - FALL_START_Y) / 10);
       
-      // Add trail particle when jumping
-      if (gameState.isJumping && Math.random() < 0.3) {
-        const particle = new Graphics()
-          .circle(0, 0, Math.random() * 5 + 2)
-          .fill({ color: 0x00ff88, alpha: 0.6 });
-        particle.x = player.x - 10;
-        particle.y = player.y - 20;
-        trail.addChild(particle);
+      // Tilt player based on horizontal movement
+      player.rotation = gameState.horizontalInput * 0.15;
+      
+      // Add wind streak effects
+      if (Math.random() < 0.3 && gameState.velocity.y > 200) {
+        const streak = new Graphics()
+          .rect(0, 0, 2, 20 + Math.random() * 30)
+          .fill({ color: 0xffffff, alpha: 0.3 });
+        streak.x = player.x + (Math.random() - 0.5) * 60;
+        streak.y = player.y - 40;
+        windStreaks.addChild(streak);
         
-        // Animate trail particle
-        const animateParticle = (delta) => {
-          particle.x -= GAME_SPEED * 1.5 * deltaTime;
-          particle.alpha -= 0.02;
-          particle.scale.x *= 0.95;
-          particle.scale.y *= 0.95;
+        // Animate streak
+        const animateStreak = (delta) => {
+          streak.y -= gameState.velocity.y * 0.3 * deltaTime;
+          streak.alpha -= 0.02;
+          streak.scale.y *= 1.02;
           
-          if (particle.alpha <= 0) {
-            trail.removeChild(particle);
-            app.ticker.remove(animateParticle);
+          if (streak.alpha <= 0) {
+            windStreaks.removeChild(streak);
+            app.ticker.remove(animateStreak);
           }
         };
-        app.ticker.add(animateParticle);
+        app.ticker.add(animateStreak);
       }
       
-      // Move background layers (parallax)
-      bgLayer1.children.forEach(star => {
-        star.x -= star.speed * GAME_SPEED * deltaTime;
-        if (star.x < -50) star.x = app.screen.width + 50;
-      });
-      
-      bgLayer2.children.forEach(star => {
-        star.x -= star.speed * GAME_SPEED * deltaTime;
-        if (star.x < -50) star.x = app.screen.width + 50;
-      });
-      
-      bgLayer3.children.forEach(star => {
-        star.x -= star.speed * GAME_SPEED * deltaTime;
-        if (star.x < -50) star.x = app.screen.width + 50;
-      });
-      
-      // Move ground
-      groundSegments.forEach(segment => {
-        segment.x -= GAME_SPEED * deltaTime;
-        if (segment.x < -groundSegmentWidth) {
-          segment.x += groundSegmentWidth * groundSegments.length;
+      // Check obstacle collisions
+      for (const obstacle of obstacles) {
+        // Animate spinners
+        if (obstacle.obstacleType === 'spinner') {
+          obstacle.rotation += obstacle.spinSpeed;
         }
-      });
-      
-      // Spawn obstacles
-      obstacleTimer += deltaTime;
-      if (obstacleTimer >= nextObstacleTime) {
-        const types = ['spike', 'box', 'double'];
-        const type = types[Math.floor(Math.random() * types.length)];
-        const obstacle = createObstacle(type);
-        obstaclesContainer.addChild(obstacle);
-        obstacles.push(obstacle);
         
-        obstacleTimer = 0;
-        nextObstacleTime = 1.5 + Math.random() * 2;
-        
-        // Increase difficulty
-        if (gameState.score > 500) {
-          nextObstacleTime *= 0.8;
-        }
-      }
-      
-      // Move and check obstacles
-      for (let i = obstacles.length - 1; i >= 0; i--) {
-        const obstacle = obstacles[i];
-        obstacle.x -= GAME_SPEED * deltaTime;
-        
-        // Check collision
         if (checkCollision(player, obstacle)) {
-          gameOver();
-        }
-        
-        // Remove off-screen obstacles
-        if (obstacle.x < -200) {
-          obstaclesContainer.removeChild(obstacle);
-          obstacles.splice(i, 1);
+          gameState.phase = 'crashed';
+          player.tint = 0xff0000;
+          resultText.text = 'CRASHED!';
+          resultText.style.fill = 0xff4444;
+          scoreResultText.text = `Distance: ${gameState.distance}m`;
+          resultContainer.visible = true;
+          
+          // Death effect
+          const crashEffect = new Graphics()
+            .circle(0, 0, 50)
+            .fill({ color: 0xff0000, alpha: 0.5 });
+          crashEffect.x = player.x;
+          crashEffect.y = player.y;
+          worldContainer.addChild(crashEffect);
+          
+          break;
         }
       }
+      
+      // Check landing
+      checkLanding();
+      
+      // Update camera
+      updateCamera();
+      
+      // Update UI
+      speedText.text = `Speed: ${Math.floor(gameState.velocity.y)}`;
+      distanceText.text = `Distance: ${gameState.distance}m`;
+      
+      // Hide instruction after falling for a bit
+      if (gameState.distance > 50) {
+        instructionText.visible = false;
+      }
+    }
+    
+    // Clean up old wind streaks
+    if (windStreaks.children.length > 50) {
+      windStreaks.removeChildAt(0);
     }
   });
 })();
