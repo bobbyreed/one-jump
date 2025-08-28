@@ -731,8 +731,9 @@ Pattern B: "Quad Landing"
 4. Starsky putting on jetpack and adjusts sunglasses
 5. "Time for some RAM-spiration!"
 6. Starsky checks watch and says: "Orientation in... 10 minutes?!"
-7. Starsky says with confidence "Good thing I know a shortcut!"
-8. JUMPS with "STARS FOREVER!" battle cry
+7. Starsky smiles and puts his shadees on and says with confidence "Good thing I know a shortcut!"
+##### In-game scene
+1. (as starsky leaves the ledge under player control this square pops up) JUMPS with "STARS FOREVER!" battle cry
 
 #### Midpoint (After Stage 5) (6 panels)
 1. Starsky catching breath on a cloud

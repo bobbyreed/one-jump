@@ -49,16 +49,421 @@ import { Application, Assets, Sprite, Graphics, Container, Text, AnimatedSprite,
 
   // Scene containers
   const menuContainer = new Container();
+  const storyContainer = new Container();
   const gameContainer = new Container();
   const highscoresContainer = new Container();
 
   app.stage.addChild(menuContainer);
+  app.stage.addChild(storyContainer);
   app.stage.addChild(gameContainer);
   app.stage.addChild(highscoresContainer);
 
-  // Initially hide game and highscores
+  // Initially hide all except menu
+  storyContainer.visible = false;
   gameContainer.visible = false;
   highscoresContainer.visible = false;
+
+  // ===============================
+  // STORY PANEL SYSTEM
+  // ===============================
+  
+  async function setupStoryScene() {
+    // Background dimmer
+    const bg = new Graphics()
+      .rect(0, 0, app.screen.width, app.screen.height)
+      .fill({ color: 0x0a0a1f });
+    storyContainer.addChild(bg);
+    
+    // Container for all panels
+    const panelsContainer = new Container();
+    storyContainer.addChild(panelsContainer);
+    
+    // Story configuration
+    const PANEL_COUNT = 5;
+    const PANEL_DISPLAY_TIME = 3000; // Time each panel is highlighted in ms
+    const PANEL_FADE_TIME = 800; // Fade in duration in ms
+    const PANEL_START_X = 50;
+    const PANEL_START_Y = 50;
+    const PANEL_OFFSET_X = 100; // How much each panel shifts right
+    const PANEL_OFFSET_Y = 40; // How much each panel shifts down
+    const PANEL_MAX_WIDTH = 400; // Max width for panels
+    const PANEL_MAX_HEIGHT = 300; // Max height for panels
+    
+    const panels = [];
+    let currentPanelIndex = 0;
+    let autoAdvanceTimer = null;
+    
+    // Load all panel textures
+    const panelTextures = [];
+    for (let i = 1; i <= PANEL_COUNT; i++) {
+      try {
+        const texture = await Assets.load(`/public/assets/narrativePanels/opening/opening${i}.png`);
+        panelTextures.push(texture);
+      } catch (error) {
+        console.warn(`Could not load panel ${i}, using placeholder`);
+        // Create placeholder if image doesn't load
+        const placeholder = new Graphics()
+          .rect(0, 0, PANEL_MAX_WIDTH, PANEL_MAX_HEIGHT)
+          .fill({ color: 0x444466 });
+        panelTextures.push(placeholder.generateTexture());
+      }
+    }
+    
+    // Create panel sprites
+    for (let i = 0; i < PANEL_COUNT; i++) {
+      const panelContainer = new Container();
+      
+      // Panel background/frame
+      const frame = new Graphics()
+        .roundRect(-10, -10, PANEL_MAX_WIDTH + 20, PANEL_MAX_HEIGHT + 20, 10)
+        .fill({ color: 0x222244, alpha: 0.8 })
+        .roundRect(-10, -10, PANEL_MAX_WIDTH + 20, PANEL_MAX_HEIGHT + 20, 10)
+        .stroke({ width: 3, color: 0x666688 });
+      panelContainer.addChild(frame);
+      
+      // Panel image
+      const panel = new Sprite(panelTextures[i]);
+      
+      // Scale to fit within max dimensions
+      const scale = Math.min(
+        PANEL_MAX_WIDTH / panel.texture.width,
+        PANEL_MAX_HEIGHT / panel.texture.height
+      );
+      panel.scale.set(scale);
+      
+      // Position panel in container
+      panelContainer.addChild(panel);
+      
+      // Calculate fan position
+      const fanX = PANEL_START_X + (i * PANEL_OFFSET_X);
+      const fanY = PANEL_START_Y + (i * PANEL_OFFSET_Y);
+      
+      panelContainer.x = fanX;
+      panelContainer.y = fanY;
+      panelContainer.alpha = 0; // Start invisible
+      panelContainer.visible = false;
+      
+      // Add glow effect (initially hidden)
+      const glow = new Graphics()
+        .roundRect(-15, -15, PANEL_MAX_WIDTH + 30, PANEL_MAX_HEIGHT + 30, 12)
+        .stroke({ width: 4, color: 0xffdd00, alpha: 0 });
+      panelContainer.addChildAt(glow, 0);
+      
+      panelContainer.panelIndex = i;
+      panelContainer.glow = glow;
+      panels.push(panelContainer);
+      panelsContainer.addChild(panelContainer);
+    }
+    
+    // Next/Skip button
+    const nextButton = new Container();
+    nextButton.eventMode = 'static';
+    nextButton.cursor = 'pointer';
+    
+    const buttonBg = new Graphics()
+      .roundRect(0, 0, 150, 50, 10)
+      .fill({ color: 0x4488ff, alpha: 0.8 })
+      .roundRect(0, 0, 150, 50, 10)
+      .stroke({ width: 2, color: 0x66aaff });
+    
+    const buttonText = new Text({
+      text: 'Next',
+      style: {
+        fontFamily: 'Arial',
+        fontSize: 24,
+        fill: 0xffffff,
+        fontWeight: 'bold',
+        dropShadow: true,
+        dropShadowColor: 0x000000,
+        dropShadowDistance: 2
+      }
+    });
+    buttonText.anchor.set(0.5);
+    buttonText.x = 75;
+    buttonText.y = 25;
+    
+    nextButton.addChild(buttonBg, buttonText);
+    nextButton.x = app.screen.width - 180;
+    nextButton.y = app.screen.height - 80;
+    nextButton.alpha = 0; // Start hidden
+    storyContainer.addChild(nextButton);
+    
+    // Skip all button (appears after first panel)
+    const skipButton = new Container();
+    skipButton.eventMode = 'static';
+    skipButton.cursor = 'pointer';
+    skipButton.visible = false;
+    
+    const skipBg = new Graphics()
+      .roundRect(0, 0, 150, 40, 8)
+      .fill({ color: 0x666666, alpha: 0.6 })
+      .roundRect(0, 0, 150, 40, 8)
+      .stroke({ width: 2, color: 0x999999 });
+    
+    const skipText = new Text({
+      text: 'Skip Story',
+      style: {
+        fontFamily: 'Arial',
+        fontSize: 18,
+        fill: 0xcccccc
+      }
+    });
+    skipText.anchor.set(0.5);
+    skipText.x = 75;
+    skipText.y = 20;
+    
+    skipButton.addChild(skipBg, skipText);
+    skipButton.x = app.screen.width - 180;
+    skipButton.y = app.screen.height - 140;
+    storyContainer.addChild(skipButton);
+    
+    // Story title
+    const storyTitle = new Text({
+      text: 'The Call to Campus',
+      style: {
+        fontFamily: 'Arial Black',
+        fontSize: 36,
+        fill: 0xffffff,
+        fontWeight: 'bold',
+        dropShadow: true,
+        dropShadowColor: 0x000000,
+        dropShadowDistance: 3
+      }
+    });
+    storyTitle.anchor.set(0.5);
+    storyTitle.x = app.screen.width / 2;
+    storyTitle.y = app.screen.height - 50;
+    storyTitle.alpha = 0;
+    storyContainer.addChild(storyTitle);
+    
+    // Panel counter
+    const panelCounter = new Text({
+      text: '1 / 5',
+      style: {
+        fontFamily: 'Arial',
+        fontSize: 20,
+        fill: 0xcccccc
+      }
+    });
+    panelCounter.anchor.set(1, 0);
+    panelCounter.x = app.screen.width - 20;
+    panelCounter.y = 20;
+    panelCounter.alpha = 0;
+    storyContainer.addChild(panelCounter);
+    
+    // Function to show next panel
+    function showNextPanel() {
+      if (currentPanelIndex >= PANEL_COUNT) {
+        // All panels shown, transition to game
+        endStorySequence();
+        return;
+      }
+      
+      const panel = panels[currentPanelIndex];
+      panel.visible = true;
+      
+      // Clear any existing timer
+      if (autoAdvanceTimer) {
+        clearTimeout(autoAdvanceTimer);
+      }
+      
+      // Fade in current panel
+      animatePanelIn(panel);
+      
+      // Update counter
+      panelCounter.text = `${currentPanelIndex + 1} / ${PANEL_COUNT}`;
+      
+      // Show skip button after first panel
+      if (currentPanelIndex === 0) {
+        skipButton.visible = true;
+        // Fade in UI elements on first panel
+        fadeIn(nextButton, 500);
+        fadeIn(panelCounter, 500);
+        fadeIn(storyTitle, 800);
+      }
+      
+      // Darken previous panels
+      if (currentPanelIndex > 0) {
+        for (let i = 0; i < currentPanelIndex; i++) {
+          darkenPanel(panels[i]);
+        }
+      }
+      
+      currentPanelIndex++;
+      
+      // Update button text
+      if (currentPanelIndex === PANEL_COUNT) {
+        buttonText.text = 'Start Game';
+      }
+      
+      // Auto advance after display time
+      autoAdvanceTimer = setTimeout(() => {
+        showNextPanel();
+      }, PANEL_DISPLAY_TIME);
+    }
+    
+    // Animate panel fade in with highlight
+    function animatePanelIn(panel) {
+      const fadeInDuration = PANEL_FADE_TIME / 1000; // Convert to seconds
+      let elapsed = 0;
+      
+      const animate = (delta) => {
+        elapsed += delta.deltaTime / 60;
+        const progress = Math.min(elapsed / fadeInDuration, 1);
+        
+        // Ease-out curve
+        const eased = 1 - Math.pow(1 - progress, 3);
+        
+        panel.alpha = eased;
+        
+        // Glow effect during fade in
+        if (progress < 0.5) {
+          panel.glow.alpha = progress * 2;
+        } else {
+          panel.glow.alpha = (1 - progress) * 2;
+        }
+        
+        // Scale effect
+        panel.scale.set(0.95 + (eased * 0.05));
+        
+        if (progress >= 1) {
+          app.ticker.remove(animate);
+          // Add subtle floating animation
+          addFloatingAnimation(panel);
+        }
+      };
+      
+      app.ticker.add(animate);
+    }
+    
+    // Darken panel when next one appears
+    function darkenPanel(panel) {
+      const darkenDuration = 0.5;
+      let elapsed = 0;
+      
+      const animate = (delta) => {
+        elapsed += delta.deltaTime / 60;
+        const progress = Math.min(elapsed / darkenDuration, 1);
+        
+        panel.alpha = 1 - (progress * 0.4); // Fade to 60% opacity
+        panel.glow.alpha = 0;
+        
+        if (progress >= 1) {
+          app.ticker.remove(animate);
+        }
+      };
+      
+      app.ticker.add(animate);
+    }
+    
+    // Add subtle floating animation to highlighted panel
+    function addFloatingAnimation(panel) {
+      panel.floatTime = 0;
+      const float = (delta) => {
+        if (!panel.visible) {
+          app.ticker.remove(float);
+          return;
+        }
+        panel.floatTime += delta.deltaTime * 0.05;
+        panel.y = panel.baseY + Math.sin(panel.floatTime) * 2;
+      };
+      panel.baseY = panel.y;
+      app.ticker.add(float);
+    }
+    
+    // Fade in helper
+    function fadeIn(element, duration) {
+      let elapsed = 0;
+      const fadeTime = duration / 1000;
+      
+      const animate = (delta) => {
+        elapsed += delta.deltaTime / 60;
+        const progress = Math.min(elapsed / fadeTime, 1);
+        element.alpha = progress;
+        
+        if (progress >= 1) {
+          app.ticker.remove(animate);
+        }
+      };
+      
+      app.ticker.add(animate);
+    }
+    
+    // End story sequence and start game
+    function endStorySequence() {
+      // Clear timer
+      if (autoAdvanceTimer) {
+        clearTimeout(autoAdvanceTimer);
+      }
+      
+      // Fade out story container
+      let fadeElapsed = 0;
+      const fadeDuration = 0.5;
+      
+      const fadeOut = (delta) => {
+        fadeElapsed += delta.deltaTime / 60;
+        const progress = Math.min(fadeElapsed / fadeDuration, 1);
+        storyContainer.alpha = 1 - progress;
+        
+        if (progress >= 1) {
+          app.ticker.remove(fadeOut);
+          storyContainer.visible = false;
+          storyContainer.alpha = 1;
+          gameContainer.visible = true;
+          gameState.currentScene = 'game';
+          resetGame();
+          
+          // Reset story for next time
+          currentPanelIndex = 0;
+          panels.forEach(p => {
+            p.visible = false;
+            p.alpha = 0;
+            p.scale.set(1);
+          });
+          nextButton.alpha = 0;
+          panelCounter.alpha = 0;
+          storyTitle.alpha = 0;
+          skipButton.visible = false;
+          buttonText.text = 'Next';
+        }
+      };
+      
+      app.ticker.add(fadeOut);
+    }
+    
+    // Button interactions
+    nextButton.on('pointerdown', () => {
+      showNextPanel();
+    });
+    
+    nextButton.on('pointerover', () => {
+      nextButton.scale.set(1.05);
+    });
+    
+    nextButton.on('pointerout', () => {
+      nextButton.scale.set(1);
+    });
+    
+    skipButton.on('pointerdown', () => {
+      endStorySequence();
+    });
+    
+    skipButton.on('pointerover', () => {
+      skipButton.scale.set(1.05);
+    });
+    
+    skipButton.on('pointerout', () => {
+      skipButton.scale.set(1);
+    });
+    
+    // Store functions for external access
+    storyContainer.showStory = () => {
+      currentPanelIndex = 0;
+      showNextPanel();
+    };
+    
+    return storyContainer;
+  }
 
   // ===============================
   // SPRITE SHEET LOADING
@@ -157,7 +562,7 @@ import { Application, Assets, Sprite, Graphics, Container, Text, AnimatedSprite,
       buttonWidth,
       buttonHeight,
       0x88,
-      () => startGame()
+      () => showStory()
     );
     menuContainer.addChild(startButton);
 
@@ -263,6 +668,13 @@ import { Application, Assets, Sprite, Graphics, Container, Text, AnimatedSprite,
     return button;
   }
 
+  function showStory() {
+    menuContainer.visible = false;
+    storyContainer.visible = true;
+    gameState.currentScene = 'story';
+    storyContainer.showStory();
+  }
+
   function startGame() {
     menuContainer.visible = false;
     gameContainer.visible = true;
@@ -278,6 +690,7 @@ import { Application, Assets, Sprite, Graphics, Container, Text, AnimatedSprite,
 
   function returnToMenu() {
     menuContainer.visible = true;
+    storyContainer.visible = false;
     gameContainer.visible = false;
     highscoresContainer.visible = false;
     gameState.currentScene = 'menu';
@@ -922,6 +1335,7 @@ import { Application, Assets, Sprite, Graphics, Container, Text, AnimatedSprite,
 
   // Initialize scenes
   await setupMenuScene();
+  await setupStoryScene();
   setupHighscoresScene();
 
   // Game loop
