@@ -64,65 +64,20 @@ import { Application, Assets, Sprite, Graphics, Container, Text } from "pixi.js"
       app.screen.width / coverSprite.texture.width,
       app.screen.height / coverSprite.texture.height
     );
-    coverSprite.scale.set(scale);
+    coverSprite.scale.set((scale*.75));
     coverSprite.anchor.set(0.5);
     coverSprite.x = app.screen.width / 2;
     coverSprite.y = app.screen.height / 2;
 
     menuContainer.addChild(coverSprite);
 
-    // Add dark overlay for better text visibility
-    const overlay = new Graphics()
-      .rect(0, 0, app.screen.width, app.screen.height)
-      .fill({ color: 0x000000, alpha: 0.4 });
-    menuContainer.addChild(overlay);
-
-    // Add game title
-    const titleText = new Text({
-      text: 'ONE JUMP',
-      style: {
-        fontFamily: 'Arial Black, sans-serif',
-        fontSize: 72,
-        fill: 0xffffff,
-        fontWeight: 'bold',
-        dropShadow: true,
-        dropShadowColor: 0x000000,
-        dropShadowDistance: 6,
-        dropShadowBlur: 4,
-        letterSpacing: 4
-      }
-    });
-    titleText.anchor.set(0.5);
-    titleText.x = app.screen.width / 2;
-    titleText.y = 100;
-    menuContainer.addChild(titleText);
-
-    // Add subtitle
-    const subtitleText = new Text({
-      text: 'Why are you scared?',
-      style: {
-        fontFamily: 'Arial',
-        fontSize: 24,
-        fill: 0xffff00,
-        fontStyle: 'italic',
-        dropShadow: true,
-        dropShadowColor: 0x000000,
-        dropShadowDistance: 3
-      }
-    });
-    subtitleText.anchor.set(0.5);
-    subtitleText.x = app.screen.width / 2;
-    subtitleText.y = 160;
-    menuContainer.addChild(subtitleText);
-
     // Create menu panel
     const panelWidth = 400;
     const panelHeight = 300;
     const panel = new Graphics()
       .roundRect(0, 0, panelWidth, panelHeight, 20)
-      .fill({ color: 0x1a1a2e, alpha: 0.95 })
+      .fill({ color: 0x1a1a2e, alpha: 0.25 })
       .roundRect(0, 0, panelWidth, panelHeight, 20)
-      .stroke({ width: 3, color: 0x00ff88 });
 
     panel.x = (app.screen.width - panelWidth) / 2;
     panel.y = (app.screen.height - panelHeight) / 2 + 50;
@@ -141,7 +96,7 @@ import { Application, Assets, Sprite, Graphics, Container, Text } from "pixi.js"
       startY,
       buttonWidth,
       buttonHeight,
-      0x00ff88,
+      0x88,
       () => startGame()
     );
     menuContainer.addChild(startButton);
@@ -153,7 +108,7 @@ import { Application, Assets, Sprite, Graphics, Container, Text } from "pixi.js"
       startY + buttonHeight + buttonSpacing,
       buttonWidth,
       buttonHeight,
-      0x4488ff,
+      0xff88ff,
       () => showHighscores()
     );
     menuContainer.addChild(highscoresButton);
