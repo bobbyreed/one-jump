@@ -1,4 +1,4 @@
-import { Application, Assets, Sprite, Graphics, Container, Text } from "pixi.js";
+import { Application, Assets, Sprite, Graphics, Container, Text, AnimatedSprite, Texture, Rectangle } from "pixi.js";
 
 (async () => {
   // Create application
@@ -24,9 +24,17 @@ import { Application, Assets, Sprite, Graphics, Container, Text } from "pixi.js"
   const FALL_START_Y = 200;
   const CAMERA_OFFSET_Y = 200;
 
+  // Animation constants
+  const SPRITE_SHEET_WIDTH = 500;
+  const SPRITE_SHEET_HEIGHT = 500;
+  const SPRITE_COLS = 3;
+  const SPRITE_ROWS = 3;
+  const SPRITE_WIDTH = SPRITE_SHEET_WIDTH / SPRITE_COLS; // ~166.67
+  const SPRITE_HEIGHT = SPRITE_SHEET_HEIGHT / SPRITE_ROWS; // ~166.67
+
   // Game state
   let gameState = {
-    currentScene: 'menu', // 'menu', 'game', 'highscores'
+    currentScene: 'menu',
     phase: 'walking', // 'walking', 'falling', 'landed', 'crashed'
     score: 0,
     highScore: localStorage.getItem('oneJumpHighScore') || 0,
@@ -34,7 +42,9 @@ import { Application, Assets, Sprite, Graphics, Container, Text } from "pixi.js"
     velocity: { x: 0, y: 0 },
     cameraY: 0,
     fallSpeed: 0,
-    horizontalInput: 0
+    horizontalInput: 0,
+    isMoving: false,
+    jetpackActivating: false
   };
 
   // Scene containers
@@ -49,6 +59,56 @@ import { Application, Assets, Sprite, Graphics, Container, Text } from "pixi.js"
   // Initially hide game and highscores
   gameContainer.visible = false;
   highscoresContainer.visible = false;
+
+  // ===============================
+  // SPRITE SHEET LOADING
+  // ===============================
+  
+  // Load the sprite sheet texture
+  const spriteSheetTexture = await Assets.load('/public/assets/sprites/idlerun.png');
+  
+  // Create texture arrays for animations
+  function createTexturesFromSpriteSheet(baseTexture) {
+    const textures = [];
+    
+    for (let row = 0; row < SPRITE_ROWS; row++) {
+      for (let col = 0; col < SPRITE_COLS; col++) {
+        const frame = new Rectangle(
+          col * SPRITE_WIDTH,
+          row * (SPRITE_HEIGHT + 12),
+          SPRITE_WIDTH,
+          SPRITE_HEIGHT
+        );
+        
+        const texture = new Texture({
+          source: baseTexture.source,
+          frame: frame
+        });
+        
+        textures.push(texture);
+      }
+    }
+    
+    return textures;
+  }
+  
+  const allTextures = createTexturesFromSpriteSheet(spriteSheetTexture);
+  
+  // Define animation sequences
+  // Cell numbering: 1=index 0, 2=index 1, etc.
+  const animations = {
+    idle: [allTextures[0]], // Cell 1
+    running: [allTextures[0], allTextures[7], allTextures[8]], // Cells 1, 8, 9
+    jetpackActivation: [
+      allTextures[1], // Cell 2
+      allTextures[2], // Cell 3
+      allTextures[3], // Cell 4
+      allTextures[4], // Cell 5
+      allTextures[5], // Cell 6
+      allTextures[6]  // Cell 7
+    ],
+    falling: [allTextures[6]] // Use last frame of jetpack for falling
+  };
 
   // ===============================
   // MENU SCENE SETUP
@@ -486,19 +546,70 @@ import { Application, Assets, Sprite, Graphics, Container, Text } from "pixi.js"
 
   worldContainer.addChild(landingZone);
 
-  // Create player character
+  // ===============================
+  // ANIMATED PLAYER CHARACTER
+  // ===============================
+  
+  // Create player container
   const player = new Container();
-  const playerBody = new Graphics()
-    .rect(-15, -20, 30, 40)
-    .fill({ color: 0x00ff88 })
-    .rect(-10, -15, 8, 8)
-    .fill({ color: 0x001122 })
-    .rect(2, -15, 8, 8)
-    .fill({ color: 0x001122 })
-    .rect(-5, -5, 10, 3)
-    .fill({ color: 0x001122 });
-
-  player.addChild(playerBody);
+  
+  // Create animated sprites for each state
+  const playerSprites = {
+    idle: new AnimatedSprite(animations.idle),
+    running: new AnimatedSprite(animations.running),
+    jetpackActivation: new AnimatedSprite(animations.jetpackActivation),
+    falling: new AnimatedSprite(animations.falling)
+  };
+  
+  // Configure each animated sprite
+  Object.values(playerSprites).forEach(sprite => {
+    sprite.anchor.set(0.5);
+    sprite.visible = false;
+    sprite.scale.set(0.5); // Scale down to reasonable size
+    player.addChild(sprite);
+  });
+  
+  // Set animation speeds (adjust as needed)
+  playerSprites.idle.animationSpeed = 0.05;
+  playerSprites.idle.loop = true;
+  
+  playerSprites.running.animationSpeed = 0.15;
+  playerSprites.running.loop = true;
+  
+  playerSprites.jetpackActivation.animationSpeed = 0.2;
+  playerSprites.jetpackActivation.loop = false;
+  playerSprites.jetpackActivation.onComplete = () => {
+    // When jetpack activation finishes, switch to falling
+    setPlayerAnimation('falling');
+    gameState.jetpackActivating = false;
+  };
+  
+  playerSprites.falling.animationSpeed = 0.1;
+  playerSprites.falling.loop = true;
+  
+  // Current active sprite reference
+  let currentPlayerSprite = playerSprites.idle;
+  
+  // Function to switch animations
+  function setPlayerAnimation(animationName) {
+    // Hide all sprites
+    Object.values(playerSprites).forEach(sprite => {
+      sprite.visible = false;
+      sprite.stop();
+    });
+    
+    // Show and play the selected animation
+    const selectedSprite = playerSprites[animationName];
+    if (selectedSprite) {
+      selectedSprite.visible = true;
+      selectedSprite.gotoAndPlay(0);
+      currentPlayerSprite = selectedSprite;
+    }
+  }
+  
+  // Start with idle animation
+  setPlayerAnimation('idle');
+  
   player.x = 100;
   player.y = FALL_START_Y - 60;
   worldContainer.addChild(player);
@@ -506,6 +617,43 @@ import { Application, Assets, Sprite, Graphics, Container, Text } from "pixi.js"
   // Wind streaks effect container
   const windStreaks = new Container();
   worldContainer.addChildAt(windStreaks, worldContainer.getChildIndex(player));
+
+  // Create jetpack particle effects
+  const jetpackParticles = new Container();
+  worldContainer.addChildAt(jetpackParticles, worldContainer.getChildIndex(player));
+  
+  function createJetpackParticle() {
+    const particle = new Graphics()
+      .circle(0, 0, 3 + Math.random() * 3)
+      .fill({ color: 0xff8800, alpha: 0.8 });
+    
+    particle.x = player.x + (Math.random() - 0.5) * 20;
+    particle.y = player.y + 40; // Below player
+    particle.velocity = {
+      x: (Math.random() - 0.5) * 2,
+      y: 5 + Math.random() * 3
+    };
+    particle.lifetime = 30;
+    
+    jetpackParticles.addChild(particle);
+    
+    // Animate particle
+    const animateParticle = () => {
+      particle.x += particle.velocity.x;
+      particle.y += particle.velocity.y;
+      particle.alpha -= 0.02;
+      particle.scale.x *= 0.95;
+      particle.scale.y *= 0.95;
+      particle.lifetime--;
+      
+      if (particle.lifetime <= 0 || particle.alpha <= 0) {
+        jetpackParticles.removeChild(particle);
+        app.ticker.remove(animateParticle);
+      }
+    };
+    
+    app.ticker.add(animateParticle);
+  }
 
   // Create UI (doesn't move with camera)
   const uiContainer = new Container();
@@ -665,10 +813,10 @@ import { Application, Assets, Sprite, Graphics, Container, Text } from "pixi.js"
   // Collision detection
   function checkCollision(player, obstacle) {
     const playerBounds = {
-      x: player.x - 15,
-      y: player.y - 20,
-      width: 30,
-      height: 40
+      x: player.x - 30,
+      y: player.y - 40,
+      width: 60,
+      height: 80
     };
 
     const obstacleBounds = {
@@ -688,6 +836,7 @@ import { Application, Assets, Sprite, Graphics, Container, Text } from "pixi.js"
   function checkLanding() {
     if (player.y >= LANDING_Y && player.y <= LANDING_Y + 40) {
       gameState.phase = 'landed';
+      setPlayerAnimation('idle');
 
       // Check which pad we landed on
       let landedPad = null;
@@ -723,6 +872,7 @@ import { Application, Assets, Sprite, Graphics, Container, Text } from "pixi.js"
     } else if (player.y > LANDING_Y + 40) {
       // Crashed into ground
       gameState.phase = 'crashed';
+      setPlayerAnimation('idle');
       resultText.text = 'CRASHED!';
       resultText.style.fill = 0xff4444;
       scoreResultText.text = 'Too fast!';
@@ -738,19 +888,29 @@ import { Application, Assets, Sprite, Graphics, Container, Text } from "pixi.js"
     gameState.velocity = { x: 0, y: 0 };
     gameState.fallSpeed = 0;
     gameState.cameraY = 0;
+    gameState.isMoving = false;
+    gameState.jetpackActivating = false;
 
     player.x = 100;
     player.y = FALL_START_Y - 60;
     player.rotation = 0;
-    player.tint = 0xffffff;
+    
+    // Reset to idle animation
+    setPlayerAnimation('idle');
+    
+    // Reset sprite tints
+    Object.values(playerSprites).forEach(sprite => {
+      sprite.tint = 0xffffff;
+    });
 
     worldContainer.y = 0;
     resultContainer.visible = false;
     instructionText.text = 'Walk to the edge with →';
     instructionText.visible = true;
 
-    // Clear wind streaks
+    // Clear particles
     windStreaks.removeChildren();
+    jetpackParticles.removeChildren();
 
     // Reset obstacles
     obstacles.forEach(obstacle => {
@@ -772,20 +932,41 @@ import { Application, Assets, Sprite, Graphics, Container, Text } from "pixi.js"
     if (gameState.currentScene !== 'game') return;
 
     // Handle input
+    const wasMoving = gameState.isMoving;
     gameState.horizontalInput = 0;
     if (keys['KeyA'] || keys['ArrowLeft']) gameState.horizontalInput = -1;
     if (keys['KeyD'] || keys['ArrowRight']) gameState.horizontalInput = 1;
+    gameState.isMoving = gameState.horizontalInput !== 0;
 
     if (gameState.phase === 'walking') {
-      // Walking phase
+      // Walking phase animations
       if (gameState.horizontalInput > 0) {
+        if (!wasMoving || currentPlayerSprite !== playerSprites.running) {
+          setPlayerAnimation('running');
+        }
         player.x += INITIAL_WALK_SPEED * deltaTime;
         instructionText.text = 'Keep going...';
+        // Face right
+        player.scale.x = Math.abs(player.scale.x);
+      } else if (gameState.horizontalInput < 0) {
+        if (!wasMoving || currentPlayerSprite !== playerSprites.running) {
+          setPlayerAnimation('running');
+        }
+        player.x -= INITIAL_WALK_SPEED * deltaTime;
+        // Face left
+        player.scale.x = -Math.abs(player.scale.x);
+      } else {
+        // Not moving - switch to idle
+        if (wasMoving || currentPlayerSprite !== playerSprites.idle) {
+          setPlayerAnimation('idle');
+        }
       }
 
       // Check if walked off cliff
       if (player.x >= CLIFF_EDGE) {
         gameState.phase = 'falling';
+        gameState.jetpackActivating = true;
+        setPlayerAnimation('jetpackActivation');
         instructionText.text = 'Use A/D or ←/→ to steer!';
       }
 
@@ -806,11 +987,23 @@ import { Application, Assets, Sprite, Graphics, Container, Text } from "pixi.js"
       // Keep player in bounds
       player.x = Math.max(30, Math.min(app.screen.width - 30, player.x));
 
+      // Face direction of movement
+      if (gameState.horizontalInput > 0) {
+        player.scale.x = Math.abs(player.scale.x);
+      } else if (gameState.horizontalInput < 0) {
+        player.scale.x = -Math.abs(player.scale.x);
+      }
+
       // Update distance
       gameState.distance = Math.floor((player.y - FALL_START_Y) / 10);
 
       // Tilt player based on horizontal movement
       player.rotation = gameState.horizontalInput * 0.15;
+
+      // Create jetpack particles if falling
+      if (!gameState.jetpackActivating && Math.random() < 0.5) {
+        createJetpackParticle();
+      }
 
       // Add wind streak effects
       if (Math.random() < 0.3 && gameState.velocity.y > 200) {
@@ -822,7 +1015,7 @@ import { Application, Assets, Sprite, Graphics, Container, Text } from "pixi.js"
         windStreaks.addChild(streak);
 
         // Animate streak
-        const animateStreak = (delta) => {
+        const animateStreak = () => {
           streak.y -= gameState.velocity.y * 0.3 * deltaTime;
           streak.alpha -= 0.02;
           streak.scale.y *= 1.02;
@@ -844,7 +1037,10 @@ import { Application, Assets, Sprite, Graphics, Container, Text } from "pixi.js"
 
         if (checkCollision(player, obstacle)) {
           gameState.phase = 'crashed';
-          player.tint = 0xff0000;
+          // Tint all sprites red on crash
+          Object.values(playerSprites).forEach(sprite => {
+            sprite.tint = 0xff0000;
+          });
           resultText.text = 'CRASHED!';
           resultText.style.fill = 0xff4444;
           scoreResultText.text = `Distance: ${gameState.distance}m`;
@@ -878,9 +1074,12 @@ import { Application, Assets, Sprite, Graphics, Container, Text } from "pixi.js"
       }
     }
 
-    // Clean up old wind streaks
+    // Clean up old particles
     if (windStreaks.children.length > 50) {
       windStreaks.removeChildAt(0);
+    }
+    if (jetpackParticles.children.length > 30) {
+      jetpackParticles.removeChildAt(0);
     }
   });
 })();

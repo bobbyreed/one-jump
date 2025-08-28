@@ -1518,7 +1518,6 @@ const POWERUPS = {
 - Auto-dodge (once per stage)
 
 **Challenges** (increase score by 50%):
-- No tricks allowed
 - Double speed
 - One-hit mode
 - Invisible obstacles (appear close)
@@ -1570,10 +1569,10 @@ Global Leaderboards:
 - Combo Records
 - Trick Score Records
 
-Friend Leaderboards:
+OCU Leaderboard:
 - Direct friend comparison
 - Weekly challenges
-- Guild/Team scores
+- College/Degree scores
 ```
 
 ### Sharing System
@@ -1599,23 +1598,6 @@ Friend Leaderboards:
 │   Play at: onejump.com      │
 └─────────────────────────────┘
 ```
-
-### Daily Challenges
-
-**Challenge Types**:
-- Score attack (beat target score)
-- Pacifist (no tricks allowed)
-- Speedrun (time limit)
-- Perfectionist (no hits)
-- Themed (specific trick focus)
-
-**Rewards**:
-- Costume pieces
-- Profile badges
-- Bonus multipliers
-- Leaderboard badges
-
----
 
 ## Analytics & Metrics
 
@@ -1666,7 +1648,7 @@ Retention:
 - D30 Retention: 10%
 
 Engagement:
-- Average Session: 15 minutes
+- Average Session: 10 minutes
 - Sessions/Day: 2.5
 - Stages/Session: 5
 
@@ -1684,28 +1666,7 @@ Social:
 
 ---
 
-## Post-Launch Content
-
-### Season 1: "Cosmic Semester"
-**New Features**:
-- 5 bonus stages in space
-- Zero gravity mechanics
-- Alien mascot encounters
-- Space suit costume
-
-### Season 2: "Time Ram"
-**New Features**:
-- Time travel stages
-- Historical obstacles
-- Dinosaurs to pyramids
-- Time wizard costume
-
-### Season 3: "Multiverse Mascot"
-**New Features**:
-- Alternate universe stages
-- Mirror Starsky boss fight
-- Reality-bending obstacles
-- Dimensional cape costume
+## Future Goals
 
 ### Endless Mode
 **Features**:
@@ -1722,23 +1683,6 @@ Social:
 - Logic scripting (simple)
 - Share with code
 - Featured community levels
-
-### Multiplayer Modes
-
-**Ram Race** (2-4 players):
-- Split screen falling
-- Power-ups affect others
-- First to land wins
-
-**Trick Battle**:
-- Turn-based trick challenges
-- Judge scores combos
-- Best of 5 rounds
-
-**Co-op Descent**:
-- Shared score
-- Coordinate movements
-- Special co-op obstacles
 
 ---
 
