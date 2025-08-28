@@ -727,11 +727,11 @@ Pattern B: "Quad Landing"
 #### Opening (8 panels)
 1. Starsky floating in space, reading "OCU Student Handbook"
 2. Telescope view of campus - freshman looking lost
-3. "Those fresh Stars need guidance!"
-4. Puts on cape, adjusts sunglasses
+3. Starsky floating in space saying "Those new Stars need guidance!"
+4. Starsky putting on jetpack and adjusts sunglasses
 5. "Time for some RAM-spiration!"
-6. Checks watch: "Orientation in... 10 minutes?!"
-7. "Good thing I know a shortcut!"
+6. Starsky checks watch and says: "Orientation in... 10 minutes?!"
+7. Starsky says with confidence "Good thing I know a shortcut!"
 8. JUMPS with "STARS FOREVER!" battle cry
 
 #### Midpoint (After Stage 5) (6 panels)
