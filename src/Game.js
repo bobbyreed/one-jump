@@ -25,10 +25,12 @@ export default class Game {
 
         await this.app.init({
             background: COLORS.BACKGROUND,
-            resizeTo: window,
+            width: 1920,
+            height: 1080,
             antialias: true,
-            resolution: window.devicePixelRatio || 1
-        });
+            resolution: 1,  // Force resolution to 1
+            autoDensity: true
+            });
 
         // Append canvas to DOM
         const container = document.getElementById('pixi-container');
@@ -54,6 +56,11 @@ export default class Game {
 
         // Start with menu
         this.sceneManager.changeScene('menu');
+
+        this.app.ticker.add((ticker) => {
+            const deltaTime = ticker.deltaTime / 60;
+            this.update(deltaTime);
+            });
 
         this.isInitialized = true;
         console.log('Game initialized successfully');
@@ -83,6 +90,29 @@ export default class Game {
     getHighScore() {
         return this.saveManager.data.highScore;
     }
+
+    update(deltaTime) {
+        if (this.sceneManager) {
+            this.sceneManager.update(deltaTime);
+        }
+        }
+
+    setupCanvasScaling() {
+        const resize = () => {
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+            const scale = Math.min(screenWidth / 1920, screenHeight / 1080);
+            
+            this.app.canvas.style.width = `${1920 * scale}px`;
+            this.app.canvas.style.height = `${1080 * scale}px`;
+            this.app.canvas.style.position = 'absolute';
+            this.app.canvas.style.left = `${(screenWidth - 1920 * scale) / 2}px`;
+            this.app.canvas.style.top = `${(screenHeight - 1080 * scale) / 2}px`;
+        };
+        
+        resize();
+        window.addEventListener('resize', resize);
+        }
 
     setHighScore(score) {
         if (score > this.saveManager.data.highScore) {
