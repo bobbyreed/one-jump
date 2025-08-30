@@ -15,6 +15,7 @@ export default class MenuScene extends BaseScene {
     async init() {
         await super.init();
 
+
         // Get cover texture from asset manager
         const coverTexture = this.game.assetManager.getTexture('cover');
         if (coverTexture) {
@@ -55,6 +56,36 @@ export default class MenuScene extends BaseScene {
 
         this.menuPanel = panel;
         this.container.addChild(panel);
+
+        // Title
+        const title = new Text({
+            text: 'ONE JUMP',
+            style: {
+                fontFamily: 'Arial Black',
+                fontSize: 72,
+                fill: 0xffffff,
+                stroke: { color: 0x000000, width: 5 }
+            }
+        });
+        title.x = 960;
+        title.y = 200;
+        title.anchor.set(0.5);
+        this.container.addChild(title);
+
+        //sub
+        const subtitle = new Text({
+            text: 'Starsky the Ram starring in...',
+            style: {
+                fontFamily: 'Arial Black',
+                fontSize: 20,
+                fill: 'black',
+                stroke: { color: '#AA4A44', width: 5 }
+        }
+        });
+        subtitle.x = 750;
+        subtitle.y = 150;
+        subtitle.anchor.set(0.5);
+        this.container.addChild(subtitle);
     }
 
     createButtons() {
