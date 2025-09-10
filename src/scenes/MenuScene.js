@@ -89,63 +89,77 @@ export default class MenuScene extends BaseScene {
     }
 
     createButtons() {
-        const buttonX = this.menuPanel.x + (UI.PANEL_WIDTH - UI.BUTTON_WIDTH) / 2;
-        const startY = this.menuPanel.y + 60;
+            const buttonX = this.menuPanel.x + (UI.PANEL_WIDTH - UI.BUTTON_WIDTH) / 2;
+            const startY = this.menuPanel.y + 60;
 
-        // Start Game button
-        const startButton = new Button(
-            'START GAME',
-            buttonX,
-            startY,
-            UI.BUTTON_WIDTH,
-            UI.BUTTON_HEIGHT,
-            COLORS.UI_PRIMARY,
-            () => this.startGame()
-        );
-        this.container.addChild(startButton.container);
-        this.buttons.push(startButton);
+            // Start Game button
+            const startButton = new Button(
+                'START GAME',
+                buttonX,
+                startY,
+                UI.BUTTON_WIDTH,
+                UI.BUTTON_HEIGHT,
+                COLORS.UI_PRIMARY,
+                () => this.startGame()
+            );
+            this.container.addChild(startButton.container);
+            this.buttons.push(startButton);
 
-        // View Highscores button
-        const highscoresButton = new Button(
-            'HIGHSCORES',
-            buttonX,
-            startY + UI.BUTTON_HEIGHT + UI.BUTTON_SPACING,
-            UI.BUTTON_WIDTH,
-            UI.BUTTON_HEIGHT,
-            COLORS.UI_SECONDARY,
-            () => this.showHighscores()
-        );
-        this.container.addChild(highscoresButton.container);
-        this.buttons.push(highscoresButton);
+            // NEW: Level Select button
+            const levelSelectButton = new Button(
+                'LEVEL SELECT',
+                buttonX,
+                startY + UI.BUTTON_HEIGHT + 20,
+                UI.BUTTON_WIDTH,
+                UI.BUTTON_HEIGHT,
+                COLORS.UI_SECONDARY,  // Use a different color for variety
+                () => this.game.sceneManager.changeScene('levelSelect')
+            );
+            this.container.addChild(levelSelectButton.container);
+            this.buttons.push(levelSelectButton);
 
-        //level selct
-        const levelSelectBtn = new Button({
-                text: 'LEVEL SELECT',
-                width: 300,
-                height: 80,
-                onClick: () => this.game.sceneManager.changeScene('levelSelect')
-            });
-            levelSelectBtn.x = 960;
-            levelSelectBtn.y = 500;
-            this.container.addChild(levelSelectBtn);
+            // View Story button (moved down)
+            const storyButton = new Button(
+                'VIEW STORY',
+                buttonX,
+                startY + (UI.BUTTON_HEIGHT + 20) * 2,
+                UI.BUTTON_WIDTH,
+                UI.BUTTON_HEIGHT,
+                COLORS.SUCCESS,
+                () => this.viewStory()
+            );
+            this.container.addChild(storyButton.container);
+            this.buttons.push(storyButton);
 
-        // High score display
-        this.highScoreText = new Text({
-            text: `Best Score: ${this.game.saveManager.data.highScore}`,
-            style: {
-                fontFamily: 'Arial',
-                fontSize: 20,
-                fill: COLORS.TEXT_PRIMARY,
-                dropShadow: true,
-                dropShadowColor: 0x000000,
-                dropShadowDistance: 2
-            }
-        });
-        this.highScoreText.anchor.set(0.5);
-        this.highScoreText.x = this.menuPanel.x + UI.PANEL_WIDTH / 2;
-        this.highScoreText.y = startY + (UI.BUTTON_HEIGHT + UI.BUTTON_SPACING) * 2 + 30;
-        this.container.addChild(this.highScoreText);
-    }
+            // Highscores button (moved down)
+            const highscoresButton = new Button(
+                'HIGHSCORES',
+                buttonX,
+                startY + (UI.BUTTON_HEIGHT + 20) * 3,
+                UI.BUTTON_WIDTH,
+                UI.BUTTON_HEIGHT,
+                COLORS.WARNING,
+                () => this.viewHighscores()
+            );
+            this.container.addChild(highscoresButton.container);
+            this.buttons.push(highscoresButton);
+
+            // Quit button (moved down)
+            const quitButton = new Button(
+                'QUIT',
+                buttonX,
+                startY + (UI.BUTTON_HEIGHT + 20) * 4,
+                UI.BUTTON_WIDTH,
+                UI.BUTTON_HEIGHT,
+                COLORS.DANGER,
+                () => this.quitGame()
+            );
+            this.container.addChild(quitButton.container);
+            this.buttons.push(quitButton);
+
+            // Update high score display position if needed
+            this.updateHighScoreDisplay();
+        }
 
     createInstructions() {
         const instructionsText = new Text({
