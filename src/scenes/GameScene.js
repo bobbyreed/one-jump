@@ -170,12 +170,17 @@ export default class GameScene extends BaseScene {
         this.walls = { left: leftWall, right: rightWall };
     }
 
-    async enter(data) {
+    async enter(data = {}) {
         await super.enter(data);
-        this.resetGame();
-
-        // Setup input handlers
-        this.setupInputHandlers();
+        
+        if (data.levelNumber) {
+            const levelConfig = this.game.levelManager.startLevel(data.levelNumber);
+            if (levelConfig) {
+                this.currentLevel = data.levelNumber;
+                this.levelConfig = levelConfig;
+                this.setupLevel(levelConfig);
+            }
+        }
     }
 
     async exit() {
@@ -382,6 +387,42 @@ export default class GameScene extends BaseScene {
         this.bgLayers.near.children.forEach(star => {
             star.y = star.baseY - cameraY * star.speedMult;
         });
+    }
+
+    onLevelComplete(score, time) {
+        const result = this.game.levelManager.completeLevel(
+            this.currentLevel,
+            score,
+            time
+        );
+        
+        // Show completion screen with grade and stars
+        this.showCompletionScreen(result);
+        
+        // After a delay, show outro story if not final level
+        if (this.currentLevel < 10) {
+            setTimeout(() => {
+                this.game.sceneManager.changeScene('story', {
+                    levelNumber: this.currentLevel,
+                    isIntro: false,
+                    nextScene: 'levelSelect',
+                    nextData: { lastLevel: this.currentLevel }
+                });
+            }, 3000);
+        } else {
+            // Final level complete - show ending
+            setTimeout(() => {
+                this.game.sceneManager.changeScene('story', {
+                    levelNumber: this.currentLevel,
+                    isIntro: false,
+                    nextScene: 'highscores',
+                    nextData: { 
+                        score: this.game.levelManager.getTotalScore(),
+                        completed: true
+                    }
+                });
+            }, 3000);
+        }
     }
 
     destroy() {

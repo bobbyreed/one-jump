@@ -8,6 +8,8 @@ import MenuScene from './scenes/MenuScene.js';
 import StoryScene from './scenes/StoryScene.js';
 import GameScene from './scenes/GameScene.js';
 import HighscoresScene from './scenes/HighscoresScene.js';
+import LevelManager from './managers/LevelManager.js';
+import LevelSelectScene from './scenes/LevelSelectScene.js';
 
 export default class Game {
     constructor() {
@@ -17,6 +19,7 @@ export default class Game {
         this.inputManager = null;
         this.saveManager = null;
         this.isInitialized = false;
+        this.levelManager = null;
     }
 
     async init() {
@@ -43,10 +46,10 @@ export default class Game {
         // Initialize managers
         this.saveManager = new SaveManager();
         this.saveManager.load();
-
         this.assetManager = new AssetManager();
         this.inputManager = new InputManager();
         this.sceneManager = new SceneManager(this);
+        this.levelManager = new LevelManager(this);
 
         // Load core assets
         await this.assetManager.loadCoreAssets();
@@ -72,18 +75,23 @@ export default class Game {
         const storyScene = new StoryScene(this);
         const gameScene = new GameScene(this);
         const highscoresScene = new HighscoresScene(this);
+        const levelSelectScene = new LevelSelectScene(this);
+
 
         // Register scenes with manager
         this.sceneManager.registerScene('menu', menuScene);
         this.sceneManager.registerScene('story', storyScene);
         this.sceneManager.registerScene('game', gameScene);
         this.sceneManager.registerScene('highscores', highscoresScene);
+        this.sceneManager.registerScene('levelSelect', levelSelectScene);
+
 
         // Initialize all scenes
         await menuScene.init();
         await storyScene.init();
         await gameScene.init();
         await highscoresScene.init();
+        await levelSelectScene.init();
     }
 
     // Global game methods

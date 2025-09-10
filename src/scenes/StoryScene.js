@@ -335,12 +335,32 @@ export default class StoryScene extends BaseScene {
         this.nextButton.setText('Next');
     }
 
-    async enter(data) {
+    async enter(data = {}) {
         await super.enter(data);
-        this.reset();
-        this.showNextPanel();
+        
+        // Check if this is a level-specific story
+        if (data.levelNumber) {
+            const levelManager = this.game.levelManager;
+            const storyData = levelManager.getStoryPanels(data.levelNumber, data.isIntro);
+            
+            this.storyData = {
+                title: storyData.title,
+                panels: storyData.panels,
+                images: storyData.images
+            };
+            
+            this.nextScene = data.nextScene || 'game';
+            this.nextData = data.nextData || { levelNumber: data.levelNumber };
+        } else {
+            // Use default story data
+            this.storyData = data.story || this.defaultStory;
+            this.nextScene = data.nextScene || 'game';
+            this.nextData = data.nextData || {};
+        }
+        
+        this.currentPanel = 0;
+        this.setupPanels();
     }
-
     async exit() {
         await super.exit();
 

@@ -118,6 +118,17 @@ export default class MenuScene extends BaseScene {
         this.container.addChild(highscoresButton.container);
         this.buttons.push(highscoresButton);
 
+        //level selct
+        const levelSelectBtn = new Button({
+                text: 'LEVEL SELECT',
+                width: 300,
+                height: 80,
+                onClick: () => this.game.sceneManager.changeScene('levelSelect')
+            });
+            levelSelectBtn.x = 960;
+            levelSelectBtn.y = 500;
+            this.container.addChild(levelSelectBtn);
+
         // High score display
         this.highScoreText = new Text({
             text: `Best Score: ${this.game.saveManager.data.highScore}`,
