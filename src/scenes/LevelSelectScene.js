@@ -1,6 +1,7 @@
 import { Container, Graphics, Text, Sprite } from 'pixi.js';
 import BaseScene from './BaseScene.js';
 import Button from '../ui/Button.js';
+import { UI, COLORS } from '../config/Constants.js';
 
 export default class LevelSelectScene extends BaseScene {
     constructor(game) {
@@ -260,12 +261,12 @@ export default class LevelSelectScene extends BaseScene {
     createNavigationButtons() {
         // Back to Menu button - using the existing Button class format
         const backBtn = new Button(
-            '← MENU',
+            'BACK',
             100,
-            50,
-            150,
+            980,
+            200,
             60,
-            0x4444ff,
+            COLORS.DANGER,
             () => this.game.sceneManager.changeScene('menu')
         );
         this.container.addChild(backBtn.container);
