@@ -50,12 +50,19 @@ export const ANIMATION = {
 
 // UI Configuration
 export const UI = {
+    PANEL_WIDTH: 500,
+    PANEL_HEIGHT: 400,
+    PANEL_RADIUS: 20,
     BUTTON_WIDTH: 300,
     BUTTON_HEIGHT: 60,
-    BUTTON_SPACING: 20,
-    PANEL_WIDTH: 400,
-    PANEL_HEIGHT: 300,
-    PANEL_RADIUS: 20
+    BUTTON_SPACING: 20,  // ADD THIS if it doesn't exist
+    BUTTON_RADIUS: 10,
+    TEXT_SIZE: {
+        TITLE: 72,
+        SUBTITLE: 36,
+        NORMAL: 24,
+        SMALL: 16
+    }
 };
 
 // Story Panel Configuration

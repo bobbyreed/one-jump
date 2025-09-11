@@ -18,8 +18,8 @@ export default class Game {
         this.assetManager = null;
         this.inputManager = null;
         this.saveManager = null;
-        this.isInitialized = false;
         this.levelManager = null;
+        this.isInitialized = false;   
     }
 
     async init() {
@@ -32,8 +32,30 @@ export default class Game {
             height: 1080,
             antialias: true,
             resolution: 1,  // Force resolution to 1
-            autoDensity: true
+            autoDensity: true,
+            powerPreference: 'high-performance',
+            preserveDrawingBuffer: false
             });
+        
+        // Handle WebGL context loss
+        this.app.renderer.runners.contextChange.add(() => {
+            console.log('WebGL context restored');
+        });
+
+        // Add context loss/restore handlers
+        const canvas = this.app.canvas;
+            canvas.addEventListener('webglcontextlost', (event) => {
+                event.preventDefault();
+                console.warn('WebGL context lost. Attempting to restore...');
+            }, false);
+
+        canvas.addEventListener('webglcontextrestored', () => {
+                console.log('WebGL context successfully restored');
+                // Reload assets if needed
+                if (this.assetManager) {
+                    this.assetManager.loadCoreAssets();
+                }
+            }, false);
 
         // Append canvas to DOM
         const container = document.getElementById('pixi-container');
@@ -46,10 +68,11 @@ export default class Game {
         // Initialize managers
         this.saveManager = new SaveManager();
         this.saveManager.load();
+        //level manager MUST be loaded before asset manager
+        this.levelManager = new LevelManager(this);
         this.assetManager = new AssetManager();
         this.inputManager = new InputManager();
         this.sceneManager = new SceneManager(this);
-        this.levelManager = new LevelManager(this);
 
         // Load core assets
         await this.assetManager.loadCoreAssets();

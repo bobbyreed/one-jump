@@ -105,7 +105,7 @@ export default class MenuScene extends BaseScene {
             this.container.addChild(startButton.container);
             this.buttons.push(startButton);
 
-            // NEW: Level Select button
+            // Level Select button
             const levelSelectButton = new Button(
                 'LEVEL SELECT',
                 buttonX,
@@ -118,7 +118,7 @@ export default class MenuScene extends BaseScene {
             this.container.addChild(levelSelectButton.container);
             this.buttons.push(levelSelectButton);
 
-            // View Story button (moved down)
+            // View Story button
             const storyButton = new Button(
                 'VIEW STORY',
                 buttonX,
@@ -131,7 +131,7 @@ export default class MenuScene extends BaseScene {
             this.container.addChild(storyButton.container);
             this.buttons.push(storyButton);
 
-            // Highscores button (moved down)
+            // Highscores button 
             const highscoresButton = new Button(
                 'HIGHSCORES',
                 buttonX,
@@ -144,7 +144,7 @@ export default class MenuScene extends BaseScene {
             this.container.addChild(highscoresButton.container);
             this.buttons.push(highscoresButton);
 
-            // Quit button (moved down)
+            // Quit button 
             const quitButton = new Button(
                 'QUIT',
                 buttonX,
