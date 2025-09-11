@@ -18,6 +18,10 @@ export default class StoryScene extends BaseScene {
         this.skipButton = null;
         this.storyTitle = null;
         this.panelCounter = null;
+
+        //scene transition stuffs
+        this.nextScene = 'game';
+        this.nextData = {};
     }
 
     async init() {
@@ -296,29 +300,31 @@ export default class StoryScene extends BaseScene {
 
     endStorySequence() {
         // Clear timer
-        if (this.autoAdvanceTimer) {
-            clearTimeout(this.autoAdvanceTimer);
-        }
-
-        // Fade out and transition
-        let fadeElapsed = 0;
-        const fadeDuration = 0.5;
-
-        const fadeOut = (ticker) => {
-            fadeElapsed += ticker.deltaTime / 60;
-            const progress = Math.min(fadeElapsed / fadeDuration, 1);
-            this.container.alpha = 1 - progress;
-
-            if (progress >= 1) {
-                this.game.app.ticker.remove(fadeOut);
-                this.container.alpha = 1;
-                this.changeScene('game');
-                this.reset();
-            }
-        };
-
-        this.game.app.ticker.add(fadeOut);
+    if (this.autoAdvanceTimer) {
+        clearTimeout(this.autoAdvanceTimer);
     }
+
+    // Fade out and transition
+    let fadeElapsed = 0;
+    const fadeDuration = 0.5;
+
+    const fadeOut = (ticker) => {
+        fadeElapsed += ticker.deltaTime / 60;
+        const progress = Math.min(fadeElapsed / fadeDuration, 1);
+        this.container.alpha = 1 - progress;
+
+        if (progress >= 1) {
+            this.game.app.ticker.remove(fadeOut);
+            this.container.alpha = 1;
+            
+            // Use the stored next scene and data
+            this.changeScene(this.nextScene, this.nextData);
+            this.reset();
+        }
+    };
+
+    this.game.app.ticker.add(fadeOut);
+}
 
     reset() {
         // Reset for next time
@@ -338,29 +344,36 @@ export default class StoryScene extends BaseScene {
     async enter(data = {}) {
         await super.enter(data);
         
+        // Store where to go after story completes
+        this.nextScene = data.nextScene || 'game';
+        this.nextData = data.nextData || {};
+        
+        // Reset the panels
+        this.reset();
+        
         // Check if this is a level-specific story
         if (data.levelNumber) {
             const levelManager = this.game.levelManager;
-            const storyData = levelManager.getStoryPanels(data.levelNumber, data.isIntro);
             
-            this.storyData = {
-                title: storyData.title,
-                panels: storyData.panels,
-                images: storyData.images
-            };
+            // Only try to get story panels if levelManager exists
+            if (levelManager && levelManager.getStoryPanels) {
+                const storyData = levelManager.getStoryPanels(data.levelNumber, data.isIntro);
+                
+                // Update story title if we have one
+                if (this.storyTitle && storyData && storyData.title) {
+                    this.storyTitle.text = storyData.title;
+                }
+            }
             
-            this.nextScene = data.nextScene || 'game';
-            this.nextData = data.nextData || { levelNumber: data.levelNumber };
-        } else {
-            // Use default story data
-            this.storyData = data.story || this.defaultStory;
-            this.nextScene = data.nextScene || 'game';
-            this.nextData = data.nextData || {};
+            // Make sure level number is passed to game scene
+            if (!this.nextData.levelNumber) {
+                this.nextData.levelNumber = data.levelNumber;
+            }
         }
-        
-        this.currentPanel = 0;
-        this.setupPanels();
-    }
+    
+    // Start showing the story panels
+    this.showNextPanel();
+}
     async exit() {
         await super.exit();
 
