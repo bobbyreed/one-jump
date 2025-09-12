@@ -524,11 +524,256 @@ export default class LevelSelectScene extends BaseScene {
     }
 
     async enter(data = {}) {
-        await super.enter(data);
-        
-        // Auto-select last played level if coming back from game
-        if (data.lastLevel) {
-            this.selectLevel(data.lastLevel);
+            await super.enter(data);
+            
+            // Check if returning from a completed level
+            if (data.justCompleted && data.lastLevel) {
+                console.log(`Returned from completing level ${data.lastLevel}`);
+                
+                // Highlight the completed level
+                this.highlightCompletedLevel(data.lastLevel);
+                
+                // Check if next level was unlocked
+                if (this.game.levelManager.isLevelUnlocked(data.lastLevel + 1)) {
+                    this.showUnlockedAnimation(data.lastLevel + 1);
+                }
+            }
+            
+            // Update all level buttons to reflect current progress
+            this.updateLevelButtons();
         }
-    }
+
+        updateLevelButtons() {
+            const levelManager = this.game.levelManager;
+            
+            this.levelButtons.forEach((button, index) => {
+                const levelNumber = index + 1;
+                const isUnlocked = levelManager.isLevelUnlocked(levelNumber);
+                const score = levelManager.levelScores[index];
+                const stars = levelManager.levelStars[index];
+                const grade = levelManager.levelGrades[index];
+                
+                // Update button appearance based on unlock status
+                if (isUnlocked) {
+                    button.interactive = true;
+                    button.alpha = 1;
+                    
+                    // Show completion status
+                    if (score > 0) {
+                        // Level has been completed
+                        this.addCompletionIndicator(button, stars, grade);
+                    }
+                } else {
+                    // Level is locked
+                    button.interactive = false;
+                    button.alpha = 0.5;
+                    this.addLockIcon(button);
+                }
+            });
+        }
+
+        highlightCompletedLevel(levelNumber) {
+            const button = this.levelButtons[levelNumber - 1];
+            if (!button) return;
+            
+            // Create a glow effect
+            const glow = new PIXI.Graphics();
+            glow.rect(-5, -5, button.width + 10, button.height + 10);
+            glow.stroke({ color: 0x00FF00, width: 3, alpha: 1 });
+            button.addChild(glow);
+            
+            // Animate the glow
+            let glowAlpha = 1;
+            const glowAnimation = (delta) => {
+                glowAlpha -= delta * 0.02;
+                glow.alpha = Math.max(0, glowAlpha);
+                
+                if (glowAlpha <= 0) {
+                    this.game.app.ticker.remove(glowAnimation);
+                    button.removeChild(glow);
+                    glow.destroy();
+                }
+            };
+            this.game.app.ticker.add(glowAnimation);
+        }
+
+        showUnlockedAnimation(levelNumber) {
+            const button = this.levelButtons[levelNumber - 1];
+            if (!button) return;
+            
+            // Create unlock effect
+            const unlockText = new PIXI.Text({
+                text: 'UNLOCKED!',
+                style: {
+                    fontFamily: 'Arial',
+                    fontSize: 16,
+                    fill: 0xFFD700,
+                    fontWeight: 'bold',
+                    dropShadow: true,
+                    dropShadowDistance: 2
+                }
+            });
+            unlockText.anchor.set(0.5);
+            unlockText.x = button.width / 2;
+            unlockText.y = -20;
+            button.addChild(unlockText);
+            
+            // Animate the unlock text
+            let unlockY = -20;
+            const unlockAnimation = (delta) => {
+                unlockY -= delta * 0.5;
+                unlockText.y = unlockY;
+                unlockText.alpha = Math.max(0, 1 + unlockY / 50);
+                
+                if (unlockText.alpha <= 0) {
+                    this.game.app.ticker.remove(unlockAnimation);
+                    button.removeChild(unlockText);
+                    unlockText.destroy();
+                }
+            };
+            this.game.app.ticker.add(unlockAnimation);
+            
+            // Also do a scale bounce on the button
+            const originalScale = button.scale.x;
+            button.scale.set(originalScale * 1.2);
+            
+            const scaleAnimation = (delta) => {
+                const currentScale = button.scale.x;
+                const targetScale = originalScale;
+                button.scale.set(currentScale + (targetScale - currentScale) * 0.1);
+                
+                if (Math.abs(currentScale - targetScale) < 0.01) {
+                    button.scale.set(targetScale);
+                    this.game.app.ticker.remove(scaleAnimation);
+                }
+            };
+            this.game.app.ticker.add(scaleAnimation);
+        }
+
+        addCompletionIndicator(button, stars, grade) {
+            // Remove any existing indicators
+            const existingIndicators = button.children.filter(child => child.isCompletionIndicator);
+            existingIndicators.forEach(child => button.removeChild(child));
+            
+            // Add star display
+            const starContainer = new PIXI.Container();
+            starContainer.isCompletionIndicator = true;
+            starContainer.y = button.height - 25;
+            
+            for (let i = 0; i < 3; i++) {
+                const star = new PIXI.Graphics();
+                const filled = i < stars;
+                
+                star.star(0, 0, 5, 8, 4);
+                star.fill({ color: filled ? 0xFFD700 : 0x444444 });
+                
+                star.x = (button.width / 2) + (i - 1) * 20;
+                starContainer.addChild(star);
+            }
+            button.addChild(starContainer);
+            
+            // Add grade indicator
+            if (grade !== 'F') {
+                const gradeText = new PIXI.Text({
+                    text: grade,
+                    style: {
+                        fontFamily: 'Arial',
+                        fontSize: 14,
+                        fill: this.getGradeColor(grade),
+                        fontWeight: 'bold'
+                    }
+                });
+                gradeText.isCompletionIndicator = true;
+                gradeText.anchor.set(1, 0);
+                gradeText.x = button.width - 5;
+                gradeText.y = 5;
+                button.addChild(gradeText);
+            }
+        }
+
+        addLockIcon(button) {
+            // Remove any existing lock icons
+            const existingLocks = button.children.filter(child => child.isLockIcon);
+            existingLocks.forEach(child => button.removeChild(child));
+            
+            // Create lock icon
+            const lock = new Graphics();
+            lock.isLockIcon = true;
+            
+            // Draw simple lock shape
+            lock.rect(-10, -5, 20, 15);
+            lock.fill({ color: 0x666666 });
+            
+            // Draw lock shackle
+            lock.moveTo(-8, -5);
+            lock.arc(0, -5, 8, Math.PI, 0);
+            lock.stroke({ color: 0x666666, width: 3 });
+            
+            lock.x = button.width / 2;
+            lock.y = button.height / 2;
+            button.addChild(lock);
+        }
+
+        getGradeColor(grade) {
+            const colors = {
+                'S': 0xFFD700,  // Gold
+                'A': 0x00FF00,  // Green  
+                'B': 0x00AAFF,  // Blue
+                'C': 0xFFFF00,  // Yellow
+                'D': 0xFF8800,  // Orange
+                'F': 0xFF0000   // Red
+            };
+            return colors[grade] || 0xFFFFFF;
+        }
+
+        selectLevel(levelNumber) {
+            this.selectedLevel = levelNumber;
+            
+            // Update button highlights
+            this.levelButtons.forEach((btn, index) => {
+                if (index + 1 === levelNumber) {
+                    btn.scale.set(1.1);
+                    btn.tint = 0xAAFFAA; // Highlight selected
+                } else {
+                    btn.scale.set(1);
+                    btn.tint = 0xFFFFFF; // Normal
+                }
+            });
+            
+            // Update info panel with level details
+            const config = this.game.levelManager.getLevelConfig(levelNumber);
+            const score = this.game.levelManager.levelScores[levelNumber - 1];
+            const bestTime = this.game.levelManager.levelBestTimes[levelNumber - 1];
+            
+            let infoText = `STAGE ${levelNumber}: ${config.name}\n\n`;
+            infoText += `${config.subtitle}\n\n`;
+            infoText += `Target Score: ${config.targetScore.toLocaleString()}\n`;
+            infoText += `Duration: ${config.duration} seconds\n\n`;
+            
+            if (score > 0) {
+                infoText += `Best Score: ${score.toLocaleString()}\n`;
+                infoText += `Best Time: ${bestTime.toFixed(1)}s`;
+            } else {
+                infoText += `Not yet completed`;
+            }
+            
+            this.infoText.text = infoText;
+            
+            // Show play button
+            this.playButton.visible = true;
+        }
+
+        startSelectedLevel() {
+            if (!this.selectedLevel) return;
+            
+            console.log(`Starting level ${this.selectedLevel}`);
+            
+            // Transition to intro story for the selected level
+            this.game.sceneManager.changeScene('story', {
+                levelNumber: this.selectedLevel,
+                isIntro: true, // This is the intro story
+                nextScene: 'game', // After intro, go to game
+                nextData: { levelNumber: this.selectedLevel }
+            });
+        }
 }

@@ -20,7 +20,8 @@ export default class GameScene extends BaseScene {
             score: 0,
             distance: 0,
             cameraY: 0,
-            fallSpeed: 0
+            fallSpeed: 0,
+            gameOver: false
         };
 
         // World container (moves with camera)
@@ -39,9 +40,25 @@ export default class GameScene extends BaseScene {
         this.hud = null;
         this.resultScreen = null;
 
+        //Level Tracking
+        this.currentLevel = 1;
+        this.levelConfig = null;
+
+            // Performance tracking
+        this.timeElapsed = 0;
+        this.maxCombo = 0;
+        this.currentCombo = 0;
+        this.nearMisses = 0;
+        this.tricksPerformed = 0;
+
+        // World container (moves with camera)
+        this.worldContainer = new Container();
+        this.container.addChild(this.worldContainer);
+
         // Environment
         this.cliff = null;
         this.walls = null;
+        this.bgLayers = { far: null, mid: null, near: null };
     }
 
     async init() {
@@ -70,14 +87,85 @@ export default class GameScene extends BaseScene {
         this.collisionSystem = new CollisionSystem();
 
         // Initialize UI
+        
         this.hud = new HUD(this.container, this.game.app.screen);
         this.resultScreen = new ResultScreen(
-            this.container,
-            this.game.app.screen,
-            () => this.resetGame(),
-            () => this.game.sceneManager.changeScene('menu')
-        );
+                this.game.app.screen,
+                {
+                    onRestart: () => this.restartLevel(),
+                    onMenu: () => this.returnToMenu(),
+                    onNextLevel: () => this.proceedToNextLevel()  // NEW callback
+                }
+            );
+            this.container.addChild(this.resultScreen.container);
     }
+
+    // Proceed to next level
+        proceedToNextLevel() {
+            console.log(`Proceeding to level ${this.currentLevel + 1}`);
+            
+            // Clean up current level
+            this.cleanup();
+            
+            // Transition to outro story, then next level intro
+            this.game.sceneManager.changeScene('story', {
+                levelNumber: this.currentLevel,
+                isIntro: false, // This is the outro
+                nextScene: 'story', // After outro, show next level's intro
+                nextData: {
+                    levelNumber: this.currentLevel + 1,
+                    isIntro: true, // Next story is an intro
+                    nextScene: 'game', // After that intro, start the game
+                    nextData: {
+                        levelNumber: this.currentLevel + 1
+                    }
+                }
+            });
+}
+
+        // Return to main menu
+    returnToMenu() {
+        console.log('Returning to menu');
+        
+        // Clean up the scene
+        this.cleanup();
+        
+        // Transition to menu
+        this.game.sceneManager.changeScene('menu');
+    }
+
+    // Restart the current level
+    restartLevel() {
+        console.log(`Restarting level ${this.currentLevel}`);
+        
+        // Hide result screen
+        this.resultScreen.hide();
+        
+        // Reset the level
+        this.resetLevel();
+        
+        // Restart with same level
+        const levelConfig = this.game.levelManager.startLevel(this.currentLevel);
+        this.loadLevel(levelConfig);
+        
+        // Reset game state
+        this.gameState = {
+            phase: PLAYER_STATES.WALKING,
+            score: 0,
+            distance: 0,
+            cameraY: 0,
+            fallSpeed: 0,
+            gameOver: false
+        };
+        
+        // Reset tracking variables
+        this.timeElapsed = 0;
+        this.maxCombo = 0;
+        this.currentCombo = 0;
+        this.nearMisses = 0;
+        this.tricksPerformed = 0;
+    }
+
 
     createEnvironment() {
         // Create parallax background
@@ -170,25 +258,182 @@ export default class GameScene extends BaseScene {
         this.walls = { left: leftWall, right: rightWall };
     }
 
-    async enter(data = {}) {
-        await super.enter(data);
+  async enter(data = {}) {
+    await super.enter(data);
+    
+    console.log('GameScene enter with data:', data);
+    
+    // Reset game state
+    this.gameState = {
+        phase: PLAYER_STATES.WALKING,
+        score: 0,
+        distance: 0,
+        cameraY: 0,
+        fallSpeed: 0,
+        gameOver: false
+    };
+    
+    // Reset tracking variables
+    this.timeElapsed = 0;
+    this.maxCombo = 0;
+    this.currentCombo = 0;
+    this.nearMisses = 0;
+    this.tricksPerformed = 0;
+    
+    // Check if a specific level was requested
+    if (data.levelNumber) {
+        this.currentLevel = data.levelNumber;
+        const levelConfig = this.game.levelManager.startLevel(this.currentLevel);
         
-        if (data.levelNumber) {
-            const levelConfig = this.game.levelManager.startLevel(data.levelNumber);
-            if (levelConfig) {
-                this.currentLevel = data.levelNumber;
-                this.levelConfig = levelConfig;
-                this.setupLevel(levelConfig);
-            }
+        if (levelConfig) {
+            console.log(`Loading level ${this.currentLevel}: ${levelConfig.name}`);
+            this.loadLevel(levelConfig);
+        } else {
+            console.error(`Failed to load level ${this.currentLevel}`);
+            // Fall back to menu
+            this.game.sceneManager.changeScene('menu');
         }
+    } else {
+        // Default to level 1 if no level specified
+        console.log('No level specified, defaulting to level 1');
+        this.currentLevel = 1;
+        const levelConfig = this.game.levelManager.startLevel(1);
+        this.loadLevel(levelConfig);
     }
-
-    async exit() {
-        await super.exit();
-
-        // Clean up input handlers
-        this.cleanupInputHandlers();
+    
+    // Make sure result screen is hidden
+    if (this.resultScreen) {
+        this.resultScreen.hide();
     }
+    
+    // Reset player to starting position
+    if (this.player) {
+        this.player.reset();
+        this.player.position.x = 960;
+        this.player.position.y = LEVEL.FALL_START_Y;
+    }
+}
+
+loadLevel(config) {
+    // Reset level state
+    this.resetLevel();
+    
+    // Store level configuration
+    this.levelConfig = config;
+    
+    // Apply level-specific settings
+    if (this.player) {
+        // Update physics based on level
+        this.player.gravity = config.gravity || PHYSICS.GRAVITY;
+        this.player.maxFallSpeed = config.maxFallSpeed || PHYSICS.MAX_FALL_SPEED;
+    }
+    
+    // Set level duration if specified
+    this.levelDuration = config.duration || 90;
+    this.timeRemaining = this.levelDuration;
+    
+    // Configure obstacles based on level
+    if (this.obstacleManager) {
+        // Clear existing obstacles
+        this.obstacleManager.reset();
+        
+        // Set level-specific patterns and types
+        // if (config.obstaclePatterns) {
+        //     this.obstacleManager.setPatterns(config.obstaclePatterns);
+        // }
+        // if (config.obstacleTypes) {
+        //     this.obstacleManager.setTypes(config.obstacleTypes);
+        // }
+        // if (config.powerUpFrequency !== undefined) {
+        //     this.obstacleManager.setPowerUpFrequency(config.powerUpFrequency);
+        // }
+        // if (config.obstacleSpacing !== undefined) {
+        //     this.obstacleManager.setSpacing(config.obstacleSpacing);
+        // }
+        
+        // Generate obstacles for the level
+        this.obstacleManager.generateObstacles();
+    }
+    
+    // Apply wind if specified
+    this.windStrength = config.windStrength || 0;
+    
+    // Update HUD with level info
+    if (this.hud) {
+        this.hud.setLevelInfo({
+            levelNumber: config.id,
+            levelName: config.name,
+            targetScore: config.targetScore
+        });
+    }
+    
+    console.log(`Level ${config.id} loaded: ${config.name}`);
+    console.log(`Target Score: ${config.targetScore}, Duration: ${config.duration}s`);
+}
+
+resetLevel() {
+    console.log('Resetting level');
+    
+    // Clear any existing completion overlay
+    if (this.completionOverlay) {
+        this.container.removeChild(this.completionOverlay);
+        this.completionOverlay.destroy();
+        this.completionOverlay = null;
+    }
+    
+    // Reset score and time
+    this.score = 0;
+    this.combo = 0;
+    this.timeElapsed = 0;
+    this.timeRemaining = 90;
+    
+    // Reset tracking
+    this.maxCombo = 0;
+    this.currentCombo = 0;
+    this.nearMisses = 0;
+    this.tricksPerformed = 0;
+    
+    // Reset player
+    if (this.player) {
+        this.player.reset();
+        this.player.position.x = 960;
+        this.player.position.y = LEVEL.FALL_START_Y;
+    }
+    
+    // Clear obstacles
+    if (this.obstacleManager) {
+        this.obstacleManager.reset();
+    }
+    
+    // Clear particles
+    if (this.particleSystem) {
+        this.particleSystem.clear();
+    }
+    
+    // Reset camera
+    if (this.cameraSystem) {
+        this.cameraSystem.reset();
+    }
+    this.cameraY = 0;
+    
+    // Reset game state
+    this.gameState = {
+        phase: PLAYER_STATES.WALKING,
+        score: 0,
+        distance: 0,
+        cameraY: 0,
+        fallSpeed: 0,
+        gameOver: false
+    };
+}
+
+async exit() {
+    await super.exit();
+    
+    // Clean up when leaving the scene
+    this.cleanup();
+}
+
 
     setupInputHandlers() {
         this.handleKeyDown = (keyCode) => {
@@ -201,6 +446,30 @@ export default class GameScene extends BaseScene {
 
         this.game.inputManager.on('keydown', this.handleKeyDown);
     }
+
+    // Clean up the scene
+        cleanup() {
+            // Hide result screen
+            if (this.resultScreen) {
+                this.resultScreen.hide();
+            }
+            
+            // Reset systems
+            if (this.player) {
+                this.player.reset();
+            }
+            
+            if (this.obstacleManager) {
+                this.obstacleManager.reset();
+            }
+            
+            if (this.particleSystem) {
+                this.particleSystem.clear();
+            }
+            
+            // Clear any ongoing animations
+            this.gameState.gameOver = true;
+        }
 
     cleanupInputHandlers() {
         if (this.handleKeyDown) {
@@ -243,6 +512,11 @@ export default class GameScene extends BaseScene {
             this.updateFalling(deltaTime);
         }
 
+        // Don't update if game is over
+        if (this.gameState.gameOver) {
+            return;
+        }
+
         // Update camera
         if (this.gameState.phase === PLAYER_STATES.FALLING ||
             this.gameState.phase === PLAYER_STATES.LANDED ||
@@ -251,9 +525,34 @@ export default class GameScene extends BaseScene {
             this.updateParallax();
         }
 
-        // Update systems
-        this.obstacleManager.update(deltaTime);
+        switch (this.gameState.phase) {
+        case PLAYER_STATES.WALKING:
+            this.updateWalking(deltaTime);
+            break;
+        case PLAYER_STATES.FALLING:
+            this.updateFalling(deltaTime);
+            break;
+        case PLAYER_STATES.LANDED:
+        case PLAYER_STATES.CRASHED:
+            // Game is over, no updates needed
+            break;
+    }
+    
+    // Update systems
+    if (this.particleSystem) {
         this.particleSystem.update(deltaTime);
+    }
+    
+    if (this.cameraSystem.followPlayer) {
+    this.cameraSystem.followPlayer(this.player, deltaTime);
+}
+    
+    // Update timer
+    if (this.gameState.phase === PLAYER_STATES.FALLING) {
+        this.timeElapsed += deltaTime;
+    }
+
+        
     }
 
     checkStateTransitions() {
@@ -305,6 +604,26 @@ export default class GameScene extends BaseScene {
         }
     }
 
+    handleMissedLanding() {
+        console.log('Missed the landing pad!');
+        
+        this.player.crash();
+        this.gameState.phase = PLAYER_STATES.CRASHED;
+
+        // Update stats
+        this.game.saveManager.incrementStat('missedLandings');
+        this.game.saveManager.incrementStat('gamesPlayed');
+
+        // Show failure result screen
+        this.resultScreen.showFailure({
+            type: 'missed',
+            distance: this.gameState.distance
+        });
+
+        // Stop game
+        this.gameState.gameOver = true;
+    }
+
     checkCollisions() {
         const obstacles = this.obstacleManager.getActiveObstacles();
 
@@ -320,59 +639,101 @@ export default class GameScene extends BaseScene {
     }
 
     checkLanding() {
-        const landingResult = this.landingZone.checkLanding(this.player.position);
+            const landingResult = this.landingZone.checkLanding(this.player.position);
 
-        if (landingResult) {
-            if (landingResult.type === 'pad') {
-                this.handleSuccessfulLanding(landingResult);
-            } else {
-                this.handleCrash();
+            if (landingResult) {
+                if (landingResult.type === 'pad') {
+                    // Successfully landed on a pad
+                    this.handleSuccessfulLanding(landingResult);
+                } else if (landingResult.type === 'missed') {
+                    // Landed but missed the pads
+                    this.handleMissedLanding();
+                } else if (landingResult.type === 'crash') {
+                    // Crashed into the ground
+                    this.handleCrash();
+                }
             }
         }
-    }
 
     handleSuccessfulLanding(landingResult) {
-        this.player.land();
-        this.gameState.phase = PLAYER_STATES.LANDED;
-        this.gameState.score = landingResult.points;
+            console.log('Successful landing!', landingResult);
+            
+            // Stop gameplay
+            this.player.land();
+            this.gameState.phase = PLAYER_STATES.LANDED;
+            
+            // Calculate final score (you can add more factors here)
+            const baseScore = landingResult.points;
+            const timeBonus = Math.max(0, (60 - this.timeElapsed) * 10);
+            const comboBonus = this.maxCombo * 100;
+            const nearMissBonus = this.nearMisses * 50;
+            
+            const totalScore = baseScore + timeBonus + comboBonus + nearMissBonus;
+            this.gameState.score = totalScore;
 
-        // Update save data
-        this.game.saveManager.incrementStat('gamesPlayed');
+            // Update save data
+            this.game.saveManager.incrementStat('gamesPlayed');
 
-        if (landingResult.label === 'PERFECT') {
-            this.game.saveManager.incrementStat('perfectLandings');
-        } else if (landingResult.label === 'GREAT') {
-            this.game.saveManager.incrementStat('greatLandings');
-        } else {
-            this.game.saveManager.incrementStat('goodLandings');
+            if (landingResult.label === 'PERFECT') {
+                this.game.saveManager.incrementStat('perfectLandings');
+            } else if (landingResult.label === 'GREAT') {
+                this.game.saveManager.incrementStat('greatLandings');
+            } else {
+                this.game.saveManager.incrementStat('goodLandings');
+            }
+
+            // Complete the level in the manager
+            const levelResult = this.game.levelManager.completeLevel(
+                this.currentLevel,
+                totalScore,
+                this.timeElapsed
+            );
+
+            // Check if next level is available
+            const canProceed = this.currentLevel < 10 && 
+                            this.game.levelManager.isLevelUnlocked(this.currentLevel + 1);
+
+            // Show success result screen with all the data
+            this.resultScreen.showSuccess({
+                label: landingResult.label,
+                score: totalScore,
+                color: landingResult.color,
+                isNewHighScore: levelResult.newHighScore,
+                grade: levelResult.grade,
+                stars: levelResult.stars,
+                canProceed: canProceed,
+                time: this.timeElapsed,
+                maxCombo: this.maxCombo || 0,
+                nearMisses: this.nearMisses || 0,
+                tricks: this.tricksPerformed || 0
+            });
+
+            // Stop any ongoing animations/updates
+            this.gameState.gameOver = true;
         }
 
-        // Check high score
-        const isNewHighScore = this.game.setHighScore(this.gameState.score);
-
-        // Show result
-        this.resultScreen.showSuccess(
-            landingResult.label,
-            this.gameState.score,
-            landingResult.color,
-            isNewHighScore
-        );
-    }
-
     handleCrash() {
-        this.player.crash();
-        this.gameState.phase = PLAYER_STATES.CRASHED;
+            console.log('Crashed!');
+            
+            this.player.crash();
+            this.gameState.phase = PLAYER_STATES.CRASHED;
 
-        // Update stats
-        this.game.saveManager.incrementStat('crashes');
-        this.game.saveManager.incrementStat('gamesPlayed');
+            // Update stats
+            this.game.saveManager.incrementStat('crashes');
+            this.game.saveManager.incrementStat('gamesPlayed');
 
-        // Create crash effect
-        this.particleSystem.createCrashEffect(this.player.position);
+            // Create crash effect
+            this.particleSystem.createCrashEffect(this.player.position);
 
-        // Show result
-        this.resultScreen.showCrash(this.gameState.distance);
-    }
+            // Show failure result screen
+            this.resultScreen.showFailure({
+                type: 'crash',
+                distance: this.gameState.distance
+            });
+
+            // Stop game
+            this.gameState.gameOver = true;
+        }
 
     updateParallax() {
         // Update background layers with parallax effect
@@ -424,6 +785,145 @@ export default class GameScene extends BaseScene {
             }, 3000);
         }
     }
+
+    onLevelComplete(score, time) {
+            console.log(`Level ${this.currentLevel} complete! Score: ${score}, Time: ${time}`);
+            
+            // Complete the level in the manager
+            const result = this.game.levelManager.completeLevel(
+                this.currentLevel,
+                score,
+                time
+            );
+            
+            // Show completion UI (stars, grade, score)
+            this.showCompletionScreen(result);
+            
+            // After a delay, transition to outro story
+            setTimeout(() => {
+                // Transition to outro story scene
+                this.game.sceneManager.changeScene('story', {
+                    levelNumber: this.currentLevel,
+                    isIntro: false, // This is the outro story
+                    nextScene: 'levelSelect', // After outro, go to level select
+                    nextData: { 
+                        lastLevel: this.currentLevel,
+                        justCompleted: true 
+                    }
+                });
+            }, 3000); // 3 second delay to show completion screen
+        }
+
+        showCompletionScreen(result) {
+            // Create completion overlay
+            const overlay = new PIXI.Container();
+            
+            // Semi-transparent background
+            const bg = new PIXI.Graphics();
+            bg.rect(0, 0, this.game.app.screen.width, this.game.app.screen.height);
+            bg.fill({ color: 0x000000, alpha: 0.7 });
+            overlay.addChild(bg);
+            
+            // Victory text
+            const victoryText = new PIXI.Text({
+                text: 'LEVEL COMPLETE!',
+                style: {
+                    fontFamily: 'Arial',
+                    fontSize: 48,
+                    fill: 0xFFD700,
+                    fontWeight: 'bold',
+                    dropShadow: true,
+                    dropShadowDistance: 4
+                }
+            });
+            victoryText.anchor.set(0.5);
+            victoryText.x = this.game.app.screen.width / 2;
+            victoryText.y = 200;
+            overlay.addChild(victoryText);
+            
+            // Grade display
+            const gradeText = new PIXI.Text({
+                text: `Grade: ${result.grade}`,
+                style: {
+                    fontFamily: 'Arial',
+                    fontSize: 36,
+                    fill: 0xFFFFFF,
+                    dropShadow: true,
+                    dropShadowDistance: 2
+                }
+            });
+            gradeText.anchor.set(0.5);
+            gradeText.x = this.game.app.screen.width / 2;
+            gradeText.y = 300;
+            overlay.addChild(gradeText);
+            
+            // Stars display
+            const starContainer = new PIXI.Container();
+            starContainer.x = this.game.app.screen.width / 2;
+            starContainer.y = 380;
+            
+            for (let i = 0; i < 3; i++) {
+                const star = new PIXI.Graphics();
+                const filled = i < result.stars;
+                
+                // Draw star shape
+                star.star(0, 0, 5, 30, 15);
+                star.fill({ color: filled ? 0xFFD700 : 0x444444 });
+                star.stroke({ color: 0xFFFFFF, width: 2 });
+                
+                star.x = (i - 1) * 80;
+                starContainer.addChild(star);
+            }
+            overlay.addChild(starContainer);
+            
+            // New high score indicator
+            if (result.newHighScore) {
+                const highScoreText = new PIXI.Text({
+                    text: 'NEW HIGH SCORE!',
+                    style: {
+                        fontFamily: 'Arial',
+                        fontSize: 24,
+                        fill: 0xFF00FF,
+                        fontWeight: 'bold',
+                        dropShadow: true,
+                        dropShadowDistance: 2
+                    }
+                });
+                highScoreText.anchor.set(0.5);
+                highScoreText.x = this.game.app.screen.width / 2;
+                highScoreText.y = 450;
+                overlay.addChild(highScoreText);
+                
+                // Pulse animation
+                const pulse = () => {
+                    highScoreText.scale.set(1 + Math.sin(Date.now() * 0.005) * 0.1);
+                };
+                this.game.app.ticker.add(pulse);
+            }
+            
+            // Next level unlocked message
+            if (result.nextLevelUnlocked) {
+                const unlockedText = new PIXI.Text({
+                    text: `Level ${this.currentLevel + 1} Unlocked!`,
+                    style: {
+                        fontFamily: 'Arial',
+                        fontSize: 20,
+                        fill: 0x00FF00,
+                        dropShadow: true,
+                        dropShadowDistance: 2
+                    }
+                });
+                unlockedText.anchor.set(0.5);
+                unlockedText.x = this.game.app.screen.width / 2;
+                unlockedText.y = 500;
+                overlay.addChild(unlockedText);
+            }
+            
+            // Add overlay to scene
+            this.container.addChild(overlay);
+            this.completionOverlay = overlay;
+        }
+
 
     destroy() {
         this.cleanupInputHandlers();
