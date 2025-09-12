@@ -1,274 +1,125 @@
+import SaveManager from './SaveManager.js';
+
 export default class LevelManager {
     constructor(game) {
         this.game = game;
-        this.currentLevel = 1;
+        
+        // Level progression tracking
         this.totalLevels = 10;
-        this.levelScores = new Array(10).fill(0);
-        this.levelGrades = new Array(10).fill('');
-        this.levelBestTimes = new Array(10).fill(Infinity);
-        this.levelStars = new Array(10).fill(0);
-        this.unlockedLevels = 1;
+        this.currentLevel = 1;
+        this.unlockedLevels = 2; // Start with levels 1 and 2 unlocked for testing
+        
+        // Level scores and grades
+        this.levelScores = new Array(this.totalLevels).fill(0);
+        this.levelGrades = new Array(this.totalLevels).fill('F');
+        this.levelStars = new Array(this.totalLevels).fill(0);
+        this.levelBestTimes = new Array(this.totalLevels).fill(Infinity);
         
         // Load saved progress
         this.loadProgress();
     }
 
-    // Level definitions based on Game Design Document
+    // Get configuration for a specific level
     getLevelConfig(levelNumber) {
-        // Base configuration that will be reused for wireframing
+        // Base configuration shared by all levels
         const baseConfig = {
-            gravity: 400,
-            obstacleSpacing: 200,
-            obstacleTypes: ['satellite', 'space_junk', 'solar_panel'],
-            specialMechanics: {
-                reducedGravity: true,
-                noWind: true,
-                wideNearMissZones: true
-            }
+            id: levelNumber,
+            gravity: 0.3,
+            maxFallSpeed: 15,
+            startHeight: -200,
+            endHeight: 3000,
+            backgroundType: 'sky',
+            windStrength: 0,
+            targetScore: 10000,
+            duration: 90,
+            obstacleSpacing: 150
         };
 
-        // Specific configurations for each of the 10 levels
+        // Level-specific configurations
         const configs = [
             {
-                // Stage 1: The Cosmic Perch (Tutorial)
+                // Level 1: Tutorial Rooftop (Original)
                 id: 1,
-                name: "The Cosmic Perch",
-                subtitle: "Tutorial in the stars",
-                altitude: { start: 400, end: 400 },
-                duration: 30,
-                targetScore: 10000,
-                gravity: 200,
-                windSpeed: 0,
-                obstacleCount: 20,
-                obstacleSpacing: 250,
-                difficulty: 0.3,
-                backgroundColor: 0x000428,
-                storyBeat: {
-                    title: "The Call to Action",
-                    panels: [
-                        "Starsky adjusting his sunglasses in zero gravity",
-                        "Radio: 'Starsky! The freshman orientation is starting!'",
-                        "'Better hustle my hooves! Can't let my Stars down!'"
-                    ]
-                }
-            },
-            {
-                // Stage 2: Thermosphere Thunder
-                id: 2,
-                name: "Thermosphere Thunder",
-                subtitle: "Burning entry",
-                altitude: { start: 300, end: 85 },
-                duration: 45,
-                targetScore: 20000,
-                gravity: 350,
-                windSpeed: 50,
-                obstacleCount: 30,
-                obstacleSpacing: 180,
-                difficulty: 0.4,
-                backgroundColor: 0x1a0033,
-                storyBeat: {
-                    title: "Heating Up",
-                    panels: [
-                        "Starsky's wool slightly singed",
-                        "Shooting star passes: 'Hey, that's my cousin!'",
-                        "Burns marshmallow on his horn: 'Waste not!'"
-                    ]
-                }
-            },
-            {
-                // Stage 3: Aurora Alley
-                id: 3,
-                name: "Aurora Alley",
-                subtitle: "Northern lights navigation",
-                altitude: { start: 85, end: 50 },
-                duration: 50,
-                targetScore: 35000,
-                gravity: 450,
-                windSpeed: 75,
-                obstacleCount: 35,
-                obstacleSpacing: 160,
-                difficulty: 0.5,
-                backgroundColor: 0x004466,
-                storyBeat: {
-                    title: "Light Show",
-                    panels: [
-                        "Starsky surfs on aurora waves",
-                        "Takes selfie: '#NaturalFilter #SpaceRam'",
-                        "Aurora forms OCU letters briefly"
-                    ]
-                }
-            },
-            {
-                // Stage 4: Jetstream Junction
-                id: 4,
-                name: "Jetstream Junction",
-                subtitle: "High-speed winds",
-                altitude: { start: 50, end: 12 },
-                duration: 55,
-                targetScore: 50000,
-                gravity: 500,
-                windSpeed: 150,
-                obstacleCount: 40,
-                obstacleSpacing: 150,
-                difficulty: 0.55,
-                backgroundColor: 0x0066aa,
-                storyBeat: {
-                    title: "Wind Rider",
-                    panels: [
-                        "Starsky's wool blowing dramatically",
-                        "Airplane pilot does double-take",
-                        "'This is your captain speaking... is that a ram?'"
-                    ]
-                }
-            },
-            {
-                // Stage 5: Cloud Nine Chaos (Midpoint)
-                id: 5,
-                name: "Cloud Nine Chaos",
-                subtitle: "Visibility challenge",
-                altitude: { start: 12, end: 6 },
+                name: "Tutorial Rooftop",
+                subtitle: "Duke's Last Stand",
+                targetScore: 5000,
                 duration: 60,
-                targetScore: 70000,
-                gravity: 520,
-                windSpeed: 100,
-                obstacleCount: 45,
-                obstacleSpacing: 140,
-                difficulty: 0.6,
-                backgroundColor: 0x88aacc,
+                obstaclePatterns: ['single', 'double'],
+                obstacleTypes: ['bird', 'plane', 'cloud'],
+                powerUpFrequency: 0.2,
+                windStrength: 0,
                 storyBeat: {
-                    title: "Halfway Home",
+                    title: "The Beginning",
                     panels: [
-                        "Starsky emerges from clouds dramatically",
-                        "Birds form arrow pointing down: 'Thanks, friends!'",
-                        "Thunder rumbles: 'Bring it on!'"
-                    ]
-                },
-                isMidpoint: true
-            },
-            {
-                // Stage 6: Storm Surge
-                id: 6,
-                name: "Storm Surge",
-                subtitle: "Lightning and rain",
-                altitude: { start: 6, end: 3 },
-                duration: 65,
-                targetScore: 90000,
-                gravity: 540,
-                windSpeed: 200,
-                obstacleCount: 50,
-                obstacleSpacing: 130,
-                difficulty: 0.7,
-                backgroundColor: 0x444466,
-                storyBeat: {
-                    title: "Weather the Storm",
-                    panels: [
-                        "Lightning illuminates Starsky's determined face",
-                        "Uses horn as lightning rod: 'I'm electric!'",
-                        "Rainbow appears: 'After every storm...'"
+                        "Duke stands at the edge...",
+                        "One final jump to glory!",
+                        "Can he make it to OCU?"
                     ]
                 }
             },
             {
-                // Stage 7: Bird Brigade
-                id: 7,
-                name: "Bird Brigade",
-                subtitle: "Flock navigation",
-                altitude: { start: 3, end: 2 },
+                // Level 2: TEMPORARY COPY OF LEVEL 1 FOR TESTING
+                // Will be replaced with unique content later
+                id: 2,
+                name: "Test Level 2",
+                subtitle: "Testing Transitions",
+                targetScore: 5000,
+                duration: 60,
+                obstaclePatterns: ['single', 'double'],
+                obstacleTypes: ['bird', 'plane', 'cloud'],
+                powerUpFrequency: 0.2,
+                windStrength: 0,
+                storyBeat: {
+                    title: "Level 2 Story",
+                    panels: [
+                        "The journey continues...",
+                        "New challenges await!",
+                        "Keep falling towards victory!"
+                    ]
+                }
+            },
+            {
+                // Level 3 and beyond (placeholders for now)
+                id: 3,
+                name: "City Streets",
+                subtitle: "Urban Descent",
+                targetScore: 7500,
                 duration: 70,
-                targetScore: 110000,
-                gravity: 560,
-                windSpeed: 80,
-                obstacleCount: 55,
-                obstacleSpacing: 120,
-                difficulty: 0.75,
-                backgroundColor: 0x66aadd,
+                obstaclePatterns: ['single', 'double', 'zigzag'],
+                obstacleTypes: ['bird', 'plane', 'balloon', 'drone'],
+                powerUpFrequency: 0.25,
+                windStrength: 0.1,
                 storyBeat: {
-                    title: "Feathered Friends",
+                    title: "Urban Adventure",
                     panels: [
-                        "Geese: 'This is a no-ram zone!'",
-                        "Starsky: 'That's discrimination!'",
-                        "Creates his own V formation with confused birds"
+                        "The city sprawls below...",
+                        "Traffic and towers everywhere!",
+                        "Navigate the urban jungle!"
                     ]
                 }
-            },
-            {
-                // Stage 8: Helicopter Heights
-                id: 8,
-                name: "Helicopter Heights",
-                subtitle: "News coverage",
-                altitude: { start: 2, end: 0.5 },
-                duration: 75,
-                targetScore: 135000,
-                gravity: 580,
-                windSpeed: 120,
-                obstacleCount: 60,
-                obstacleSpacing: 110,
-                difficulty: 0.8,
-                backgroundColor: 0x87ceeb,
-                storyBeat: {
-                    title: "Breaking News",
-                    panels: [
-                        "Reporter: 'This is unprecedented!'",
-                        "Starsky peace sign: 'Hi OCU!'",
-                        "Breaking News ticker: 'RAM RATES RADICAL'"
-                    ]
-                }
-            },
-            {
-                // Stage 9: Skyscraper Slalom
-                id: 9,
-                name: "Skyscraper Slalom",
-                subtitle: "Urban maze",
-                altitude: { start: 0.5, end: 0.1 },
-                duration: 80,
-                targetScore: 160000,
-                gravity: 600,
-                windSpeed: 150,
-                obstacleCount: 65,
-                obstacleSpacing: 100,
-                difficulty: 0.9,
-                backgroundColor: 0x4169e1,
-                storyBeat: {
-                    title: "City Limits",
-                    panels: [
-                        "Construction workers: 'Did we order a ram?'",
-                        "Starsky between buildings: 'Just passing through!'",
-                        "Sign changes: 'RAM CONSTRUCTION CO.'"
-                    ]
-                }
-            },
-            {
-                // Stage 10: Campus Crashdown (Finale)
-                id: 10,
-                name: "Campus Crashdown",
-                subtitle: "Home sweet home",
-                altitude: { start: 0.1, end: 0 },
-                duration: 90,
-                targetScore: 200000,
-                gravity: 600,
-                windSpeed: 100,
-                obstacleCount: 70,
-                obstacleSpacing: 90,
-                difficulty: 1.0,
-                backgroundColor: 0x228b22,
-                storyBeat: {
-                    title: "Final Descent",
-                    panels: [
-                        "OCU campus comes into view",
-                        "Students gathering: 'It's Starsky!'",
-                        "Perfect landing in fountain: 'STARS FOREVER!'"
-                    ]
-                },
-                finalLevel: true
             }
         ];
 
-        // Return specific config or reuse first level as wireframe
+        // Return specific config or use level 1 as fallback
         if (levelNumber <= configs.length) {
             return { ...baseConfig, ...configs[levelNumber - 1] };
         } else {
-            // Fallback for any level beyond 10 (shouldn't happen)
-            return { ...baseConfig, ...configs[0], id: levelNumber };
+            // For levels 4-10, reuse level 1 config as placeholder
+            return { 
+                ...baseConfig, 
+                ...configs[0], 
+                id: levelNumber,
+                name: `Stage ${levelNumber}`,
+                subtitle: "Coming Soon",
+                storyBeat: {
+                    title: `Stage ${levelNumber}`,
+                    panels: [
+                        "This level is coming soon!",
+                        "For now, enjoy the classic obstacles.",
+                        "More content on the way!"
+                    ]
+                }
+            };
         }
     }
 
@@ -277,16 +128,35 @@ export default class LevelManager {
         const config = this.getLevelConfig(levelNumber);
         
         if (isIntro) {
-            // Use the story beat from the level config
+            // Intro story before the level starts
             return {
                 title: config.storyBeat.title,
                 panels: config.storyBeat.panels,
-                // Reuse opening images as wireframes for now
                 images: this.getWireframeImages()
             };
         } else {
-            // Victory/transition story after completing level
-            if (levelNumber === 5) {
+            // Outro story after completing the level
+            if (levelNumber === 1) {
+                return {
+                    title: "Stage 1 Complete!",
+                    panels: [
+                        "Great job on your first descent!",
+                        "You've mastered the basics.",
+                        "Ready for the next challenge?"
+                    ],
+                    images: this.getWireframeImages()
+                };
+            } else if (levelNumber === 2) {
+                return {
+                    title: "Stage 2 Complete!",
+                    panels: [
+                        "Another successful landing!",
+                        "Your skills are improving.",
+                        "8 more stages await!"
+                    ],
+                    images: this.getWireframeImages()
+                };
+            } else if (levelNumber === 5) {
                 // Special midpoint story
                 return {
                     title: "Halfway There!",
@@ -309,7 +179,7 @@ export default class LevelManager {
                     images: this.getWireframeImages()
                 };
             } else {
-                // Generic transition
+                // Generic transition for other levels
                 return {
                     title: `Stage ${levelNumber} Complete!`,
                     panels: [
@@ -323,28 +193,33 @@ export default class LevelManager {
         }
     }
 
-    // Get wireframe images (reusing opening scene assets)
+    // Get wireframe images (placeholder for now)
     getWireframeImages() {
-        // Return paths to existing opening images as placeholders
+        // Return placeholder image paths
+        // These will be replaced with actual story panel images later
         return [
-            '/public/assets/narrativePanels/opening/opening1.png',
-            '/public/assets/narrativePanels/opening/opening2.png',
-            '/public/assets/narrativePanels/opening/opening3.png'
+            '/assets/story/panel1.png',
+            '/assets/story/panel2.png',
+            '/assets/story/panel3.png'
         ];
     }
 
-    // Progress management
+    // Start a level
     startLevel(levelNumber) {
         if (levelNumber > this.unlockedLevels || levelNumber < 1 || levelNumber > this.totalLevels) {
+            console.warn(`Cannot start level ${levelNumber}. Unlocked: ${this.unlockedLevels}`);
             return false;
         }
         
         this.currentLevel = levelNumber;
+        console.log(`Starting level ${levelNumber}`);
         return this.getLevelConfig(levelNumber);
     }
 
+    // Complete a level
     completeLevel(levelNumber, score, time) {
-        // Calculate grade based on score
+        console.log(`Completing level ${levelNumber} with score ${score} in ${time}s`);
+        
         const config = this.getLevelConfig(levelNumber);
         const grade = this.calculateGrade(score, config.targetScore);
         
@@ -366,9 +241,10 @@ export default class LevelManager {
         // Calculate stars
         this.levelStars[levelNumber - 1] = this.calculateStars(score, config.targetScore);
         
-        // Unlock next level
+        // Unlock next level if this was the highest unlocked level
         if (levelNumber === this.unlockedLevels && levelNumber < this.totalLevels) {
             this.unlockedLevels++;
+            console.log(`Unlocked level ${this.unlockedLevels}`);
         }
         
         // Save progress
@@ -377,114 +253,110 @@ export default class LevelManager {
         return {
             grade,
             stars: this.levelStars[levelNumber - 1],
-            newBest: score === this.levelScores[levelNumber - 1],
-            levelUnlocked: levelNumber === this.unlockedLevels - 1
+            newHighScore: score === this.levelScores[levelNumber - 1],
+            nextLevelUnlocked: levelNumber < this.unlockedLevels
         };
     }
 
+    // Calculate grade based on score
     calculateGrade(score, targetScore) {
         const percentage = (score / targetScore) * 100;
         
-        if (percentage >= 150) return 'S+';
-        if (percentage >= 125) return 'S';
-        if (percentage >= 100) return 'A';
-        if (percentage >= 75) return 'B';
-        if (percentage >= 50) return 'C';
-        return 'D';
+        if (percentage >= 150) return 'S';
+        if (percentage >= 120) return 'A';
+        if (percentage >= 100) return 'B';
+        if (percentage >= 80) return 'C';
+        if (percentage >= 60) return 'D';
+        return 'F';
     }
 
-    calculateStars(score, targetScore) {
-        if (score >= targetScore) return 3;
-        if (score >= targetScore * 0.75) return 2;
-        if (score >= targetScore * 0.5) return 1;
-        return 0;
-    }
-
+    // Get numeric value for grade comparison
     getGradeValue(grade) {
-        const values = { 'S+': 6, 'S': 5, 'A': 4, 'B': 3, 'C': 2, 'D': 1, '': 0 };
+        const values = { 'F': 0, 'D': 1, 'C': 2, 'B': 3, 'A': 4, 'S': 5 };
         return values[grade] || 0;
     }
 
-    getTotalStars() {
-        return this.levelStars.reduce((sum, stars) => sum + stars, 0);
+    // Calculate stars earned
+    calculateStars(score, targetScore) {
+        const percentage = (score / targetScore) * 100;
+        
+        if (percentage >= 150) return 3;
+        if (percentage >= 100) return 2;
+        if (percentage >= 60) return 1;
+        return 0;
     }
 
+    // Get total score across all levels
     getTotalScore() {
         return this.levelScores.reduce((sum, score) => sum + score, 0);
     }
 
+    // Get completion percentage
     getCompletionPercentage() {
         const completedLevels = this.levelScores.filter(score => score > 0).length;
-        return Math.round((completedLevels / this.totalLevels) * 100);
+        return Math.floor((completedLevels / this.totalLevels) * 100);
     }
 
+    // Check if a level is unlocked
     isLevelUnlocked(levelNumber) {
         return levelNumber <= this.unlockedLevels;
     }
 
-    // Save/Load progress
+    // Save progress to local storage
     saveProgress() {
-        const data = {
+        const progressData = {
             unlockedLevels: this.unlockedLevels,
             levelScores: this.levelScores,
             levelGrades: this.levelGrades,
-            levelBestTimes: this.levelBestTimes,
-            levelStars: this.levelStars
+            levelStars: this.levelStars,
+            levelBestTimes: this.levelBestTimes
         };
         
-        if (this.game && this.game.saveManager) {
-            this.game.saveManager.data.levelProgress = data;
+        if (this.game.saveManager) {
+            this.game.saveManager.data.levelProgress = progressData;
             this.game.saveManager.save();
-        } else {
-            // Fallback to localStorage
-            localStorage.setItem('oneJump_levelProgress', JSON.stringify(data));
         }
+        
+        // Also save directly to localStorage as backup
+        localStorage.setItem('oneJumpLevelProgress', JSON.stringify(progressData));
     }
 
+    // Load progress from local storage
     loadProgress() {
-        let data;
+        let progressData = null;
         
-        if (this.game && this.game.saveManager && this.game.saveManager.data.levelProgress) {
-            data = this.game.saveManager.data.levelProgress;
+        // Try to load from SaveManager first
+        if (this.game.saveManager && this.game.saveManager.data.levelProgress) {
+            progressData = this.game.saveManager.data.levelProgress;
         } else {
-            // Fallback to localStorage
-            const saved = localStorage.getItem('oneJump_levelProgress');
+            // Fall back to direct localStorage
+            const saved = localStorage.getItem('oneJumpLevelProgress');
             if (saved) {
-                data = JSON.parse(saved);
+                try {
+                    progressData = JSON.parse(saved);
+                } catch (e) {
+                    console.error('Failed to parse saved progress:', e);
+                }
             }
         }
         
-        if (data) {
-            this.unlockedLevels = data.unlockedLevels || 1;
-            this.levelScores = data.levelScores || new Array(10).fill(0);
-            this.levelGrades = data.levelGrades || new Array(10).fill('');
-            this.levelBestTimes = data.levelBestTimes || new Array(10).fill(Infinity);
-            this.levelStars = data.levelStars || new Array(10).fill(0);
+        if (progressData) {
+            this.unlockedLevels = progressData.unlockedLevels || 2; // Keep 2 unlocked for testing
+            this.levelScores = progressData.levelScores || new Array(this.totalLevels).fill(0);
+            this.levelGrades = progressData.levelGrades || new Array(this.totalLevels).fill('F');
+            this.levelStars = progressData.levelStars || new Array(this.totalLevels).fill(0);
+            this.levelBestTimes = progressData.levelBestTimes || new Array(this.totalLevels).fill(Infinity);
         }
     }
 
-    // Reset progress
+    // Reset all progress
     resetProgress() {
-        this.unlockedLevels = 1;
-        this.levelScores = new Array(10).fill(0);
-        this.levelGrades = new Array(10).fill('');
-        this.levelBestTimes = new Array(10).fill(Infinity);
-        this.levelStars = new Array(10).fill(0);
+        this.unlockedLevels = 2; // Keep 2 unlocked for testing
+        this.levelScores = new Array(this.totalLevels).fill(0);
+        this.levelGrades = new Array(this.totalLevels).fill('F');
+        this.levelStars = new Array(this.totalLevels).fill(0);
+        this.levelBestTimes = new Array(this.totalLevels).fill(Infinity);
+        
         this.saveProgress();
-    }
-
-    // Debug methods
-    unlockAllLevels() {
-        this.unlockedLevels = this.totalLevels;
-        this.saveProgress();
-    }
-
-    setTestScores() {
-        // Set some test scores for development
-        for (let i = 0; i < 5; i++) {
-            const config = this.getLevelConfig(i + 1);
-            const score = Math.floor(config.targetScore * (0.5 + Math.random() * 0.8));
-            this.completeLevel(i + 1, score, 30 + Math.random() * 60);
-        }
     }
 }

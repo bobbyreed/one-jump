@@ -173,15 +173,96 @@ export default class GameScene extends BaseScene {
     async enter(data = {}) {
         await super.enter(data);
         
+        // Check if a specific level was requested
         if (data.levelNumber) {
-            const levelConfig = this.game.levelManager.startLevel(data.levelNumber);
+            this.currentLevel = data.levelNumber;
+            const levelConfig = this.game.levelManager.startLevel(this.currentLevel);
+            
             if (levelConfig) {
-                this.currentLevel = data.levelNumber;
-                this.levelConfig = levelConfig;
-                this.setupLevel(levelConfig);
+                console.log(`Loading level ${this.currentLevel}: ${levelConfig.name}`);
+                this.loadLevel(levelConfig);
+            } else {
+                console.error(`Failed to load level ${this.currentLevel}`);
+                // Fall back to level select
+                this.game.sceneManager.changeScene('levelSelect');
             }
+        } else {
+            // Default to level 1 if no level specified
+            this.currentLevel = 1;
+            const levelConfig = this.game.levelManager.startLevel(1);
+            this.loadLevel(levelConfig);
         }
     }
+
+    loadLevel(config) {
+            // Reset game state
+            this.resetLevel();
+            
+            // Apply level configuration
+            this.levelConfig = config;
+            
+            // Update gravity and physics
+            if (this.player) {
+                this.player.gravity = config.gravity;
+                this.player.maxFallSpeed = config.maxFallSpeed;
+            }
+            
+            // Set level duration
+            this.levelDuration = config.duration;
+            this.timeRemaining = config.duration;
+            
+            // Configure obstacles based on level
+            if (this.obstacleManager) {
+                this.obstacleManager.setPatterns(config.obstaclePatterns);
+                this.obstacleManager.setTypes(config.obstacleTypes);
+                this.obstacleManager.setPowerUpFrequency(config.powerUpFrequency);
+                this.obstacleManager.setSpacing(config.obstacleSpacing);
+            }
+            
+            // Apply wind if specified
+            this.windStrength = config.windStrength || 0;
+            
+            // Update HUD with level info
+            if (this.hud) {
+                this.hud.setLevelName(`Level ${config.id}: ${config.name}`);
+                this.hud.setTargetScore(config.targetScore);
+            }
+            
+            console.log(`Level ${config.id} loaded: ${config.name}`);
+        }
+
+        resetLevel() {
+            // Clear any existing completion overlay
+            if (this.completionOverlay) {
+                this.container.removeChild(this.completionOverlay);
+                this.completionOverlay.destroy();
+                this.completionOverlay = null;
+            }
+            
+            // Reset score and time
+            this.score = 0;
+            this.combo = 0;
+            this.timeElapsed = 0;
+            
+            // Reset player position
+            if (this.player) {
+                this.player.reset();
+            }
+            
+            // Clear obstacles
+            if (this.obstacleManager) {
+                this.obstacleManager.reset();
+            }
+            
+            // Reset camera
+            this.cameraY = 0;
+            
+            // Reset game state
+            this.gameState = {
+                phase: 'ready',
+                paused: false
+            };
+        }
 
     async exit() {
         await super.exit();
@@ -424,6 +505,145 @@ export default class GameScene extends BaseScene {
             }, 3000);
         }
     }
+
+    onLevelComplete(score, time) {
+            console.log(`Level ${this.currentLevel} complete! Score: ${score}, Time: ${time}`);
+            
+            // Complete the level in the manager
+            const result = this.game.levelManager.completeLevel(
+                this.currentLevel,
+                score,
+                time
+            );
+            
+            // Show completion UI (stars, grade, score)
+            this.showCompletionScreen(result);
+            
+            // After a delay, transition to outro story
+            setTimeout(() => {
+                // Transition to outro story scene
+                this.game.sceneManager.changeScene('story', {
+                    levelNumber: this.currentLevel,
+                    isIntro: false, // This is the outro story
+                    nextScene: 'levelSelect', // After outro, go to level select
+                    nextData: { 
+                        lastLevel: this.currentLevel,
+                        justCompleted: true 
+                    }
+                });
+            }, 3000); // 3 second delay to show completion screen
+        }
+
+        showCompletionScreen(result) {
+            // Create completion overlay
+            const overlay = new PIXI.Container();
+            
+            // Semi-transparent background
+            const bg = new PIXI.Graphics();
+            bg.rect(0, 0, this.game.app.screen.width, this.game.app.screen.height);
+            bg.fill({ color: 0x000000, alpha: 0.7 });
+            overlay.addChild(bg);
+            
+            // Victory text
+            const victoryText = new PIXI.Text({
+                text: 'LEVEL COMPLETE!',
+                style: {
+                    fontFamily: 'Arial',
+                    fontSize: 48,
+                    fill: 0xFFD700,
+                    fontWeight: 'bold',
+                    dropShadow: true,
+                    dropShadowDistance: 4
+                }
+            });
+            victoryText.anchor.set(0.5);
+            victoryText.x = this.game.app.screen.width / 2;
+            victoryText.y = 200;
+            overlay.addChild(victoryText);
+            
+            // Grade display
+            const gradeText = new PIXI.Text({
+                text: `Grade: ${result.grade}`,
+                style: {
+                    fontFamily: 'Arial',
+                    fontSize: 36,
+                    fill: 0xFFFFFF,
+                    dropShadow: true,
+                    dropShadowDistance: 2
+                }
+            });
+            gradeText.anchor.set(0.5);
+            gradeText.x = this.game.app.screen.width / 2;
+            gradeText.y = 300;
+            overlay.addChild(gradeText);
+            
+            // Stars display
+            const starContainer = new PIXI.Container();
+            starContainer.x = this.game.app.screen.width / 2;
+            starContainer.y = 380;
+            
+            for (let i = 0; i < 3; i++) {
+                const star = new PIXI.Graphics();
+                const filled = i < result.stars;
+                
+                // Draw star shape
+                star.star(0, 0, 5, 30, 15);
+                star.fill({ color: filled ? 0xFFD700 : 0x444444 });
+                star.stroke({ color: 0xFFFFFF, width: 2 });
+                
+                star.x = (i - 1) * 80;
+                starContainer.addChild(star);
+            }
+            overlay.addChild(starContainer);
+            
+            // New high score indicator
+            if (result.newHighScore) {
+                const highScoreText = new PIXI.Text({
+                    text: 'NEW HIGH SCORE!',
+                    style: {
+                        fontFamily: 'Arial',
+                        fontSize: 24,
+                        fill: 0xFF00FF,
+                        fontWeight: 'bold',
+                        dropShadow: true,
+                        dropShadowDistance: 2
+                    }
+                });
+                highScoreText.anchor.set(0.5);
+                highScoreText.x = this.game.app.screen.width / 2;
+                highScoreText.y = 450;
+                overlay.addChild(highScoreText);
+                
+                // Pulse animation
+                const pulse = () => {
+                    highScoreText.scale.set(1 + Math.sin(Date.now() * 0.005) * 0.1);
+                };
+                this.game.app.ticker.add(pulse);
+            }
+            
+            // Next level unlocked message
+            if (result.nextLevelUnlocked) {
+                const unlockedText = new PIXI.Text({
+                    text: `Level ${this.currentLevel + 1} Unlocked!`,
+                    style: {
+                        fontFamily: 'Arial',
+                        fontSize: 20,
+                        fill: 0x00FF00,
+                        dropShadow: true,
+                        dropShadowDistance: 2
+                    }
+                });
+                unlockedText.anchor.set(0.5);
+                unlockedText.x = this.game.app.screen.width / 2;
+                unlockedText.y = 500;
+                overlay.addChild(unlockedText);
+            }
+            
+            // Add overlay to scene
+            this.container.addChild(overlay);
+            this.completionOverlay = overlay;
+        }
+
 
     destroy() {
         this.cleanupInputHandlers();
