@@ -722,9 +722,9 @@ Pattern B: "Quad Landing"
 - Urban challenges test all skills
 - Campus welcomes their hero
 
-# Extended Cutscenes
+### Extended Cutscenes
 
-## Opening (8 panels)
+#### Opening (8 panels)
 1. Starsky floating in space, reading "OCU Student Handbook"
 2. Telescope view of campus - freshman looking lost
 3. "Those fresh Stars need guidance!"
@@ -734,29 +734,29 @@ Pattern B: "Quad Landing"
 7. "Good thing I know a shortcut!"
 8. JUMPS with "STARS FOREVER!" battle cry
 
-## Stage 1: Escape Velocity
+#### Stage 1: Escape Velocity
 
-### Entrance (3 panels)
+##### Entrance (3 panels)
 1. Starsky floating past the space station window, scientists inside drop their coffee
 2. Adjusts sunglasses in zero gravity: "Time to show these satellites how to really orbit!"
 3. Kicks off the station hull: "Let's make gravity jealous!"
 
-### Exit (2 panels)
+##### Exit (2 panels)
 1. Starsky salutes the space station as he plummets away: "That's one small leap for a ram..."
 2. Checks cosmic GPS: "Only 400,000 kilometers to OCU. Practically next door!"
 
-## Stage 2: Asteroid Alley
+#### Stage 2: Asteroid Alley
 
-### Entrance (3 panels)
+##### Entrance (3 panels)
 1. Asteroids come into view, Starsky cracks knuckles
 2. "Dodgeball was my favorite subject!"
 3. Strikes a superhero pose: "These space rocks are about to get schooled!"
 
-### Exit (2 panels)
+##### Exit (2 panels)
 1. Starsky gives thumbs up to a confused astronaut on a passing asteroid
 2. Points earthward: "350,000 kilometers to campus. I can almost smell the cafeteria food!"
 
-## Stage 3: Ice Ring Run
+#### Stage 3: Ice Ring Run
 
 ### Entrance (3 panels)
 1. Saturn's rings sparkle ahead, Starsky's eyes widen behind sunglasses
