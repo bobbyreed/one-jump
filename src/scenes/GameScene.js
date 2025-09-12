@@ -64,7 +64,7 @@ export default class GameScene extends BaseScene {
 
         this.cameraSystem = new CameraSystem(
             this.worldContainer,
-            this.game.app.screen
+            this.game.app
         );
 
         this.collisionSystem = new CollisionSystem();

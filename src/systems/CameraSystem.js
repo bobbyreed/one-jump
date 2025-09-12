@@ -1,9 +1,9 @@
 import { LEVEL } from '../config/Constants.js';
 
 export default class CameraSystem {
-    constructor(worldContainer, screen) {
+    constructor(worldContainer, app) {
         this.worldContainer = worldContainer;
-        this.screen = screen;
+        this.app = app;
 
         // Camera position
         this.cameraX = 0;
@@ -27,17 +27,35 @@ export default class CameraSystem {
         this.shakeIntensity = 0;
         this.shakeDuration = 0;
         this.shakeOffset = { x: 0, y: 0 };
+        
+        // Base dimensions for calculations
+        this.baseWidth = 1920;
+        this.baseHeight = 1080;
+    }
+
+    /**
+     * Get effective screen dimensions considering responsive scaling
+     */
+    getEffectiveScreenSize() {
+        // Since we're using responsive scaling, the effective screen size
+        // is always our base dimensions for world positioning purposes
+        return {
+            width: this.baseWidth,
+            height: this.baseHeight
+        };
     }
 
     /**
      * Follow player with smooth camera movement
      */
     followPlayer(player, deltaTime) {
+        const screenSize = this.getEffectiveScreenSize();
+        
         // Calculate target position
         this.targetY = -(player.position.y - this.offsetY);
 
         // Optional: Center horizontally if player moves too far
-        const screenCenterX = this.screen.width / 2;
+        const screenCenterX = screenSize.width / 2;
         const deadZoneX = 200; // Pixels from center before camera moves
 
         if (Math.abs(player.position.x - screenCenterX) > deadZoneX) {
@@ -149,13 +167,14 @@ export default class CameraSystem {
      * Check if a point is visible on screen
      */
     isVisible(worldX, worldY, margin = 100) {
+        const screenSize = this.getEffectiveScreenSize();
         const screenX = worldX + this.cameraX;
         const screenY = worldY + this.cameraY;
 
         return screenX > -margin &&
-            screenX < this.screen.width + margin &&
+            screenX < screenSize.width + margin &&
             screenY > -margin &&
-            screenY < this.screen.height + margin;
+            screenY < screenSize.height + margin;
     }
 
     /**

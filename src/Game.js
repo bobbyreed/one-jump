@@ -18,8 +18,8 @@ export default class Game {
         this.assetManager = null;
         this.inputManager = null;
         this.saveManager = null;
+        this.isInitialized = false;
         this.levelManager = null;
-        this.isInitialized = false;   
     }
 
     async init() {
@@ -31,11 +31,10 @@ export default class Game {
             width: 1920,
             height: 1080,
             antialias: true,
-            resolution: 1,  // Force resolution to 1
-            autoDensity: true,
-            powerPreference: 'high-performance',
-            preserveDrawingBuffer: false
-            });
+            resizeTo: window, // This enables automatic responsive resizing
+            autoDensity: true, // Handles device pixel ratio automatically
+            preference: 'webgpu' // Use WebGPU when available, fallback to WebGL
+        });
         
         // Handle WebGL context loss
         this.app.renderer.runners.contextChange.add(() => {
@@ -127,23 +126,23 @@ export default class Game {
             this.sceneManager.update(deltaTime);
         }
         }
-
-    setupCanvasScaling() {
-        const resize = () => {
-            const screenWidth = window.innerWidth;
-            const screenHeight = window.innerHeight;
-            const scale = Math.min(screenWidth / 1920, screenHeight / 1080);
+        //I think this is causing an issue with the pixi responsive scaling
+    // setupCanvasScaling() {
+    //     const resize = () => {
+    //         const screenWidth = window.innerWidth;
+    //         const screenHeight = window.innerHeight;
+    //         const scale = Math.min(screenWidth / 1920, screenHeight / 1080);
             
-            this.app.canvas.style.width = `${1920 * scale}px`;
-            this.app.canvas.style.height = `${1080 * scale}px`;
-            this.app.canvas.style.position = 'absolute';
-            this.app.canvas.style.left = `${(screenWidth - 1920 * scale) / 2}px`;
-            this.app.canvas.style.top = `${(screenHeight - 1080 * scale) / 2}px`;
-        };
+    //         this.app.canvas.style.width = `${1920 * scale}px`;
+    //         this.app.canvas.style.height = `${1080 * scale}px`;
+    //         this.app.canvas.style.position = 'absolute';
+    //         this.app.canvas.style.left = `${(screenWidth - 1920 * scale) / 2}px`;
+    //         this.app.canvas.style.top = `${(screenHeight - 1080 * scale) / 2}px`;
+    //     };
         
-        resize();
-        window.addEventListener('resize', resize);
-        }
+    //     resize();
+    //     window.addEventListener('resize', resize);
+    //     }
 
     setHighScore(score) {
         if (score > this.saveManager.data.highScore) {
