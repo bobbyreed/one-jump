@@ -338,18 +338,18 @@ loadLevel(config) {
         this.obstacleManager.reset();
         
         // Set level-specific patterns and types
-        if (config.obstaclePatterns) {
-            this.obstacleManager.setPatterns(config.obstaclePatterns);
-        }
-        if (config.obstacleTypes) {
-            this.obstacleManager.setTypes(config.obstacleTypes);
-        }
-        if (config.powerUpFrequency !== undefined) {
-            this.obstacleManager.setPowerUpFrequency(config.powerUpFrequency);
-        }
-        if (config.obstacleSpacing !== undefined) {
-            this.obstacleManager.setSpacing(config.obstacleSpacing);
-        }
+        // if (config.obstaclePatterns) {
+        //     this.obstacleManager.setPatterns(config.obstaclePatterns);
+        // }
+        // if (config.obstacleTypes) {
+        //     this.obstacleManager.setTypes(config.obstacleTypes);
+        // }
+        // if (config.powerUpFrequency !== undefined) {
+        //     this.obstacleManager.setPowerUpFrequency(config.powerUpFrequency);
+        // }
+        // if (config.obstacleSpacing !== undefined) {
+        //     this.obstacleManager.setSpacing(config.obstacleSpacing);
+        // }
         
         // Generate obstacles for the level
         this.obstacleManager.generateObstacles();
@@ -543,9 +543,9 @@ async exit() {
         this.particleSystem.update(deltaTime);
     }
     
-    if (this.cameraSystem && this.gameState.phase === PLAYER_STATES.FALLING) {
-        this.cameraSystem.update(this.player.position);
-    }
+    if (this.cameraSystem.followPlayer) {
+    this.cameraSystem.followPlayer(this.player, deltaTime);
+}
     
     // Update timer
     if (this.gameState.phase === PLAYER_STATES.FALLING) {

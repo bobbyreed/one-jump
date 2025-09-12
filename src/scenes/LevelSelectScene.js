@@ -697,7 +697,7 @@ export default class LevelSelectScene extends BaseScene {
             existingLocks.forEach(child => button.removeChild(child));
             
             // Create lock icon
-            const lock = new PIXI.Graphics();
+            const lock = new Graphics();
             lock.isLockIcon = true;
             
             // Draw simple lock shape
