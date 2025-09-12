@@ -105,11 +105,24 @@ export default class MenuScene extends BaseScene {
         this.container.addChild(startButton.container);
         this.buttons.push(startButton);
 
-        // View Highscores button
+        // Level Select button - FIXED FORMAT
+        const levelSelectButton = new Button(
+            'LEVEL SELECT',
+            buttonX,
+            startY + UI.BUTTON_HEIGHT + UI.BUTTON_SPACING,
+            UI.BUTTON_WIDTH,
+            UI.BUTTON_HEIGHT,
+            COLORS.SUCCESS,
+            () => this.game.sceneManager.changeScene('levelSelect')
+        );
+        this.container.addChild(levelSelectButton.container);
+        this.buttons.push(levelSelectButton);
+
+        // Highscores button
         const highscoresButton = new Button(
             'HIGHSCORES',
             buttonX,
-            startY + UI.BUTTON_HEIGHT + UI.BUTTON_SPACING,
+            startY + (UI.BUTTON_HEIGHT + UI.BUTTON_SPACING) * 2,
             UI.BUTTON_WIDTH,
             UI.BUTTON_HEIGHT,
             COLORS.UI_SECONDARY,
@@ -132,9 +145,9 @@ export default class MenuScene extends BaseScene {
         });
         this.highScoreText.anchor.set(0.5);
         this.highScoreText.x = this.menuPanel.x + UI.PANEL_WIDTH / 2;
-        this.highScoreText.y = startY + (UI.BUTTON_HEIGHT + UI.BUTTON_SPACING) * 2 + 30;
+        this.highScoreText.y = startY + (UI.BUTTON_HEIGHT + UI.BUTTON_SPACING) * 3 + 30;
         this.container.addChild(this.highScoreText);
-    }
+            }
 
     createInstructions() {
         const instructionsText = new Text({

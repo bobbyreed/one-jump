@@ -8,6 +8,8 @@ import MenuScene from './scenes/MenuScene.js';
 import StoryScene from './scenes/StoryScene.js';
 import GameScene from './scenes/GameScene.js';
 import HighscoresScene from './scenes/HighscoresScene.js';
+import LevelManager from './managers/LevelManager.js';
+import LevelSelectScene from './scenes/LevelSelectScene.js';
 
 export default class Game {
     constructor() {
@@ -17,6 +19,7 @@ export default class Game {
         this.inputManager = null;
         this.saveManager = null;
         this.isInitialized = false;
+        this.levelManager = null;
     }
 
     async init() {
@@ -28,9 +31,30 @@ export default class Game {
             width: 1920,
             height: 1080,
             antialias: true,
-            resolution: 1,  // Force resolution to 1
-            autoDensity: true
-            });
+            resizeTo: window, // This enables automatic responsive resizing
+            autoDensity: true, // Handles device pixel ratio automatically
+            preference: 'webgpu' // Use WebGPU when available, fallback to WebGL
+        });
+        
+        // Handle WebGL context loss
+        this.app.renderer.runners.contextChange.add(() => {
+            console.log('WebGL context restored');
+        });
+
+        // Add context loss/restore handlers
+        const canvas = this.app.canvas;
+            canvas.addEventListener('webglcontextlost', (event) => {
+                event.preventDefault();
+                console.warn('WebGL context lost. Attempting to restore...');
+            }, false);
+
+        canvas.addEventListener('webglcontextrestored', () => {
+                console.log('WebGL context successfully restored');
+                // Reload assets if needed
+                if (this.assetManager) {
+                    this.assetManager.loadCoreAssets();
+                }
+            }, false);
 
         // Append canvas to DOM
         const container = document.getElementById('pixi-container');
@@ -43,7 +67,8 @@ export default class Game {
         // Initialize managers
         this.saveManager = new SaveManager();
         this.saveManager.load();
-
+        //level manager MUST be loaded before asset manager
+        this.levelManager = new LevelManager(this);
         this.assetManager = new AssetManager();
         this.inputManager = new InputManager();
         this.sceneManager = new SceneManager(this);
@@ -72,18 +97,23 @@ export default class Game {
         const storyScene = new StoryScene(this);
         const gameScene = new GameScene(this);
         const highscoresScene = new HighscoresScene(this);
+        const levelSelectScene = new LevelSelectScene(this);
+
 
         // Register scenes with manager
         this.sceneManager.registerScene('menu', menuScene);
         this.sceneManager.registerScene('story', storyScene);
         this.sceneManager.registerScene('game', gameScene);
         this.sceneManager.registerScene('highscores', highscoresScene);
+        this.sceneManager.registerScene('levelSelect', levelSelectScene);
+
 
         // Initialize all scenes
         await menuScene.init();
         await storyScene.init();
         await gameScene.init();
         await highscoresScene.init();
+        await levelSelectScene.init();
     }
 
     // Global game methods
@@ -96,23 +126,23 @@ export default class Game {
             this.sceneManager.update(deltaTime);
         }
         }
-
-    setupCanvasScaling() {
-        const resize = () => {
-            const screenWidth = window.innerWidth;
-            const screenHeight = window.innerHeight;
-            const scale = Math.min(screenWidth / 1920, screenHeight / 1080);
+        //I think this is causing an issue with the pixi responsive scaling
+    // setupCanvasScaling() {
+    //     const resize = () => {
+    //         const screenWidth = window.innerWidth;
+    //         const screenHeight = window.innerHeight;
+    //         const scale = Math.min(screenWidth / 1920, screenHeight / 1080);
             
-            this.app.canvas.style.width = `${1920 * scale}px`;
-            this.app.canvas.style.height = `${1080 * scale}px`;
-            this.app.canvas.style.position = 'absolute';
-            this.app.canvas.style.left = `${(screenWidth - 1920 * scale) / 2}px`;
-            this.app.canvas.style.top = `${(screenHeight - 1080 * scale) / 2}px`;
-        };
+    //         this.app.canvas.style.width = `${1920 * scale}px`;
+    //         this.app.canvas.style.height = `${1080 * scale}px`;
+    //         this.app.canvas.style.position = 'absolute';
+    //         this.app.canvas.style.left = `${(screenWidth - 1920 * scale) / 2}px`;
+    //         this.app.canvas.style.top = `${(screenHeight - 1080 * scale) / 2}px`;
+    //     };
         
-        resize();
-        window.addEventListener('resize', resize);
-        }
+    //     resize();
+    //     window.addEventListener('resize', resize);
+    //     }
 
     setHighScore(score) {
         if (score > this.saveManager.data.highScore) {
