@@ -722,7 +722,147 @@ Pattern B: "Quad Landing"
 - Urban challenges test all skills
 - Campus welcomes their hero
 
-### Extended Cutscenes
+# Extended Cutscenes
+
+## Opening (8 panels)
+1. Starsky floating in space, reading "OCU Student Handbook"
+2. Telescope view of campus - freshman looking lost
+3. "Those fresh Stars need guidance!"
+4. Puts on cape, adjusts sunglasses
+5. "Time for some RAM-spiration!"
+6. Checks watch: "Orientation in... 10 minutes?!"
+7. "Good thing I know a shortcut!"
+8. JUMPS with "STARS FOREVER!" battle cry
+
+## Stage 1: Escape Velocity
+
+### Entrance (3 panels)
+1. Starsky floating past the space station window, scientists inside drop their coffee
+2. Adjusts sunglasses in zero gravity: "Time to show these satellites how to really orbit!"
+3. Kicks off the station hull: "Let's make gravity jealous!"
+
+### Exit (2 panels)
+1. Starsky salutes the space station as he plummets away: "That's one small leap for a ram..."
+2. Checks cosmic GPS: "Only 400,000 kilometers to OCU. Practically next door!"
+
+## Stage 2: Asteroid Alley
+
+### Entrance (3 panels)
+1. Asteroids come into view, Starsky cracks knuckles
+2. "Dodgeball was my favorite subject!"
+3. Strikes a superhero pose: "These space rocks are about to get schooled!"
+
+### Exit (2 panels)
+1. Starsky gives thumbs up to a confused astronaut on a passing asteroid
+2. Points earthward: "350,000 kilometers to campus. I can almost smell the cafeteria food!"
+
+## Stage 3: Ice Ring Run
+
+### Entrance (3 panels)
+1. Saturn's rings sparkle ahead, Starsky's eyes widen behind sunglasses
+2. "Ice to meet you, Saturn!"
+3. Flexes: "Time to put these rings through their paces - Olympic style!"
+
+### Exit (2 panels)
+1. Starsky surfs on an ice chunk: "And the judges give it a perfect 10!"
+2. Earth gets bigger in view: "300,000 kilometers to go. The Stars are calling!"
+
+## Stage 4: Atmospheric Entry
+
+### Entrance (3 panels)
+1. The atmosphere glows orange as Starsky approaches
+2. "Things are heating up! Good thing rams are naturally cool!"
+3. Strikes a confident pose as flames begin: "Let's turn up the heat on this entrance exam!"
+
+### Exit (2 panels)
+1. Starsky emerges from the fire, slightly singed but grinning
+2. "Only 100 kilometers to OCU! I can practically see the library from here!"
+
+## Stage 5: Cloud Nine
+
+### Entrance (3 panels)
+1. Fluffy clouds surround Starsky as he breaks through
+2. "Now THIS is what I call higher education!"
+3. Does a backflip: "Cloud surfing should be a required course!"
+
+### Exit (2 panels)
+1. Starsky waves goodbye to a surprised pilot: "Thanks for sharing the airspace!"
+2. "50 kilometers until touchdown! Time to stick the landing!"
+
+## Midpoint (After Stage 5) (6 panels)
+1. Starsky catching breath on a cloud
+2. Pulls out phone (somehow has signal)
+3. Text from mascot friends: "R U OK?"
+4. Selfie with Earth in background
+5. Posts: "Just dropping in! #RAMdom #OCUbound"
+6. Comments explode: "LEGEND!" "Save some cool for us!"
+
+## Stage 6: Storm Rider
+
+### Entrance (3 panels)
+1. Dark storm clouds flash with lightning, Starsky grins wider
+2. "Shocking development! But nothing stops this ram!"
+3. Thunder booms, he shouts back: "Is that all you got? I've survived finals week!"
+
+### Exit (2 panels)
+1. Starsky emerges from the storm, electricity still crackling off his horns
+2. "20 kilometers to campus! Even Mother Nature can't stop a Star!"
+
+## Stage 7: Wind Current
+
+### Entrance (3 panels)
+1. Geese fly by in formation, Starsky joins them
+2. Lead goose squawks angrily, Starsky: "Don't worry, I'm just winging it!"
+3. Spins through the air: "Time to show these birds how migration is REALLY done!"
+
+### Exit (2 panels)
+1. Starsky high-fives a confused goose: "Thanks for the escort service!"
+2. City skyline appears: "10 kilometers! I can see the OCU flag from here!"
+
+## Stage 8: Helicopter Heights
+
+### Entrance (3 panels)
+1. News helicopters swarm around, cameras rolling
+2. Starsky faces the cameras: "This just in: Ram incoming!"
+3. Winks at news camera: "Tell my professors I'll be there for the quiz!"
+
+### Exit (2 panels)
+1. Starsky blows kisses to the news crews: "Remember, Stars shine brightest!"
+2. "5 kilometers to touchdown! Hope they saved me a parking spot!"
+
+## Stage 9: Skyscraper Slalom
+
+### Entrance (3 panels)
+1. City buildings tower around him, office workers pressed against windows
+2. "Urban jungle? More like urban playground!"
+3. Wall-jumps between buildings: "Parkour? More like RAM-kour!"
+
+### Exit (2 panels)
+1. Starsky salutes construction workers: "Thanks for building my obstacle course!"
+2. Campus visible below: "1 kilometer! I can hear the fight song from here!"
+
+## Stage 10: Campus Crashdown
+
+### Entrance (3 panels)
+1. OCU campus spreads below, students pointing up and cheering
+2. "Home sweet home! Did you miss me?"
+3. Arms spread wide: "Time for the most EPIC entrance in university history!"
+
+### Exit (2 panels)
+1. Starsky aims for the fountain: "Calculated trajectory: 100% awesome!"
+2. "Zero kilometers! STARS FOREVER!"
+
+## Ending (10 panels)
+1. Fountain landing with huge splash
+2. Students surround fountain cheering
+3. President hands him towel: "Starsky, that was..."
+4. "Necessary? Awesome? Ram-tastic?"
+5. "I was going to say 'unprecedented'..."
+6. Freshman approaches: "Can you teach me that?"
+7. Starsky grins: "First rule of being a Star..."
+8. "Always aim high..." 
+9. "...even when you're falling!"
+10. Everyone laughs, OCU flag waves, iris out on Starsky's wink
 
 #### Opening (8 panels)
 1. Starsky floating in space, reading "OCU Student Handbook"
