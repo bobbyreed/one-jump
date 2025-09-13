@@ -1,122 +1,165 @@
-import SaveManager from './SaveManager.js';
-
 export default class LevelManager {
     constructor(game) {
         this.game = game;
-        
-        // Level progression tracking
-        this.totalLevels = 10;
         this.currentLevel = 1;
-        this.unlockedLevels = 2; // Start with levels 1 and 2 unlocked for testing
-        
-        // Level scores and grades
-        this.levelScores = new Array(this.totalLevels).fill(0);
-        this.levelGrades = new Array(this.totalLevels).fill('F');
-        this.levelStars = new Array(this.totalLevels).fill(0);
-        this.levelBestTimes = new Array(this.totalLevels).fill(Infinity);
-        
-        // Load saved progress
-        this.loadProgress();
+        this.unlockedLevels = 1;
+        this.totalLevels = 10;
+        this.levelScores = new Array(10).fill(0);
+        this.levelGrades = new Array(10).fill('');
     }
 
     // Get configuration for a specific level
     getLevelConfig(levelNumber) {
         // Base configuration shared by all levels
         const baseConfig = {
-            id: levelNumber,
-            gravity: 0.3,
-            maxFallSpeed: 15,
-            startHeight: -200,
-            endHeight: 3000,
-            backgroundType: 'sky',
-            windStrength: 0,
-            targetScore: 10000,
-            duration: 90,
-            obstacleSpacing: 150
+            fallSpeed: 200 + (levelNumber * 20),
+            spawnRate: Math.max(0.5, 1.2 - (levelNumber * 0.05)),
+            obstacleSpeed: 150 + (levelNumber * 10),
+            nearMissThreshold: 50,
+            duration: 60
         };
 
         // Level-specific configurations
         const configs = [
             {
-                // Level 1: Tutorial Rooftop (Original)
+                // Level 1 - Space Station
                 id: 1,
-                name: "Tutorial Rooftop",
-                subtitle: "Duke's Last Stand",
+                name: "Space Station",
+                subtitle: "Escape Velocity",
                 targetScore: 5000,
-                duration: 60,
+                duration: 45,
                 obstaclePatterns: ['single', 'double'],
-                obstacleTypes: ['bird', 'plane', 'cloud'],
-                powerUpFrequency: 0.2,
+                obstacleTypes: ['satellite', 'debris', 'asteroid'],
+                powerUpFrequency: 0.3,
                 windStrength: 0,
                 storyBeat: {
-                    title: "The Beginning",
-                    panels: [
-                        "Duke stands at the edge...",
-                        "One final jump to glory!",
-                        "Can he make it to OCU?"
+                    title: "Escape Velocity",
+                    entryPanels: [
+                        "Starsky floats past the space station window, scientists inside drop their coffee",
+                        "Time to show these satellites how to really orbit!",
+                        "Let's make gravity jealous!"
+                    ],
+                    exitPanels: [
+                        "That's one small leap for a ram...",
+                        "Only 400,000 kilometers to OCU. Practically next door!"
                     ]
                 }
             },
             {
-                // Level 2: TEMPORARY COPY OF LEVEL 1 FOR TESTING
-                // Will be replaced with unique content later
+                // Level 2 - Asteroid Alley
                 id: 2,
-                name: "Test Level 2",
-                subtitle: "Testing Transitions",
-                targetScore: 5000,
+                name: "Asteroid Alley",
+                subtitle: "Space Rocks",
+                targetScore: 6000,
                 duration: 60,
-                obstaclePatterns: ['single', 'double'],
-                obstacleTypes: ['bird', 'plane', 'cloud'],
-                powerUpFrequency: 0.2,
-                windStrength: 0,
+                obstaclePatterns: ['single', 'double', 'triple'],
+                obstacleTypes: ['asteroid_small', 'asteroid_large', 'comet'],
+                powerUpFrequency: 0.25,
+                windStrength: 0.05,
                 storyBeat: {
-                    title: "Level 2 Story",
-                    panels: [
-                        "The journey continues...",
-                        "New challenges await!",
-                        "Keep falling towards victory!"
+                    title: "Asteroid Alley",
+                    entryPanels: [
+                        "Asteroids come into view, Starsky cracks knuckles",
+                        "Dodgeball was my favorite subject!",
+                        "These space rocks are about to get schooled!"
+                    ],
+                    exitPanels: [
+                        "Starsky gives thumbs up to a confused astronaut on a passing asteroid",
+                        "Points earthward: 350,000 kilometers to campus. I can almost smell the cafeteria food!"
                     ]
                 }
             },
             {
-                // Level 3 and beyond (placeholders for now)
+                // Level 3 - Ice Ring Run
                 id: 3,
-                name: "City Streets",
-                subtitle: "Urban Descent",
+                name: "Ice Ring Run",
+                subtitle: "Saturn's Challenge",
                 targetScore: 7500,
                 duration: 70,
-                obstaclePatterns: ['single', 'double', 'zigzag'],
-                obstacleTypes: ['bird', 'plane', 'balloon', 'drone'],
-                powerUpFrequency: 0.25,
+                obstaclePatterns: ['single', 'double', 'zigzag', 'spiral'],
+                obstacleTypes: ['ice_chunk', 'ring_particle', 'frozen_debris'],
+                powerUpFrequency: 0.2,
                 windStrength: 0.1,
                 storyBeat: {
-                    title: "Urban Adventure",
-                    panels: [
-                        "The city sprawls below...",
-                        "Traffic and towers everywhere!",
-                        "Navigate the urban jungle!"
+                    title: "Ice Ring Run",
+                    entryPanels: [
+                        "Saturn's rings sparkle ahead, Starsky's eyes widen behind sunglasses",
+                        "Ice to meet you, Saturn!",
+                        "Time to put these rings through their paces - Olympic style!"
+                    ],
+                    exitPanels: [
+                        "Starsky surfs on an ice chunk: And the judges give it a perfect 10!",
+                        "Earth gets bigger in view: 300,000 kilometers to go. The Stars are calling!"
+                    ]
+                }
+            },
+            {
+                // Level 4 - Atmospheric Entry
+                id: 4,
+                name: "Atmospheric Entry",
+                subtitle: "Burning Through",
+                targetScore: 8500,
+                duration: 75,
+                obstaclePatterns: ['wave', 'double', 'cross'],
+                obstacleTypes: ['heat_wave', 'plasma', 'turbulence'],
+                powerUpFrequency: 0.15,
+                windStrength: 0.15,
+                storyBeat: {
+                    title: "Atmospheric Entry",
+                    entryPanels: [
+                        "The atmosphere glows orange as Starsky approaches",
+                        "Time to turn up the heat!",
+                        "This ram's about to become a shooting star!"
+                    ],
+                    exitPanels: [
+                        "Starsky emerges from the flames unscathed",
+                        "Looking down: I can see the continent! Almost home!"
                     ]
                 }
             }
         ];
 
-        // Return specific config or use level 1 as fallback
+        // Return specific config or create placeholder for unfinished levels
         if (levelNumber <= configs.length) {
-            return { ...baseConfig, ...configs[levelNumber - 1] };
+            const config = { ...baseConfig, ...configs[levelNumber - 1] };
+            // Ensure we have proper panel data
+            if (!config.storyBeat.entryPanels) {
+                config.storyBeat.entryPanels = [
+                    `Stage ${levelNumber} begins...`,
+                    "Navigate carefully!",
+                    "Good luck!"
+                ];
+            }
+            if (!config.storyBeat.exitPanels) {
+                config.storyBeat.exitPanels = [
+                    `Stage ${levelNumber} complete!`,
+                    "Well done!"
+                ];
+            }
+            return config;
         } else {
-            // For levels 4-10, reuse level 1 config as placeholder
+            // For levels 5-10, create placeholder config
             return { 
                 ...baseConfig, 
-                ...configs[0], 
                 id: levelNumber,
                 name: `Stage ${levelNumber}`,
                 subtitle: "Coming Soon",
+                targetScore: 5000 + (levelNumber * 1000),
+                duration: 60 + (levelNumber * 5),
+                obstaclePatterns: ['single', 'double', 'triple'],
+                obstacleTypes: ['placeholder'],
+                powerUpFrequency: 0.2,
+                windStrength: 0.1,
                 storyBeat: {
                     title: `Stage ${levelNumber}`,
-                    panels: [
-                        "This level is coming soon!",
-                        "For now, enjoy the classic obstacles.",
-                        "More content on the way!"
+                    entryPanels: [
+                        `Stage ${levelNumber} - Coming Soon`,
+                        "This level is under construction",
+                        "For now, enjoy classic gameplay!"
+                    ],
+                    exitPanels: [
+                        `Stage ${levelNumber} Complete!`,
+                        "More content coming soon!"
                     ]
                 }
             };
@@ -131,30 +174,26 @@ export default class LevelManager {
             // Intro story before the level starts
             return {
                 title: config.storyBeat.title,
-                panels: config.storyBeat.panels,
-                images: this.getWireframeImages()
+                panels: config.storyBeat.entryPanels,
+                panelCount: config.storyBeat.entryPanels.length
             };
         } else {
             // Outro story after completing the level
-            if (levelNumber === 1) {
+            if (levelNumber === 10) {
+                // Special victory sequence
                 return {
-                    title: "Stage 1 Complete!",
+                    title: "Mission Complete!",
                     panels: [
-                        "Great job on your first descent!",
-                        "You've mastered the basics.",
-                        "Ready for the next challenge?"
+                        "Perfect landing in fountain",
+                        "Students cheering, throwing caps",
+                        "President: Starsky! You're late!",
+                        "A Star arrives precisely when they mean to!",
+                        "Crowd lifts him up",
+                        "Who wants to hear about my space adventure?",
+                        "Everyone raises hands",
+                        "It started with ONE JUMP..."
                     ],
-                    images: this.getWireframeImages()
-                };
-            } else if (levelNumber === 2) {
-                return {
-                    title: "Stage 2 Complete!",
-                    panels: [
-                        "Another successful landing!",
-                        "Your skills are improving.",
-                        "8 more stages await!"
-                    ],
-                    images: this.getWireframeImages()
+                    panelCount: 8
                 };
             } else if (levelNumber === 5) {
                 // Special midpoint story
@@ -165,136 +204,84 @@ export default class LevelManager {
                         "The hardest part is behind you...",
                         "...or is it? The campus awaits!"
                     ],
-                    images: this.getWireframeImages()
-                };
-            } else if (levelNumber === 10) {
-                // Final victory
-                return {
-                    title: "Mission Complete!",
-                    panels: [
-                        "Perfect landing at OCU!",
-                        "The crowd goes wild!",
-                        "You are a true STAR!"
-                    ],
-                    images: this.getWireframeImages()
+                    panelCount: 3
                 };
             } else {
-                // Generic transition for other levels
+                // Use level-specific outro panels
                 return {
                     title: `Stage ${levelNumber} Complete!`,
-                    panels: [
+                    panels: config.storyBeat.exitPanels || [
                         "Excellent descent!",
                         `${10 - levelNumber} stages remaining...`,
                         "Keep up the great work!"
                     ],
-                    images: this.getWireframeImages()
+                    panelCount: config.storyBeat.exitPanels ? config.storyBeat.exitPanels.length : 3
                 };
             }
         }
-    }
-
-    // Get wireframe images (placeholder for now)
-    getWireframeImages() {
-        // Return placeholder image paths
-        // These will be replaced with actual story panel images later
-        return [
-            '/assets/story/panel1.png',
-            '/assets/story/panel2.png',
-            '/assets/story/panel3.png'
-        ];
     }
 
     // Start a level
     startLevel(levelNumber) {
         if (levelNumber > this.unlockedLevels || levelNumber < 1 || levelNumber > this.totalLevels) {
             console.warn(`Cannot start level ${levelNumber}. Unlocked: ${this.unlockedLevels}`);
-            return false;
+            return null;
         }
-        
+
         this.currentLevel = levelNumber;
-        console.log(`Starting level ${levelNumber}`);
-        return this.getLevelConfig(levelNumber);
+        const config = this.getLevelConfig(levelNumber);
+        
+        console.log(`Starting Level ${levelNumber}: ${config.name}`);
+        return config;
     }
 
     // Complete a level
-    completeLevel(levelNumber, score, time) {
-        console.log(`Completing level ${levelNumber} with score ${score} in ${time}s`);
-        
+    completeLevel(levelNumber, score) {
         const config = this.getLevelConfig(levelNumber);
-        const grade = this.calculateGrade(score, config.targetScore);
         
-        // Update scores
+        // Update score if it's a new high score
         if (score > this.levelScores[levelNumber - 1]) {
             this.levelScores[levelNumber - 1] = score;
-        }
-        
-        // Update grade
-        if (this.getGradeValue(grade) > this.getGradeValue(this.levelGrades[levelNumber - 1])) {
+            
+            // Calculate grade
+            const targetScore = config.targetScore;
+            const percentage = (score / targetScore) * 100;
+            
+            let grade = 'F';
+            if (percentage >= 150) grade = 'S';
+            else if (percentage >= 120) grade = 'A';
+            else if (percentage >= 100) grade = 'B';
+            else if (percentage >= 80) grade = 'C';
+            else if (percentage >= 60) grade = 'D';
+            
             this.levelGrades[levelNumber - 1] = grade;
         }
         
-        // Update best time
-        if (time < this.levelBestTimes[levelNumber - 1]) {
-            this.levelBestTimes[levelNumber - 1] = time;
-        }
-        
-        // Calculate stars
-        this.levelStars[levelNumber - 1] = this.calculateStars(score, config.targetScore);
-        
-        // Unlock next level if this was the highest unlocked level
+        // Unlock next level if needed
         if (levelNumber === this.unlockedLevels && levelNumber < this.totalLevels) {
             this.unlockedLevels++;
-            console.log(`Unlocked level ${this.unlockedLevels}`);
+            console.log(`Level ${this.unlockedLevels} unlocked!`);
         }
         
         // Save progress
         this.saveProgress();
         
         return {
-            grade,
-            stars: this.levelStars[levelNumber - 1],
+            grade: this.levelGrades[levelNumber - 1],
             newHighScore: score === this.levelScores[levelNumber - 1],
-            nextLevelUnlocked: levelNumber < this.unlockedLevels
+            nextLevelUnlocked: levelNumber === this.unlockedLevels - 1
         };
     }
 
-    // Calculate grade based on score
-    calculateGrade(score, targetScore) {
-        const percentage = (score / targetScore) * 100;
-        
-        if (percentage >= 150) return 'S';
-        if (percentage >= 120) return 'A';
-        if (percentage >= 100) return 'B';
-        if (percentage >= 80) return 'C';
-        if (percentage >= 60) return 'D';
-        return 'F';
-    }
-
-    // Get numeric value for grade comparison
-    getGradeValue(grade) {
-        const values = { 'F': 0, 'D': 1, 'C': 2, 'B': 3, 'A': 4, 'S': 5 };
-        return values[grade] || 0;
-    }
-
-    // Calculate stars earned
-    calculateStars(score, targetScore) {
-        const percentage = (score / targetScore) * 100;
-        
-        if (percentage >= 150) return 3;
-        if (percentage >= 100) return 2;
-        if (percentage >= 60) return 1;
-        return 0;
-    }
-
-    // Get total score across all levels
+    // Calculate total score across all levels
     getTotalScore() {
-        return this.levelScores.reduce((sum, score) => sum + score, 0);
+        return this.levelScores.reduce((total, score) => total + score, 0);
     }
 
     // Get completion percentage
     getCompletionPercentage() {
         const completedLevels = this.levelScores.filter(score => score > 0).length;
-        return Math.floor((completedLevels / this.totalLevels) * 100);
+        return Math.round((completedLevels / this.totalLevels) * 100);
     }
 
     // Check if a level is unlocked
@@ -302,61 +289,32 @@ export default class LevelManager {
         return levelNumber <= this.unlockedLevels;
     }
 
-    // Save progress to local storage
+    // Save progress to local storage via SaveManager
     saveProgress() {
-        const progressData = {
-            unlockedLevels: this.unlockedLevels,
-            levelScores: this.levelScores,
-            levelGrades: this.levelGrades,
-            levelStars: this.levelStars,
-            levelBestTimes: this.levelBestTimes
-        };
-        
         if (this.game.saveManager) {
-            this.game.saveManager.data.levelProgress = progressData;
+            this.game.saveManager.saveData.unlockedLevels = this.unlockedLevels;
+            this.game.saveManager.saveData.levelScores = [...this.levelScores];
+            this.game.saveManager.saveData.levelGrades = [...this.levelGrades];
             this.game.saveManager.save();
         }
-        
-        // Also save directly to localStorage as backup
-        localStorage.setItem('oneJumpLevelProgress', JSON.stringify(progressData));
     }
 
-    // Load progress from local storage
+    // Load progress from SaveManager
     loadProgress() {
-        let progressData = null;
-        
-        // Try to load from SaveManager first
-        if (this.game.saveManager && this.game.saveManager.data.levelProgress) {
-            progressData = this.game.saveManager.data.levelProgress;
-        } else {
-            // Fall back to direct localStorage
-            const saved = localStorage.getItem('oneJumpLevelProgress');
-            if (saved) {
-                try {
-                    progressData = JSON.parse(saved);
-                } catch (e) {
-                    console.error('Failed to parse saved progress:', e);
-                }
-            }
-        }
-        
-        if (progressData) {
-            this.unlockedLevels = progressData.unlockedLevels || 2; // Keep 2 unlocked for testing
-            this.levelScores = progressData.levelScores || new Array(this.totalLevels).fill(0);
-            this.levelGrades = progressData.levelGrades || new Array(this.totalLevels).fill('F');
-            this.levelStars = progressData.levelStars || new Array(this.totalLevels).fill(0);
-            this.levelBestTimes = progressData.levelBestTimes || new Array(this.totalLevels).fill(Infinity);
+        if (this.game.saveManager && this.game.saveManager.saveData) {
+            const data = this.game.saveManager.saveData;
+            this.unlockedLevels = data.unlockedLevels || 1;
+            this.levelScores = data.levelScores || new Array(10).fill(0);
+            this.levelGrades = data.levelGrades || new Array(10).fill('');
         }
     }
 
     // Reset all progress
     resetProgress() {
-        this.unlockedLevels = 2; // Keep 2 unlocked for testing
-        this.levelScores = new Array(this.totalLevels).fill(0);
-        this.levelGrades = new Array(this.totalLevels).fill('F');
-        this.levelStars = new Array(this.totalLevels).fill(0);
-        this.levelBestTimes = new Array(this.totalLevels).fill(Infinity);
-        
+        this.currentLevel = 1;
+        this.unlockedLevels = 1;
+        this.levelScores = new Array(10).fill(0);
+        this.levelGrades = new Array(10).fill('');
         this.saveProgress();
     }
 }
