@@ -1,4 +1,4 @@
-import { Assets } from 'pixi.js';
+import { Assets, Texture, Rectangle } from 'pixi.js';
 import { ASSETS, ANIMATION } from '../config/Constants.js';
 
 export default class AssetManager {
@@ -8,39 +8,49 @@ export default class AssetManager {
     }
 
     async loadCoreAssets() {
-        // Load idle-run sprite sheet
-        const idleRunTexture = await Assets.load(ASSETS.SPRITES.IDLE_RUN);
-        this.textures.set('idleRun', idleRunTexture);
+        try {
+            // Load cover image
+            const coverTexture = await Assets.load(ASSETS.SPRITES.COVER);
+            this.textures.set('cover', coverTexture);
 
-        // Load cover image
-        const coverTexture = await Assets.load(ASSETS.SPRITES.COVER);
-        this.textures.set('cover', coverTexture);
+            // Load sprite sheet
+            const spriteSheetTexture = await Assets.load(ASSETS.SPRITES.IDLE_RUN);
+            this.textures.set('spriteSheet', spriteSheetTexture);
 
-        // Create animations from sprite sheet
-        this.createCharacterAnimations(idleRunTexture);
+            // Create animation textures from sprite sheet
+            this.createAnimations(spriteSheetTexture);
+
+            console.log('Core assets loaded successfully');
+        } catch (error) {
+            console.error('Failed to load core assets:', error);
+            throw error;
+        }
     }
 
-    createCharacterAnimations(baseTexture) {
+    createAnimations(baseTexture) {
         const textures = [];
-        const frameWidth = ANIMATION.FRAME_WIDTH;
-        const frameHeight = ANIMATION.FRAME_HEIGHT;
 
-        // Extract frames from the sprite sheet
-        for (let i = 0; i < ANIMATION.TOTAL_FRAMES; i++) {
-            const x = (i % ANIMATION.FRAMES_PER_ROW) * frameWidth;
-            const y = Math.floor(i / ANIMATION.FRAMES_PER_ROW) * frameHeight;
+        // Extract individual frames from sprite sheet
+        for (let row = 0; row < ANIMATION.SPRITE_ROWS; row++) {
+            for (let col = 0; col < ANIMATION.SPRITE_COLS; col++) {
+                const frame = new Rectangle(
+                    col * ANIMATION.SPRITE_WIDTH,
+                    row * (ANIMATION.SPRITE_HEIGHT + 12), // Account for spacing in sprite sheet
+                    ANIMATION.SPRITE_WIDTH,
+                    ANIMATION.SPRITE_HEIGHT
+                );
 
-            const frame = baseTexture.clone();
-            frame.frame.x = x;
-            frame.frame.y = y;
-            frame.frame.width = frameWidth;
-            frame.frame.height = frameHeight;
-            frame.updateUvs();
+                const texture = new Texture({
+                    source: baseTexture.source,
+                    frame: frame
+                });
 
-            textures.push(frame);
+                textures.push(texture);
+            }
         }
 
-        // Map frames to animations
+        // Define animation sequences
+        // Cell numbering: 1=index 0, 2=index 1, etc.
         this.animations.set('idle', [textures[0]]);
         this.animations.set('running', [textures[0], textures[7], textures[8]]);
         this.animations.set('jetpackActivation', [
@@ -50,71 +60,21 @@ export default class AssetManager {
         this.animations.set('falling', [textures[6]]);
     }
 
-    async loadStoryPanels(levelNumber = 0, isIntro = true) {
+    async loadStoryPanels() {
         const panels = [];
-        let panelPaths = [];
 
-        // Determine which panels to load based on level
-        if (levelNumber === 0) {
-            // Opening story panels
-            panelPaths = ASSETS.NARRATIVE_PANELS.OPENING;
-        } else {
-            // Level-specific panels
-            panelPaths = this.getLevelPanelPaths(levelNumber, isIntro);
-        }
-
-        // Load each panel
-        for (let i = 0; i < panelPaths.length; i++) {
+        for (let i = 0; i < ASSETS.NARRATIVE_PANELS.OPENING.length; i++) {
             try {
-                const texture = await Assets.load(panelPaths[i]);
+                const texture = await Assets.load(ASSETS.NARRATIVE_PANELS.OPENING[i]);
                 panels.push(texture);
             } catch (error) {
-                console.warn(`Could not load panel ${i + 1} from ${panelPaths[i]}, using placeholder`);
+                console.warn(`Could not load panel ${i + 1}, using placeholder`);
                 panels.push(null); // Scene will handle placeholder creation
             }
         }
 
-        // Store in textures map with a unique key
-        const key = levelNumber === 0 ? 'storyPanels' : `level${levelNumber}${isIntro ? 'Intro' : 'Outro'}Panels`;
-        this.textures.set(key, panels);
-        
+        this.textures.set('storyPanels', panels);
         return panels;
-    }
-
-    getLevelPanelPaths(levelNumber, isIntro) {
-        const panelType = isIntro ? 'entry' : 'exit';
-        const basePath = `/public/assets/narrativePanels/level${levelNumber}`;
-        
-        // Determine number of panels based on level and type
-        let panelCount = 3; // Default for most levels
-        
-        // Special cases for different levels
-        if (levelNumber === 1 && isIntro) {
-            panelCount = 3;
-        } else if (levelNumber === 2 && isIntro) {
-            panelCount = 3;
-        } else if (levelNumber === 10 && !isIntro) {
-            panelCount = 8; // Victory sequence
-        }
-        
-        // Generate paths
-        const paths = [];
-        for (let i = 1; i <= panelCount; i++) {
-            paths.push(`${basePath}/level${levelNumber}${panelType}${i}.png`);
-        }
-        
-        return paths;
-    }
-
-    async loadLevelAssets(levelNumber) {
-        // Load intro panels for the level
-        await this.loadStoryPanels(levelNumber, true);
-        
-        // Pre-load outro panels as well
-        await this.loadStoryPanels(levelNumber, false);
-        
-        // Load any level-specific gameplay assets here
-        // For example: unique obstacles, backgrounds, etc.
     }
 
     getTexture(name) {
