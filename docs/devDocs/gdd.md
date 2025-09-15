@@ -726,269 +726,174 @@ Pattern B: "Quad Landing"
 
 #### Opening (8 panels)
 1. Starsky floating in space, reading "OCU Student Handbook"
-   - {"prompt":"A retro video game style illustration of Starsky the Ram, an anthropomorphic ram mascot with bold golden curling horns and white fur, floating in deep space surrounded by stars and nebulas. He's wearing cool sunglasses and reading a red book labeled 'OCU Student Handbook'. The art uses bold 80s/90s video game aesthetics with dramatic space lighting and exaggerated perspective.","size":"1024x1024","n":1}
-
 2. Telescope view of campus - freshman looking lost
-   - {"prompt":"A retro video game cutscene showing a circular telescope view of a college campus from above. In the center, a confused freshman student with a backpack looks lost among campus buildings. The scene uses 80s/90s pixel-art inspired aesthetics with bold colors, showing OCU campus buildings and pathways from a bird's eye view.","size":"1024x1024","n":1}
-
-3. Starsky floating in space saying "Those new Stars need guidance!"
-   - {"prompt":"Retro video game illustration of Starsky the Ram floating in space with Earth visible below. The anthropomorphic ram with golden horns and sunglasses has a determined expression with a speech bubble saying 'Those new Stars need guidance!' The art uses bold 80s/90s comic book style with dramatic space backdrop and vibrant colors.","size":"1024x1024","n":1}
-
-4. Starsky putting on jetpack and adjusts sunglasses
-   - {"prompt":"Action-packed retro video game illustration of Starsky the Ram, the anthropomorphic ram mascot, strapping on a futuristic red jetpack while adjusting his cool wraparound sunglasses with one hoof. His golden horns gleam as he prepares for action. Bold 80s/90s video game cover art style with dynamic angles and dramatic lighting.","size":"1024x1024","n":1}
-
+3. "Those fresh Stars need guidance!"
+4. Puts on cape, adjusts sunglasses
 5. "Time for some RAM-spiration!"
-   - {"prompt":"Retro video game style close-up of Starsky the Ram's face with a confident grin, his golden horns prominent and sunglasses reflecting stars. A bold speech bubble says 'Time for some RAM-spiration!' The art uses exaggerated 80s/90s comic book aesthetics with dramatic shading and vibrant colors against a space background.","size":"1024x1024","n":1}
-
-6. Starsky checks watch and says: "Orientation in... 10 minutes?!"
-   - {"prompt":"Retro video game illustration of Starsky the Ram looking shocked at a digital watch on his wrist, with a speech bubble saying 'Orientation in... 10 minutes?!' The anthropomorphic ram's eyes are wide behind his sunglasses. Bold 80s/90s cartoon style with exaggerated expressions, speed lines for emphasis, and a cosmic background.","size":"1024x1024","n":1}
-
-7. Starsky smiles and puts his shades on and says with confidence "Good thing I know a shortcut!"
-   - {"prompt":"Retro video game hero shot of Starsky the Ram putting on his cool sunglasses with a confident smirk. The anthropomorphic ram with golden horns has a speech bubble saying 'Good thing I know a shortcut!' Dynamic 80s/90s video game cover art style with dramatic lighting, lens flares on the sunglasses, and space backdrop.","size":"1024x1024","n":1}
-
-##### In-game scene
-1. (as starsky leaves the ledge under player control this square pops up) JUMPS with "STARS FOREVER!" battle cry
-   - {"prompt":"Epic retro video game action scene of Starsky the Ram leaping off a space platform with arms spread wide, shouting 'STARS FOREVER!' in a bold speech bubble. The anthropomorphic ram with golden horns and sunglasses is captured mid-jump with his jetpack igniting. Dramatic 80s/90s video game aesthetics with motion lines, lens flares, and Earth visible far below.","size":"1024x1024","n":1}
-
-#### Midpoint (After Stage 5) (6 panels)
-1. Starsky catching breath on a cloud
-   - {"prompt":"Retro video game illustration of Starsky the Ram sitting on a fluffy white cloud, wiping his brow and catching his breath. The anthropomorphic ram with golden horns has his sunglasses pushed up on his head. Peaceful mid-journey scene with blue sky, distant Earth below, and 80s/90s cartoon game art style.","size":"1024x1024","n":1}
-
-2. Pulls out phone (somehow has signal)
-   - {"prompt":"Humorous retro video game illustration of Starsky the Ram pulling out a smartphone while sitting on a cloud in the stratosphere. The phone shows full signal bars impossibly. The anthropomorphic ram looks amused. Bold 80s/90s cartoon style with exaggerated expressions and bright colors against a sky backdrop.","size":"1024x1024","n":1}
-
-3. Text from mascot friends: "R U OK?"
-   - {"prompt":"Retro video game style close-up of a smartphone screen showing text messages from other mascot friends asking 'R U OK?' with cartoon mascot profile pictures visible. The phone is held by Starsky the Ram's hoof. Bold 80s/90s pixel-art inspired interface design with vibrant colors and comic book style text bubbles.","size":"1024x1024","n":1}
-
-4. Selfie with Earth in background
-   - {"prompt":"Retro video game illustration of Starsky the Ram taking a selfie with his phone, golden horns prominent, sunglasses on, giving a thumbs up with Earth visible in the background. The anthropomorphic ram has a big grin. Bold 80s/90s video game art style with exaggerated perspective and vibrant space colors.","size":"1024x1024","n":1}
-
-5. Posts: "Just dropping in! #RAMdom #OCUbound"
-   - {"prompt":"Retro video game style social media post screen showing Starsky the Ram's selfie with the caption 'Just dropping in! #RAMdom #OCUbound'. The interface shows likes rapidly increasing. Bold 80s/90s inspired UI design with neon colors and pixelated elements mixed with cartoon graphics.","size":"1024x1024","n":1}
-
-6. Comments explode: "LEGEND!" "Save some cool for us!"
-   - {"prompt":"Retro video game illustration of a phone screen with comments exploding in cartoon style - 'LEGEND!' 'Save some cool for us!' with fire emojis and star effects bursting from the screen. Bold 80s/90s comic book style with exaggerated action lines and vibrant colors showing viral social media reaction.","size":"1024x1024","n":1}
+6. Checks watch: "Orientation in... 10 minutes?!"
+7. "Good thing I know a shortcut!"
+8. JUMPS with "STARS FOREVER!" battle cry
 
 #### Stage 1: Escape Velocity
 
 ##### Entrance (3 panels)
 1. Starsky floating past the space station window, scientists inside drop their coffee
-   - {"prompt":"Retro video game illustration showing Starsky the Ram floating past a space station window in zero gravity. Inside, shocked scientists in white coats drop their coffee cups in surprise. The anthropomorphic ram with golden horns and sunglasses waves casually. Bold 80s/90s cartoon style with exaggerated expressions and floating coffee droplets.","size":"1024x1024","n":1}
-
 2. Adjusts sunglasses in zero gravity: "Time to show these satellites how to really orbit!"
-   - {"prompt":"Retro video game close-up of Starsky the Ram adjusting his cool wraparound sunglasses while floating in space, with satellites visible in the background. Speech bubble says 'Time to show these satellites how to really orbit!' Bold 80s/90s action hero style with lens flares and cosmic backdrop.","size":"1024x1024","n":1}
-
 3. Kicks off the station hull: "Let's make gravity jealous!"
-   - {"prompt":"Dynamic retro video game action shot of Starsky the Ram kicking off from a space station hull to begin his descent, with a speech bubble saying 'Let's make gravity jealous!' His golden horns gleam as he pushes off with powerful legs. Bold 80s/90s comic book style with motion lines and dramatic perspective.","size":"1024x1024","n":1}
 
 ##### Exit (2 panels)
 1. Starsky salutes the space station as he plummets away: "That's one small leap for a ram..."
-   - {"prompt":"Retro video game illustration of Starsky the Ram saluting toward a distant space station while falling through space, with Earth visible below. Speech bubble reads 'That's one small leap for a ram...' Bold 80s/90s style with dramatic perspective showing him getting smaller against the vast cosmos.","size":"1024x1024","n":1}
-
 2. Checks cosmic GPS: "Only 400,000 kilometers to OCU. Practically next door!"
-   - {"prompt":"Retro video game illustration of Starsky the Ram checking a futuristic glowing GPS device while falling through space. The screen shows '400,000 km to OCU'. Speech bubble says 'Practically next door!' Bold 80s/90s sci-fi style with holographic display effects.","size":"1024x1024","n":1}
 
 #### Stage 2: Asteroid Alley
 
 ##### Entrance (3 panels)
 1. Asteroids come into view, Starsky cracks knuckles
-   - {"prompt":"Retro video game scene showing Starsky the Ram cracking his knuckles as massive asteroids tumble into view around him. The anthropomorphic ram with golden horns looks determined and ready. Bold 80s/90s action game style with detailed space rocks and dramatic lighting.","size":"1024x1024","n":1}
-
 2. "Dodgeball was my favorite subject!"
-   - {"prompt":"Retro video game close-up of Starsky the Ram with a competitive grin, golden horns prominent, with a speech bubble saying 'Dodgeball was my favorite subject!' Asteroids float menacingly in the background. Bold 80s/90s cartoon style with exaggerated confident expression.","size":"1024x1024","n":1}
-
 3. Strikes a superhero pose: "These space rocks are about to get schooled!"
-   - {"prompt":"Retro video game illustration of Starsky the Ram striking a classic superhero pose with fists on hips, cape flowing (if he has one), saying 'These space rocks are about to get schooled!' Asteroids surround him dramatically. Bold 80s/90s comic book style with dynamic composition and action lines.","size":"1024x1024","n":1}
 
 ##### Exit (2 panels)
 1. Starsky gives thumbs up to a confused astronaut on a passing asteroid
-   - {"prompt":"Retro video game scene showing Starsky the Ram giving a thumbs up to a bewildered astronaut sitting on an asteroid. The astronaut in a space suit looks completely confused. Bold 80s/90s cartoon style with humorous character expressions and detailed space setting.","size":"1024x1024","n":1}
-
 2. Points earthward: "350,000 kilometers to campus. I can almost smell the cafeteria food!"
-   - {"prompt":"Retro video game illustration of Starsky the Ram pointing downward toward Earth while falling, with a speech bubble saying '350,000 kilometers to campus. I can almost smell the cafeteria food!' His golden horns catch starlight. Bold 80s/90s style with Earth visible in the distance.","size":"1024x1024","n":1}
 
 #### Stage 3: Ice Ring Run
 
-##### Entrance (3 panels)
+### Entrance (3 panels)
 1. Saturn's rings sparkle ahead, Starsky's eyes widen behind sunglasses
-   - {"prompt":"Retro video game scene showing Starsky the Ram's eyes widening behind his sunglasses as Saturn's magnificent ice rings sparkle ahead. The crystalline rings shimmer with rainbow colors. Bold 80s/90s space adventure style with dramatic lighting and cosmic beauty.","size":"1024x1024","n":1}
-
 2. "Ice to meet you, Saturn!"
-   - {"prompt":"Retro video game close-up of Starsky the Ram making finger guns with a cheesy grin, speech bubble saying 'Ice to meet you, Saturn!' Ice crystals float around him sparkling. Bold 80s/90s cartoon style with pun-loving expression and icy particle effects.","size":"1024x1024","n":1}
-
 3. Flexes: "Time to put these rings through their paces - Olympic style!"
-   - {"prompt":"Retro video game illustration of Starsky the Ram flexing his muscles impressively, golden horns gleaming, saying 'Time to put these rings through their paces - Olympic style!' Saturn's rings create a spectacular backdrop. Bold 80s/90s action hero style with exaggerated muscles and dynamic pose.","size":"1024x1024","n":1}
 
-##### Exit (2 panels)
+### Exit (2 panels)
 1. Starsky surfs on an ice chunk: "And the judges give it a perfect 10!"
-   - {"prompt":"Retro video game action shot of Starsky the Ram surfing on a large chunk of ice like a snowboard, arms out for balance, saying 'And the judges give it a perfect 10!' Ice particles trail behind him. Bold 80s/90s extreme sports style with motion blur and dynamic angle.","size":"1024x1024","n":1}
-
 2. Earth gets bigger in view: "300,000 kilometers to go. The Stars are calling!"
-   - {"prompt":"Retro video game illustration of Starsky the Ram looking toward Earth which now appears larger, with a determined expression. Speech bubble reads '300,000 kilometers to go. The Stars are calling!' Bold 80s/90s style with Earth's blue marble prominently featured.","size":"1024x1024","n":1}
 
-#### Stage 4: Atmospheric Entry
+## Stage 4: Atmospheric Entry
 
-##### Entrance (3 panels)
+### Entrance (3 panels)
 1. The atmosphere glows orange as Starsky approaches
-   - {"prompt":"Retro video game scene showing Starsky the Ram approaching Earth's atmosphere which glows with intense orange and red fire. His figure is silhouetted against the burning atmospheric entry. Bold 80s/90s sci-fi style with dramatic fire effects and glowing plasma.","size":"1024x1024","n":1}
-
 2. "Things are heating up! Good thing rams are naturally cool!"
-   - {"prompt":"Retro video game close-up of Starsky the Ram with flames beginning to surround him, sunglasses reflecting the fire, saying 'Things are heating up! Good thing rams are naturally cool!' Bold 80s/90s action style with fire effects and confident expression despite the heat.","size":"1024x1024","n":1}
-
 3. Strikes a confident pose as flames begin: "Let's turn up the heat on this entrance exam!"
-   - {"prompt":"Retro video game illustration of Starsky the Ram striking a confident pose with arms crossed as flames engulf him, saying 'Let's turn up the heat on this entrance exam!' His golden horns glow from the heat. Bold 80s/90s comic style with intense fire effects.","size":"1024x1024","n":1}
 
-##### Exit (2 panels)
+### Exit (2 panels)
 1. Starsky emerges from the fire, slightly singed but grinning
-   - {"prompt":"Retro video game illustration of Starsky the Ram emerging from flames with his white fur slightly singed and smoking, but still grinning confidently. His sunglasses are slightly askew. Bold 80s/90s cartoon style with smoke wisps and charred edges for comedy effect.","size":"1024x1024","n":1}
-
 2. "Only 100 kilometers to OCU! I can practically see the library from here!"
-   - {"prompt":"Retro video game scene of Starsky the Ram shading his eyes with one hoof to look down at Earth, saying 'Only 100 kilometers to OCU! I can practically see the library from here!' Clear blue sky surrounds him. Bold 80s/90s style with hopeful expression.","size":"1024x1024","n":1}
 
-#### Stage 5: Cloud Nine
+## Stage 5: Cloud Nine
 
-##### Entrance (3 panels)
+### Entrance (3 panels)
 1. Fluffy clouds surround Starsky as he breaks through
-   - {"prompt":"Retro video game illustration of Starsky the Ram bursting through fluffy white clouds, creating a dramatic cloud break effect. His golden horns pierce through first. Bold 80s/90s style with volumetric cloud effects and god rays of sunlight.","size":"1024x1024","n":1}
-
 2. "Now THIS is what I call higher education!"
-   - {"prompt":"Retro video game close-up of Starsky the Ram with arms spread wide among beautiful clouds, huge grin, saying 'Now THIS is what I call higher education!' Sunlight creates a halo effect. Bold 80s/90s inspirational poster style with vibrant sky colors.","size":"1024x1024","n":1}
-
 3. Does a backflip: "Cloud surfing should be a required course!"
-   - {"prompt":"Retro video game action shot of Starsky the Ram performing an impressive backflip through clouds, his golden horns tracing an arc, saying 'Cloud surfing should be a required course!' Bold 80s/90s extreme sports style with motion lines and cloud wisps.","size":"1024x1024","n":1}
 
-##### Exit (2 panels)
+### Exit (2 panels)
 1. Starsky waves goodbye to a surprised pilot: "Thanks for sharing the airspace!"
-   - {"prompt":"Retro video game scene showing Starsky the Ram waving cheerfully at a shocked pilot visible through an airplane cockpit window. Speech bubble says 'Thanks for sharing the airspace!' Bold 80s/90s cartoon style with exaggerated pilot's double-take expression.","size":"1024x1024","n":1}
-
 2. "50 kilometers until touchdown! Time to stick the landing!"
-   - {"prompt":"Retro video game illustration of Starsky the Ram in a diving pose with determination, looking down at the approaching ground, saying '50 kilometers until touchdown! Time to stick the landing!' Bold 80s/90s action style with speed lines and focused expression.","size":"1024x1024","n":1}
 
-#### Stage 6: Storm Rider
+## Midpoint (After Stage 5) (6 panels)
+1. Starsky catching breath on a cloud
+2. Pulls out phone (somehow has signal)
+3. Text from mascot friends: "R U OK?"
+4. Selfie with Earth in background
+5. Posts: "Just dropping in! #RAMdom #OCUbound"
+6. Comments explode: "LEGEND!" "Save some cool for us!"
 
-##### Entrance (3 panels)
+## Stage 6: Storm Rider
+
+### Entrance (3 panels)
 1. Dark storm clouds flash with lightning, Starsky grins wider
-   - {"prompt":"Retro video game scene of Starsky the Ram grinning even wider as dark storm clouds flash with lightning around him. His golden horns conduct small sparks. Bold 80s/90s dramatic style with dark clouds, lightning effects, and fearless expression.","size":"1024x1024","n":1}
-
 2. "Shocking development! But nothing stops this ram!"
-   - {"prompt":"Retro video game close-up of Starsky the Ram with electricity crackling around his horns, confidently saying 'Shocking development! But nothing stops this ram!' Lightning illuminates his determined face. Bold 80s/90s comic style with electric effects.","size":"1024x1024","n":1}
-
 3. Thunder booms, he shouts back: "Is that all you got? I've survived finals week!"
-   - {"prompt":"Retro video game illustration of Starsky the Ram shouting defiantly at storm clouds with fist raised, saying 'Is that all you got? I've survived finals week!' Thunder and lightning surround him dramatically. Bold 80s/90s battle scene style with epic confrontation energy.","size":"1024x1024","n":1}
 
-##### Exit (2 panels)
+### Exit (2 panels)
 1. Starsky emerges from the storm, electricity still crackling off his horns
-   - {"prompt":"Retro video game scene of Starsky the Ram emerging from dark clouds with residual electricity crackling between his golden horns like a Tesla coil. His fur is frizzed from static. Bold 80s/90s style with electric particle effects and dramatic exit.","size":"1024x1024","n":1}
-
 2. "20 kilometers to campus! Even Mother Nature can't stop a Star!"
-   - {"prompt":"Retro video game illustration of Starsky the Ram with fist pumped triumphantly, storm clouds behind him, saying '20 kilometers to campus! Even Mother Nature can't stop a Star!' Clear sky ahead. Bold 80s/90s victory style with contrast between storm and clear sky.","size":"1024x1024","n":1}
 
-#### Stage 7: Wind Current
+## Stage 7: Wind Current
 
-##### Entrance (3 panels)
+### Entrance (3 panels)
 1. Geese fly by in formation, Starsky joins them
-   - {"prompt":"Retro video game scene of Starsky the Ram joining a V-formation of geese in flight, trying to fit in among them. The geese look confused at this ram among them. Bold 80s/90s cartoon style with humorous bird expressions and flying formation.","size":"1024x1024","n":1}
-
 2. Lead goose squawks angrily, Starsky: "Don't worry, I'm just winging it!"
-   - {"prompt":"Retro video game close-up of an angry lead goose squawking at Starsky the Ram who responds with a pun, saying 'Don't worry, I'm just winging it!' with a cheeky grin. Bold 80s/90s cartoon style with exaggerated animal expressions and speech bubbles.","size":"1024x1024","n":1}
-
 3. Spins through the air: "Time to show these birds how migration is REALLY done!"
-   - {"prompt":"Retro video game action shot of Starsky the Ram performing aerial spins and tricks while geese watch in amazement, saying 'Time to show these birds how migration is REALLY done!' Bold 80s/90s style with motion lines and impressed bird reactions.","size":"1024x1024","n":1}
 
-##### Exit (2 panels)
+### Exit (2 panels)
 1. Starsky high-fives a confused goose: "Thanks for the escort service!"
-   - {"prompt":"Retro video game illustration of Starsky the Ram attempting to high-five a very confused goose mid-flight, saying 'Thanks for the escort service!' The goose's wing awkwardly meets his hoof. Bold 80s/90s cartoon style with humorous animal interaction.","size":"1024x1024","n":1}
-
 2. City skyline appears: "10 kilometers! I can see the OCU flag from here!"
-   - {"prompt":"Retro video game scene of Starsky the Ram pointing excitedly at the city skyline appearing below, saying '10 kilometers! I can see the OCU flag from here!' Buildings and urban landscape visible. Bold 80s/90s style with detailed cityscape background.","size":"1024x1024","n":1}
 
-#### Stage 8: Helicopter Heights
+## Stage 8: Helicopter Heights
 
-##### Entrance (3 panels)
+### Entrance (3 panels)
 1. News helicopters swarm around, cameras rolling
-   - {"prompt":"Retro video game scene of multiple news helicopters converging on Starsky the Ram, with camera operators visible filming him. TV station logos on the helicopters. Bold 80s/90s action news style with dramatic helicopter angles and spinning rotors.","size":"1024x1024","n":1}
-
 2. Starsky faces the cameras: "This just in: Ram incoming!"
-   - {"prompt":"Retro video game close-up of Starsky the Ram facing news cameras with a reporter's microphone gesture, saying 'This just in: Ram incoming!' in a news anchor voice. His golden horns gleam in camera lights. Bold 80s/90s broadcast style with lens flares.","size":"1024x1024","n":1}
-
 3. Winks at news camera: "Tell my professors I'll be there for the quiz!"
-   - {"prompt":"Retro video game illustration of Starsky the Ram winking directly at a news camera with finger guns, saying 'Tell my professors I'll be there for the quiz!' Camera lens reflection visible in his sunglasses. Bold 80s/90s style with charismatic media moment.","size":"1024x1024","n":1}
 
-##### Exit (2 panels)
+### Exit (2 panels)
 1. Starsky blows kisses to the news crews: "Remember, Stars shine brightest!"
-   - {"prompt":"Retro video game scene of Starsky the Ram blowing kisses to multiple helicopter news crews while falling, saying 'Remember, Stars shine brightest!' Helicopters circle around him. Bold 80s/90s celebrity style with paparazzi energy and star quality poses.","size":"1024x1024","n":1}
-
 2. "5 kilometers to touchdown! Hope they saved me a parking spot!"
-   - {"prompt":"Retro video game illustration of Starsky the Ram looking down at the approaching campus, adjusting his sunglasses, saying '5 kilometers to touchdown! Hope they saved me a parking spot!' Bold 80s/90s style with campus buildings visible below.","size":"1024x1024","n":1}
 
-#### Stage 9: Skyscraper Slalom
+## Stage 9: Skyscraper Slalom
 
-##### Entrance (3 panels)
+### Entrance (3 panels)
 1. City buildings tower around him, office workers pressed against windows
-   - {"prompt":"Retro video game scene of Starsky the Ram falling between towering skyscrapers with office workers pressed against windows watching in amazement. His reflection appears in the glass buildings. Bold 80s/90s urban style with detailed building textures and crowd reactions.","size":"1024x1024","n":1}
-
 2. "Urban jungle? More like urban playground!"
-   - {"prompt":"Retro video game close-up of Starsky the Ram with a confident smirk surrounded by buildings, saying 'Urban jungle? More like urban playground!' City lights reflect in his sunglasses. Bold 80s/90s action style with urban environment and cocky attitude.","size":"1024x1024","n":1}
-
 3. Wall-jumps between buildings: "Parkour? More like RAM-kour!"
-   - {"prompt":"Retro video game action shot of Starsky the Ram performing a wall-jump between two buildings, legs extended, saying 'Parkour? More like RAM-kour!' Motion lines show his trajectory. Bold 80s/90s extreme sports style with dynamic urban acrobatics.","size":"1024x1024","n":1}
 
-##### Exit (2 panels)
+### Exit (2 panels)
 1. Starsky salutes construction workers: "Thanks for building my obstacle course!"
-   - {"prompt":"Retro video game scene of Starsky the Ram saluting construction workers on scaffolding who wave back, saying 'Thanks for building my obstacle course!' Hard hats and tools visible. Bold 80s/90s cartoon style with blue-collar camaraderie.","size":"1024x1024","n":1}
-
 2. Campus visible below: "1 kilometer! I can hear the fight song from here!"
-   - {"prompt":"Retro video game illustration of Starsky the Ram with hand to ear in listening pose, OCU campus visible below, saying '1 kilometer! I can hear the fight song from here!' Campus buildings and fountain visible. Bold 80s/90s style with anticipation and school pride.","size":"1024x1024","n":1}
 
-#### Stage 10: Campus Crashdown
+## Stage 10: Campus Crashdown
 
-##### Entrance (3 panels)
+### Entrance (3 panels)
 1. OCU campus spreads below, students pointing up and cheering
-   - {"prompt":"Retro video game wide shot of OCU campus from above with crowds of students pointing up and cheering at Starsky the Ram descending. School buildings and quad visible. Bold 80s/90s celebration style with excited crowd energy and school spirit.","size":"1024x1024","n":1}
-
 2. "Home sweet home! Did you miss me?"
-   - {"prompt":"Retro video game close-up of Starsky the Ram with arms spread wide in greeting, huge smile, saying 'Home sweet home! Did you miss me?' Golden horns shining in sunlight. Bold 80s/90s homecoming style with warm, welcoming expression.","size":"1024x1024","n":1}
-
 3. Arms spread wide: "Time for the most EPIC entrance in university history!"
-   - {"prompt":"Retro video game hero shot of Starsky the Ram with arms spread wide like a skydiver, dramatic angle from below, saying 'Time for the most EPIC entrance in university history!' Bold 80s/90s epic moment style with dramatic perspective and heroic pose.","size":"1024x1024","n":1}
 
-##### Exit (2 panels)
+### Exit (2 panels)
 1. Starsky aims for the fountain: "Calculated trajectory: 100% awesome!"
-   - {"prompt":"Retro video game POV shot of Starsky the Ram aiming for the campus fountain below, with targeting reticle overlay, saying 'Calculated trajectory: 100% awesome!' Bold 80s/90s video game HUD style with targeting graphics and precision landing setup.","size":"1024x1024","n":1}
-
 2. "Zero kilometers! STARS FOREVER!"
-   - {"prompt":"Retro video game illustration of Starsky the Ram in final approach to the fountain, fist raised triumphantly, shouting 'Zero kilometers! STARS FOREVER!' Fountain and cheering crowd visible below. Bold 80s/90s victory style with epic landing moment approaching.","size":"1024x1024","n":1}
+
+## Ending (10 panels)
+1. Fountain landing with huge splash
+2. Students surround fountain cheering
+3. President hands him towel: "Starsky, that was..."
+4. "Necessary? Awesome? Ram-tastic?"
+5. "I was going to say 'unprecedented'..."
+6. Freshman approaches: "Can you teach me that?"
+7. Starsky grins: "First rule of being a Star..."
+8. "Always aim high..." 
+9. "...even when you're falling!"
+10. Everyone laughs, OCU flag waves, iris out on Starsky's wink
+
+#### Opening (8 panels)
+1. Starsky floating in space, reading "OCU Student Handbook"
+2. Telescope view of campus - freshman looking lost
+3. Starsky floating in space saying "Those new Stars need guidance!"
+4. Starsky putting on jetpack and adjusts sunglasses
+5. "Time for some RAM-spiration!"
+6. Starsky checks watch and says: "Orientation in... 10 minutes?!"
+7. Starsky smiles and puts his shadees on and says with confidence "Good thing I know a shortcut!"
+##### In-game scene
+1. (as starsky leaves the ledge under player control this square pops up) JUMPS with "STARS FOREVER!" battle cry
+
+#### Midpoint (After Stage 5) (6 panels)
+1. Starsky catching breath on a cloud
+2. Pulls out phone (somehow has signal)
+3. Text from mascot friends: "R U OK?"
+4. Selfie with Earth in background
+5. Posts: "Just dropping in! #RAMdom #OCUbound"
+6. Comments explode: "LEGEND!" "Save some cool for us!"
 
 #### Ending (10 panels)
 1. Fountain landing with huge splash
-   - {"prompt":"Epic retro video game illustration of Starsky the Ram landing in a campus fountain with a massive splash. Water droplets fly everywhere in dramatic slow motion, his golden horns gleaming through the spray. Students visible cheering around the fountain. Bold 80s/90s action game aesthetics with dynamic water effects and motion blur.","size":"1024x1024","n":1}
-
 2. Students surround fountain cheering
-   - {"prompt":"Retro video game celebration scene with dozens of diverse college students surrounding a fountain, cheering with raised arms. Starsky the Ram is visible in the center, soaking wet but triumphant. Bold 80s/90s cartoon style with vibrant school colors, confetti effects, and joyful crowd energy.","size":"1024x1024","n":1}
-
 3. President hands him towel: "Starsky, that was..."
-   - {"prompt":"Retro video game dialogue scene showing a distinguished university president in a suit handing a towel to a dripping wet Starsky the Ram. The president has a speech bubble saying 'Starsky, that was...' with an expression mixing stern and impressed. Bold 80s/90s visual novel style art with detailed character expressions.","size":"1024x1024","n":1}
-
 4. "Necessary? Awesome? Ram-tastic?"
-   - {"prompt":"Retro video game close-up of Starsky the Ram with a cheeky grin, still dripping wet, with multiple choice speech bubbles saying 'Necessary?' 'Awesome?' 'Ram-tastic?' His golden horns have water droplets and his sunglasses are slightly askew. Bold 80s/90s comic style with exaggerated expressions and vibrant colors.","size":"1024x1024","n":1}
-
 5. "I was going to say 'unprecedented'..."
-   - {"prompt":"Retro video game illustration of the university president with a slight smile, adjusting his glasses with a speech bubble saying 'I was going to say unprecedented...' Behind him, students are taking selfies with the wet Starsky the Ram. Bold 80s/90s visual novel art style with detailed backgrounds and character interactions.","size":"1024x1024","n":1}
-
 6. Freshman approaches: "Can you teach me that?"
-   - {"prompt":"Retro video game scene of a wide-eyed freshman student approaching Starsky the Ram with admiration, holding a notebook and saying 'Can you teach me that?' Starsky is drying his golden horns with a towel. Bold 80s/90s cartoon style showing the size difference and the freshman's awestruck expression.","size":"1024x1024","n":1}
-
 7. Starsky grins: "First rule of being a Star..."
-   - {"prompt":"Retro video game illustration of Starsky the Ram with a mentoring expression, one hoof on the freshman's shoulder, saying 'First rule of being a Star...' His golden horns catch the sunlight dramatically. Bold 80s/90s inspirational poster style with warm lighting and heroic composition.","size":"1024x1024","n":1}
-
-8. "Always aim high..."
-   - {"prompt":"Retro video game art of Starsky the Ram pointing dramatically upward toward the sky, his golden horns framing his determined face, with a speech bubble saying 'Always aim high...' The freshman and other students look up inspired. Bold 80s/90s motivational scene with dramatic sky and lens flares.","size":"1024x1024","n":1}
-
+8. "Always aim high..." 
 9. "...even when you're falling!"
-   - {"prompt":"Retro video game illustration of Starsky the Ram with a knowing wink and finger guns pose, finishing his advice with '...even when you're falling!' Students around him laugh and cheer. Bold 80s/90s cartoon style with dynamic poses and comic book energy lines radiating from the character.","size":"1024x1024","n":1}
-
 10. Everyone laughs, OCU flag waves, iris out on Starsky's wink
-   - {"prompt":"Retro video game ending scene with a classic iris transition closing in on Starsky the Ram's winking face. The OCU flag waves proudly in the background, students are laughing and celebrating. Golden horns gleam one last time. Bold 80s/90s cartoon style with the classic circular closing transition effect and vibrant school colors.","size":"1024x1024","n":1}
 
 ---
 
