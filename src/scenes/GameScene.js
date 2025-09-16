@@ -923,6 +923,86 @@ async exit() {
             this.container.addChild(overlay);
             this.completionOverlay = overlay;
         }
+    
+completeLevel() {
+        const levelNumber = this.currentLevel || 1;
+        const score = this.score;
+        
+        // Save the score
+        if (this.game.levelManager) {
+            this.game.levelManager.completeLevel(levelNumber, score);
+        }
+        
+        // Check if level has exit story
+        const hasExitStory = this.checkForStoryPanels(levelNumber, 'exit');
+        
+        if (hasExitStory) {
+            // Show exit story
+            this.changeScene('story', {
+                levelNumber: levelNumber,
+                storyType: 'exit',
+                nextScene: this.getNextScene(levelNumber),
+                nextData: this.getNextSceneData(levelNumber)
+            });
+        } else {
+            // No exit story, go to next destination
+            this.goToNextDestination(levelNumber);
+        }
+    }
+    
+    checkForStoryPanels(levelNumber, storyType) {
+        // Match the logic in LevelSelectScene
+        if (levelNumber === 1 && storyType === 'exit') {
+            return true;
+        }
+        return false;
+    }
+    
+    getNextScene(levelNumber) {
+        // After completing a level, determine where to go
+        const nextLevel = levelNumber + 1;
+        
+        // Check if next level exists and has an entry story
+        if (nextLevel <= 10) {
+            const hasNextLevelEntry = this.checkForStoryPanels(nextLevel, 'entry');
+            if (hasNextLevelEntry) {
+                return 'story'; // Go to story for next level entry
+            } else {
+                return 'game'; // Go directly to next level
+            }
+        } else {
+            // Completed all levels
+            return 'victory'; // Or 'menu' if victory scene doesn't exist
+        }
+    }
+    
+    getNextSceneData(levelNumber) {
+        const nextLevel = levelNumber + 1;
+        
+        if (nextLevel <= 10) {
+            const hasNextLevelEntry = this.checkForStoryPanels(nextLevel, 'entry');
+            if (hasNextLevelEntry) {
+                // Data for next level's entry story
+                return {
+                    levelNumber: nextLevel,
+                    storyType: 'entry',
+                    nextScene: 'game',
+                    nextData: { levelNumber: nextLevel }
+                };
+            } else {
+                // Data for next level game
+                return { levelNumber: nextLevel };
+            }
+        } else {
+            return {};
+        }
+    }
+    
+    goToNextDestination(levelNumber) {
+        const nextScene = this.getNextScene(levelNumber);
+        const nextData = this.getNextSceneData(levelNumber);
+        this.changeScene(nextScene, nextData);
+    }
 
 
     destroy() {

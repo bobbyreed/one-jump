@@ -143,3 +143,39 @@ export const OBSTACLE_TYPES = [
     { type: 'spinner', color: 0xff44ff, damage: 100 },
     { type: 'wall', color: 0x4444ff, damage: 50 }
 ];
+
+export const LEVEL_STORIES = {
+    1: {
+        entry: {
+            panels: 1,  // Number of panels
+            title: "Tutorial Rooftop",
+            exists: true
+        },
+        exit: {
+            panels: 1,
+            title: "Level 1 Complete!",
+            exists: true
+        }
+    },
+    2: {
+        entry: {
+            panels: 1,
+            title: "Entering Level 2",
+            exists: true
+        },
+        exit: {
+            panels: 0,
+            title: "Level 2 Complete!",
+            exists: false
+        }
+    },
+    // Add more levels as panels are created
+    3: { entry: { exists: false }, exit: { exists: false } },
+    4: { entry: { exists: false }, exit: { exists: false } },
+    5: { entry: { exists: false }, exit: { exists: false } },
+    6: { entry: { exists: false }, exit: { exists: false } },
+    7: { entry: { exists: false }, exit: { exists: false } },
+    8: { entry: { exists: false }, exit: { exists: false } },
+    9: { entry: { exists: false }, exit: { exists: false } },
+    10: { entry: { exists: false }, exit: { exists: false } }
+};

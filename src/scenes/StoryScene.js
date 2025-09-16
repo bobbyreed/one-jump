@@ -19,9 +19,14 @@ export default class StoryScene extends BaseScene {
         this.storyTitle = null;
         this.panelCounter = null;
 
-        //scene transition stuffs
+        // Scene transition data
         this.nextScene = 'game';
         this.nextData = {};
+        
+        // Level-specific story data
+        this.levelNumber = null;
+        this.storyType = null; // 'opening', 'entry', or 'exit'
+        this.actualPanelCount = STORY.PANEL_COUNT; // Will be updated based on loaded panels
     }
 
     async init() {
@@ -37,22 +42,48 @@ export default class StoryScene extends BaseScene {
         this.panelsContainer = new Container();
         this.container.addChild(this.panelsContainer);
 
-        // Load panel textures
-        await this.loadPanelTextures();
-
-        // Create panels
-        this.createPanels();
-
+        // Don't load panels in init - wait for enter() to determine which panels to load
         // Create UI elements
         this.createUI();
     }
 
     async loadPanelTextures() {
-        this.panelTextures = await this.game.assetManager.loadStoryPanels();
+        // Determine which panels to load based on story type and level
+        if (this.storyType === 'opening') {
+            // Original opening story
+            this.panelTextures = await this.game.assetManager.loadStoryPanels();
+            this.actualPanelCount = this.panelTextures.length;
+        } else if (this.levelNumber && this.storyType) {
+            // Level-specific story (entry or exit)
+            this.panelTextures = await this.game.assetManager.loadLevelStoryPanels(
+                this.levelNumber, 
+                this.storyType,
+                3 // Try to load up to 3 panels for level stories
+            );
+            
+            // Filter out any nulls to get actual panel count
+            this.actualPanelCount = this.panelTextures.filter(p => p !== null).length;
+            
+            // If no panels were loaded, create placeholders
+            if (this.actualPanelCount === 0) {
+                console.warn(`No ${this.storyType} panels for level ${this.levelNumber}, using placeholders`);
+                this.panelTextures = [null]; // At least one placeholder
+                this.actualPanelCount = 1;
+            }
+        } else {
+            // Fallback - no panels
+            this.panelTextures = [];
+            this.actualPanelCount = 0;
+        }
     }
 
     createPanels() {
-        for (let i = 0; i < STORY.PANEL_COUNT; i++) {
+        // Clear existing panels
+        this.panels.forEach(panel => panel.destroy());
+        this.panels = [];
+        this.panelsContainer.removeChildren();
+        
+        for (let i = 0; i < this.actualPanelCount; i++) {
             const panelContainer = new Container();
 
             // Panel frame
@@ -73,14 +104,33 @@ export default class StoryScene extends BaseScene {
                     STORY.PANEL_MAX_HEIGHT / panel.texture.height
                 );
                 panel.scale.set(scale);
+                
+                // Center the panel
+                panel.x = (STORY.PANEL_MAX_WIDTH - panel.width) / 2;
+                panel.y = (STORY.PANEL_MAX_HEIGHT - panel.height) / 2;
 
                 panelContainer.addChild(panel);
             } else {
-                // Create placeholder
+                // Create placeholder with text
                 const placeholder = new Graphics()
                     .rect(0, 0, STORY.PANEL_MAX_WIDTH, STORY.PANEL_MAX_HEIGHT)
                     .fill({ color: 0x444466 });
                 panelContainer.addChild(placeholder);
+                
+                // Add placeholder text
+                const placeholderText = new Text({
+                    text: `Level ${this.levelNumber || '?'}\n${this.storyType || 'Story'}\nPanel ${i + 1}`,
+                    style: {
+                        fontFamily: 'Arial',
+                        fontSize: 32,
+                        fill: 0x888888,
+                        align: 'center'
+                    }
+                });
+                placeholderText.anchor.set(0.5);
+                placeholderText.x = STORY.PANEL_MAX_WIDTH / 2;
+                placeholderText.y = STORY.PANEL_MAX_HEIGHT / 2;
+                panelContainer.addChild(placeholderText);
             }
 
             // Calculate fan position
@@ -116,7 +166,7 @@ export default class StoryScene extends BaseScene {
             150,
             50,
             COLORS.UI_PRIMARY,
-            () => this.showNextPanel()
+            () => this.handleNextClick()
         );
         this.nextButton.container.alpha = 0;
         this.container.addChild(this.nextButton.container);
@@ -155,7 +205,7 @@ export default class StoryScene extends BaseScene {
 
         // Panel counter
         this.panelCounter = new Text({
-            text: '1 / 5',
+            text: '1 / 1',
             style: {
                 fontFamily: 'Arial',
                 fontSize: 20,
@@ -169,13 +219,28 @@ export default class StoryScene extends BaseScene {
         this.container.addChild(this.panelCounter);
     }
 
+    handleNextClick() {
+        // Clear auto-advance timer
+        if (this.autoAdvanceTimer) {
+            clearTimeout(this.autoAdvanceTimer);
+            this.autoAdvanceTimer = null;
+        }
+        
+        this.showNextPanel();
+    }
+
     showNextPanel() {
-        if (this.currentPanelIndex >= STORY.PANEL_COUNT) {
+        if (this.currentPanelIndex >= this.actualPanelCount) {
             this.endStorySequence();
             return;
         }
 
         const panel = this.panels[this.currentPanelIndex];
+        if (!panel) {
+            this.endStorySequence();
+            return;
+        }
+        
         panel.visible = true;
 
         // Clear any existing timer
@@ -187,7 +252,7 @@ export default class StoryScene extends BaseScene {
         this.animatePanelIn(panel);
 
         // Update counter
-        this.panelCounter.text = `${this.currentPanelIndex + 1} / ${STORY.PANEL_COUNT}`;
+        this.panelCounter.text = `${this.currentPanelIndex + 1} / ${this.actualPanelCount}`;
 
         // Show UI on first panel
         if (this.currentPanelIndex === 0) {
@@ -200,15 +265,17 @@ export default class StoryScene extends BaseScene {
         // Darken previous panels
         if (this.currentPanelIndex > 0) {
             for (let i = 0; i < this.currentPanelIndex; i++) {
-                this.darkenPanel(this.panels[i]);
+                if (this.panels[i]) {
+                    this.darkenPanel(this.panels[i]);
+                }
             }
         }
 
         this.currentPanelIndex++;
 
         // Update button text for last panel
-        if (this.currentPanelIndex === STORY.PANEL_COUNT) {
-            this.nextButton.setText('Start Game');
+        if (this.currentPanelIndex === this.actualPanelCount) {
+            this.nextButton.setText('Continue');
         }
 
         // Auto advance
@@ -221,164 +288,154 @@ export default class StoryScene extends BaseScene {
         const fadeInDuration = STORY.PANEL_FADE_TIME / 1000;
         let elapsed = 0;
 
-        const animate = (ticker) => {
+        const fadeIn = (ticker) => {
             elapsed += ticker.deltaTime / 60;
             const progress = Math.min(elapsed / fadeInDuration, 1);
+            panel.alpha = progress;
 
-            // Ease-out curve
-            const eased = 1 - Math.pow(1 - progress, 3);
-
-            panel.alpha = eased;
-
-            // Glow effect
-            if (progress < 0.5) {
-                panel.glow.alpha = progress * 2;
-            } else {
-                panel.glow.alpha = (1 - progress) * 2;
-            }
-
-            // Scale effect
-            panel.scale.set(0.95 + (eased * 0.05));
+            // Subtle floating animation
+            panel.y = panel.baseY + Math.sin(elapsed * 2) * 5;
 
             if (progress >= 1) {
-                this.game.app.ticker.remove(animate);
-                this.addFloatingAnimation(panel);
+                this.game.app.ticker.remove(fadeIn);
             }
         };
 
-        this.game.app.ticker.add(animate);
+        this.game.app.ticker.add(fadeIn);
     }
 
     darkenPanel(panel) {
-        const darkenDuration = 0.5;
-        let elapsed = 0;
-
-        const animate = (ticker) => {
-            elapsed += ticker.deltaTime / 60;
-            const progress = Math.min(elapsed / darkenDuration, 1);
-
-            panel.alpha = 1 - (progress * 0.4);
-            panel.glow.alpha = 0;
-
-            if (progress >= 1) {
-                this.game.app.ticker.remove(animate);
-            }
-        };
-
-        this.game.app.ticker.add(animate);
-    }
-
-    addFloatingAnimation(panel) {
-        panel.floatTime = 0;
-        const float = (ticker) => {
-            if (!panel.visible) {
-                this.game.app.ticker.remove(float);
-                return;
-            }
-            panel.floatTime += ticker.deltaTime * 0.05;
-            panel.y = panel.baseY + Math.sin(panel.floatTime) * 2;
-        };
-        this.game.app.ticker.add(float);
+        panel.alpha = 0.5;
+        // Optionally add darkening overlay
     }
 
     fadeIn(element, duration) {
         let elapsed = 0;
-        const fadeTime = duration / 1000;
+        const fadeInDuration = duration / 1000;
 
-        const animate = (ticker) => {
+        const fade = (ticker) => {
             elapsed += ticker.deltaTime / 60;
-            const progress = Math.min(elapsed / fadeTime, 1);
+            const progress = Math.min(elapsed / fadeInDuration, 1);
             element.alpha = progress;
 
             if (progress >= 1) {
-                this.game.app.ticker.remove(animate);
+                this.game.app.ticker.remove(fade);
             }
         };
 
-        this.game.app.ticker.add(animate);
+        this.game.app.ticker.add(fade);
     }
 
     endStorySequence() {
-        // Clear timer
-    if (this.autoAdvanceTimer) {
-        clearTimeout(this.autoAdvanceTimer);
-    }
-
-    // Fade out and transition
-    let fadeElapsed = 0;
-    const fadeDuration = 0.5;
-
-    const fadeOut = (ticker) => {
-        fadeElapsed += ticker.deltaTime / 60;
-        const progress = Math.min(fadeElapsed / fadeDuration, 1);
-        this.container.alpha = 1 - progress;
-
-        if (progress >= 1) {
-            this.game.app.ticker.remove(fadeOut);
-            this.container.alpha = 1;
-            
-            // Use the stored next scene and data
-            this.changeScene(this.nextScene, this.nextData);
-            this.reset();
+        // Clear auto-advance timer
+        if (this.autoAdvanceTimer) {
+            clearTimeout(this.autoAdvanceTimer);
+            this.autoAdvanceTimer = null;
         }
-    };
 
-    this.game.app.ticker.add(fadeOut);
-}
+        // Fade out and transition
+        const fadeDuration = 0.5;
+        let fadeElapsed = 0;
+
+        const fadeOut = (ticker) => {
+            fadeElapsed += ticker.deltaTime / 60;
+            const progress = Math.min(fadeElapsed / fadeDuration, 1);
+            this.container.alpha = 1 - progress;
+
+            if (progress >= 1) {
+                this.game.app.ticker.remove(fadeOut);
+                this.container.alpha = 1;
+                
+                // Use the stored next scene and data
+                this.changeScene(this.nextScene, this.nextData);
+                this.reset();
+            }
+        };
+
+        this.game.app.ticker.add(fadeOut);
+    }
 
     reset() {
         // Reset for next time
         this.currentPanelIndex = 0;
         this.panels.forEach(p => {
-            p.visible = false;
-            p.alpha = 0;
-            p.scale.set(1);
+            if (p) {
+                p.visible = false;
+                p.alpha = 0;
+                p.scale.set(1);
+            }
         });
-        this.nextButton.container.alpha = 0;
-        this.panelCounter.alpha = 0;
-        this.storyTitle.alpha = 0;
-        this.skipButton.container.visible = false;
-        this.nextButton.setText('Next');
+        if (this.nextButton) this.nextButton.container.alpha = 0;
+        if (this.panelCounter) this.panelCounter.alpha = 0;
+        if (this.storyTitle) this.storyTitle.alpha = 0;
+        if (this.skipButton) this.skipButton.container.visible = false;
+        if (this.nextButton) this.nextButton.setText('Next');
     }
 
     async enter(data = {}) {
         await super.enter(data);
         
+        // Store story configuration
+        this.levelNumber = data.levelNumber || null;
+        this.storyType = data.storyType || 'opening'; // 'opening', 'entry', or 'exit'
+        
         // Store where to go after story completes
         this.nextScene = data.nextScene || 'game';
         this.nextData = data.nextData || {};
         
-        // Reset the panels
+        // Make sure level number is passed along
+        if (this.levelNumber && !this.nextData.levelNumber) {
+            this.nextData.levelNumber = this.levelNumber;
+        }
+        
+        // Load the appropriate panels
+        await this.loadPanelTextures();
+        
+        // Create panels based on loaded textures
+        this.createPanels();
+        
+        // Update story title based on type
+        this.updateStoryTitle();
+        
+        // Reset the scene
         this.reset();
         
-        // Check if this is a level-specific story
-        if (data.levelNumber) {
-            const levelManager = this.game.levelManager;
+        // Start showing the story panels
+        if (this.actualPanelCount > 0) {
+            this.showNextPanel();
+        } else {
+            // No panels, skip directly to next scene
+            console.warn('No story panels loaded, skipping to next scene');
+            this.endStorySequence();
+        }
+    }
+
+    updateStoryTitle() {
+        if (!this.storyTitle) return;
+        
+        let title = 'The Story Continues...';
+        
+        if (this.storyType === 'opening') {
+            title = 'The Call to Campus';
+        } else if (this.levelNumber) {
+            const levelName = this.game.levelManager?.getLevelConfig(this.levelNumber)?.name || `Level ${this.levelNumber}`;
             
-            // Only try to get story panels if levelManager exists
-            if (levelManager && levelManager.getStoryPanels) {
-                const storyData = levelManager.getStoryPanels(data.levelNumber, data.isIntro);
-                
-                // Update story title if we have one
-                if (this.storyTitle && storyData && storyData.title) {
-                    this.storyTitle.text = storyData.title;
-                }
-            }
-            
-            // Make sure level number is passed to game scene
-            if (!this.nextData.levelNumber) {
-                this.nextData.levelNumber = data.levelNumber;
+            if (this.storyType === 'entry') {
+                title = `Entering ${levelName}`;
+            } else if (this.storyType === 'exit') {
+                title = `${levelName} Complete!`;
             }
         }
-    
-    // Start showing the story panels
-    this.showNextPanel();
-}
+        
+        this.storyTitle.text = title;
+    }
+
     async exit() {
         await super.exit();
 
         if (this.autoAdvanceTimer) {
             clearTimeout(this.autoAdvanceTimer);
+            this.autoAdvanceTimer = null;
         }
     }
 

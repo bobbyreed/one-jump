@@ -776,4 +776,35 @@ export default class LevelSelectScene extends BaseScene {
                 nextData: { levelNumber: this.selectedLevel }
             });
         }
+
+         startLevel() {
+        if (!this.selectedLevel) return;
+        
+        // Check if level has entry story panels
+        const hasEntryStory = this.checkForStoryPanels(this.selectedLevel, 'entry');
+        
+        if (hasEntryStory) {
+            // Go to story scene first, then game
+            this.changeScene('story', {
+                levelNumber: this.selectedLevel,
+                storyType: 'entry',
+                nextScene: 'game',
+                nextData: { levelNumber: this.selectedLevel }
+            });
+        } else {
+            // No entry story, go directly to game
+            this.changeScene('game', { levelNumber: this.selectedLevel });
+        }
+    }
+    
+    checkForStoryPanels(levelNumber, storyType) {
+        // For now, we know level 1 has entry and exit panels
+        // Level 2 has entry panel
+        if (levelNumber === 1) {
+            return true; // Has both entry and exit
+        } else if (levelNumber === 2 && storyType === 'entry') {
+            return true;
+        }
+        return false;
+    }
 }
