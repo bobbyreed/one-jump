@@ -369,40 +369,6 @@ export default class LevelSelectScene extends BaseScene {
         });
     }
 
-    selectLevel(levelNumber) {
-        this.selectedLevel = levelNumber;
-        
-        // Update button highlights
-        this.levelButtons.forEach(btn => {
-            if (btn.levelNumber === levelNumber) {
-                btn.scale.set(1.1);
-                btn.children[0].tint = 0xaaffaa; // Highlight selected
-            } else {
-                btn.scale.set(1);
-                btn.children[0].tint = 0xffffff;
-            }
-        });
-        
-        // Update info panel
-        const config = this.game.levelManager.getLevelConfig(levelNumber);
-        this.infoText.text = `STAGE ${levelNumber}: ${config.name}\n\n${config.subtitle}\n\nTarget Score: ${config.targetScore.toLocaleString()}\nDuration: ${config.duration} seconds`;
-        
-        // Show play button
-        this.playButton.container.visible = true;
-    }
-
-    startSelectedLevel() {
-        if (!this.selectedLevel) return;
-        
-        // Show story intro for the level
-        this.game.sceneManager.changeScene('story', {
-            levelNumber: this.selectedLevel,
-            isIntro: true,
-            nextScene: 'game',
-            nextData: { levelNumber: this.selectedLevel }
-        });
-    }
-
     showLevelPreview(levelNumber) {
         // Could show a small preview of the level obstacles
         const config = this.game.levelManager.getLevelConfig(levelNumber);
@@ -758,9 +724,9 @@ export default class LevelSelectScene extends BaseScene {
             }
             
             this.infoText.text = infoText;
-            
+
             // Show play button
-            this.playButton.visible = true;
+            this.playButton.container.visible = true;
         }
 
         startSelectedLevel() {
