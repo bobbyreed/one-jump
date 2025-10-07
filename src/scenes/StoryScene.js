@@ -69,6 +69,66 @@ export default class StoryScene extends BaseScene {
         this.panelCount = this.panelTextures.length;
     }
 
+    calculatePanelLayout(panelCount) {
+        const screenWidth = this.game.app.screen.width;
+        const screenHeight = this.game.app.screen.height;
+
+        // Reserve space for UI elements
+        const uiReserveTop = 150;     // Title area
+        const uiReserveBottom = 150;  // Buttons area
+        const sideMargin = 100;       // Side margins
+
+        const usableWidth = screenWidth - (sideMargin * 2);
+        const usableHeight = screenHeight - uiReserveTop - uiReserveBottom;
+
+        let rows, cols;
+
+        // Determine grid layout based on panel count
+        if (panelCount === 2) {
+            rows = 1;
+            cols = 2;
+        } else if (panelCount === 3) {
+            rows = 1;
+            cols = 3;
+        } else if (panelCount <= 6) {
+            rows = 2;
+            cols = 3;
+        } else {
+            // Fallback for unexpected counts
+            rows = Math.ceil(Math.sqrt(panelCount));
+            cols = Math.ceil(panelCount / rows);
+        }
+
+        // Calculate spacing
+        const horizontalSpacing = 40;
+        const verticalSpacing = 40;
+
+        // Calculate panel dimensions
+        const totalHorizontalSpacing = horizontalSpacing * (cols - 1);
+        const totalVerticalSpacing = verticalSpacing * (rows - 1);
+
+        const panelWidth = (usableWidth - totalHorizontalSpacing) / cols;
+        const panelHeight = (usableHeight - totalVerticalSpacing) / rows;
+
+        // Calculate starting position to center the grid
+        const gridWidth = (panelWidth * cols) + totalHorizontalSpacing;
+        const gridHeight = (panelHeight * rows) + totalVerticalSpacing;
+
+        const startX = sideMargin + (usableWidth - gridWidth) / 2;
+        const startY = uiReserveTop + (usableHeight - gridHeight) / 2;
+
+        return {
+            rows,
+            cols,
+            panelWidth,
+            panelHeight,
+            startX,
+            startY,
+            horizontalSpacing,
+            verticalSpacing
+        };
+    }
+
     createPanels() {
         // Clear any existing panels first
         this.panels.forEach(panel => {
@@ -78,55 +138,69 @@ export default class StoryScene extends BaseScene {
         });
         this.panels = [];
 
+        // Calculate dynamic layout
+        const layout = this.calculatePanelLayout(this.panelCount);
+
         for (let i = 0; i < this.panelCount; i++) {
             const panelContainer = new Container();
 
-            // Panel frame
-            const frame = new Graphics()
-                .roundRect(-10, -10, STORY.PANEL_MAX_WIDTH + 20, STORY.PANEL_MAX_HEIGHT + 20, 10)
-                .fill({ color: 0x222244, alpha: 0.8 })
-                .roundRect(-10, -10, STORY.PANEL_MAX_WIDTH + 20, STORY.PANEL_MAX_HEIGHT + 20, 10)
-                .stroke({ width: 3, color: 0x666688 });
-            panelContainer.addChild(frame);
+            // Calculate grid position
+            const row = Math.floor(i / layout.cols);
+            const col = i % layout.cols;
+
+            // Calculate position in grid
+            const gridX = layout.startX + (col * (layout.panelWidth + layout.horizontalSpacing));
+            const gridY = layout.startY + (row * (layout.panelHeight + layout.verticalSpacing));
 
             // Panel image or placeholder
+            let panelSprite;
             if (this.panelTextures[i]) {
-                const panel = new Sprite(this.panelTextures[i]);
+                panelSprite = new Sprite(this.panelTextures[i]);
 
-                // Scale to fit
+                // Scale to fit panel dimensions while maintaining aspect ratio
                 const scale = Math.min(
-                    STORY.PANEL_MAX_WIDTH / panel.texture.width,
-                    STORY.PANEL_MAX_HEIGHT / panel.texture.height
+                    layout.panelWidth / panelSprite.texture.width,
+                    layout.panelHeight / panelSprite.texture.height
                 );
-                panel.scale.set(scale);
+                panelSprite.scale.set(scale);
 
-                panelContainer.addChild(panel);
+                // Center sprite within panel area
+                const scaledWidth = panelSprite.texture.width * scale;
+                const scaledHeight = panelSprite.texture.height * scale;
+                panelSprite.x = (layout.panelWidth - scaledWidth) / 2;
+                panelSprite.y = (layout.panelHeight - scaledHeight) / 2;
             } else {
                 // Create placeholder
-                const placeholder = new Graphics()
-                    .rect(0, 0, STORY.PANEL_MAX_WIDTH, STORY.PANEL_MAX_HEIGHT)
+                panelSprite = new Graphics()
+                    .rect(0, 0, layout.panelWidth, layout.panelHeight)
                     .fill({ color: 0x444466 });
-                panelContainer.addChild(placeholder);
             }
 
-            // Calculate fan position
-            const fanX = STORY.PANEL_START_X + (i * STORY.PANEL_OFFSET_X);
-            const fanY = STORY.PANEL_START_Y + (i * STORY.PANEL_OFFSET_Y);
+            panelContainer.addChild(panelSprite);
 
-            panelContainer.x = fanX;
-            panelContainer.y = fanY;
+            // Panel frame (draw around the actual panel dimensions)
+            const frame = new Graphics()
+                .roundRect(-10, -10, layout.panelWidth + 20, layout.panelHeight + 20, 10)
+                .fill({ color: 0x222244, alpha: 0.8 })
+                .roundRect(-10, -10, layout.panelWidth + 20, layout.panelHeight + 20, 10)
+                .stroke({ width: 3, color: 0x666688 });
+            panelContainer.addChildAt(frame, 0); // Add frame behind the image
+
+            // Position panel
+            panelContainer.x = gridX;
+            panelContainer.y = gridY;
             panelContainer.alpha = 0;
             panelContainer.visible = false;
 
             // Add glow effect
             const glow = new Graphics()
-                .roundRect(-15, -15, STORY.PANEL_MAX_WIDTH + 30, STORY.PANEL_MAX_HEIGHT + 30, 12)
+                .roundRect(-15, -15, layout.panelWidth + 30, layout.panelHeight + 30, 12)
                 .stroke({ width: 4, color: 0xffdd00, alpha: 0 });
             panelContainer.addChildAt(glow, 0);
 
             panelContainer.panelIndex = i;
             panelContainer.glow = glow;
-            panelContainer.baseY = fanY;
+            panelContainer.baseY = gridY;
 
             this.panels.push(panelContainer);
             this.panelsContainer.addChild(panelContainer);
