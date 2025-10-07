@@ -731,15 +731,25 @@ export default class LevelSelectScene extends BaseScene {
 
         startSelectedLevel() {
             if (!this.selectedLevel) return;
-            
+
             console.log(`Starting level ${this.selectedLevel}`);
-            
-            // Transition to intro story for the selected level
-            this.game.sceneManager.changeScene('story', {
-                levelNumber: this.selectedLevel,
-                isIntro: true, // This is the intro story
-                nextScene: 'game', // After intro, go to game
-                nextData: { levelNumber: this.selectedLevel }
-            });
+
+            // Check if story should be skipped
+            const skipStory = this.game.saveManager.data.settings.skipStory;
+
+            if (skipStory) {
+                // Skip directly to game
+                this.game.sceneManager.changeScene('game', {
+                    levelNumber: this.selectedLevel
+                });
+            } else {
+                // Transition to intro story for the selected level
+                this.game.sceneManager.changeScene('story', {
+                    levelNumber: this.selectedLevel,
+                    isIntro: true, // This is the intro story
+                    nextScene: 'game', // After intro, go to game
+                    nextData: { levelNumber: this.selectedLevel }
+                });
+            }
         }
 }

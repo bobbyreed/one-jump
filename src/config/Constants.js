@@ -80,9 +80,10 @@ export const STORY = {
 // Scoring Configuration
 export const SCORING = {
     LANDING_PADS: [
-        { x_offset: -150, width: 60, color: 0x44ff44, points: 1000, label: 'PERFECT' },
+        // Ordered from largest to smallest so smallest (best) pads are checked last and take priority
+        { x_offset: -180, width: 360, color: 0xccffcc, points: 100, label: 'GOOD' },
         { x_offset: -90, width: 180, color: 0x88ff88, points: 500, label: 'GREAT' },
-        { x_offset: -180, width: 360, color: 0xccffcc, points: 100, label: 'GOOD' }
+        { x_offset: -30, width: 60, color: 0x44ff44, points: 1000, label: 'PERFECT' }
     ],
     NEAR_MISS_POINTS: [100, 150, 200, 300],
     COMBO_MULTIPLIERS: [1, 2, 3, 5, 8, 10],
@@ -151,5 +152,12 @@ export const OBSTACLE_TYPES = [
     { type: 'spike', color: 0xff4444, damage: 100 },
     { type: 'platform', color: 0xff8844, damage: 0 },
     { type: 'spinner', color: 0xff44ff, damage: 100 },
-    { type: 'wall', color: 0x4444ff, damage: 50 }
+    { type: 'wall', color: 0x4444ff, damage: 50 },
+    { type: 'alien', color: 0x00ff88, damage: 100 },
+    { type: 'barrel', color: 0xffaa00, damage: 75 },
+    { type: 'laser', color: 0xff0000, damage: 100 },
+    { type: 'meteor', color: 0x888888, damage: 75 },
+    { type: 'orbiter', color: 0x00ffff, damage: 75 },
+    { type: 'pendulum', color: 0xffff00, damage: 75 },
+    { type: 'pulsar', color: 0xff00ff, damage: 50 }
 ];

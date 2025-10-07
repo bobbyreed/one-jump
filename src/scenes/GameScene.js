@@ -71,9 +71,8 @@ export default class GameScene extends BaseScene {
         this.player = new Player(this.game.assetManager);
         this.worldContainer.addChild(this.player.container);
 
-        // Initialize systems
+        // Initialize systems (don't generate obstacles yet - wait for level config)
         this.obstacleManager = new ObstacleManager(this.worldContainer);
-        this.obstacleManager.generateObstacles();
 
         this.landingZone = new LandingZone(this.worldContainer);
 
@@ -103,24 +102,34 @@ export default class GameScene extends BaseScene {
     // Proceed to next level
         proceedToNextLevel() {
             console.log(`Proceeding to level ${this.currentLevel + 1}`);
-            
+
             // Clean up current level
             this.cleanup();
-            
-            // Transition to outro story, then next level intro
-            this.game.sceneManager.changeScene('story', {
-                levelNumber: this.currentLevel,
-                isIntro: false, // This is the outro
-                nextScene: 'story', // After outro, show next level's intro
-                nextData: {
-                    levelNumber: this.currentLevel + 1,
-                    isIntro: true, // Next story is an intro
-                    nextScene: 'game', // After that intro, start the game
+
+            // Check if story should be skipped
+            const skipStory = this.game.saveManager.data.settings.skipStory;
+
+            if (skipStory) {
+                // Skip directly to next level game
+                this.game.sceneManager.changeScene('game', {
+                    levelNumber: this.currentLevel + 1
+                });
+            } else {
+                // Transition to outro story, then next level intro
+                this.game.sceneManager.changeScene('story', {
+                    levelNumber: this.currentLevel,
+                    isIntro: false, // This is the outro
+                    nextScene: 'story', // After outro, show next level's intro
                     nextData: {
-                        levelNumber: this.currentLevel + 1
+                        levelNumber: this.currentLevel + 1,
+                        isIntro: true, // Next story is an intro
+                        nextScene: 'game', // After that intro, start the game
+                        nextData: {
+                            levelNumber: this.currentLevel + 1
+                        }
                     }
-                }
-            });
+                });
+            }
 }
 
         // Return to main menu
@@ -336,23 +345,18 @@ loadLevel(config) {
     if (this.obstacleManager) {
         // Clear existing obstacles
         this.obstacleManager.reset();
-        
-        // Set level-specific patterns and types
-        // if (config.obstaclePatterns) {
-        //     this.obstacleManager.setPatterns(config.obstaclePatterns);
-        // }
-        // if (config.obstacleTypes) {
-        //     this.obstacleManager.setTypes(config.obstacleTypes);
-        // }
-        // if (config.powerUpFrequency !== undefined) {
-        //     this.obstacleManager.setPowerUpFrequency(config.powerUpFrequency);
-        // }
-        // if (config.obstacleSpacing !== undefined) {
-        //     this.obstacleManager.setSpacing(config.obstacleSpacing);
-        // }
-        
-        // Generate obstacles for the level
-        this.obstacleManager.generateObstacles();
+
+        // Generate obstacles for the level with difficulty config
+        this.obstacleManager.generateObstacles({
+            obstacleCount: config.obstacleCount,
+            obstacleSpacing: config.obstacleSpacing,
+            availableObstacles: config.availableObstacles
+        });
+    }
+
+    // Update landing zone position based on level difficulty
+    if (this.landingZone && config.endHeight) {
+        this.landingZone.updatePosition(config.endHeight);
     }
     
     // Apply wind if specified
@@ -632,6 +636,11 @@ async exit() {
         const obstacles = this.obstacleManager.getActiveObstacles();
 
         for (const obstacle of obstacles) {
+            // Skip lasers that are off
+            if (obstacle.type === 'laser' && !obstacle.laserOn) {
+                continue;
+            }
+
             if (this.collisionSystem.checkCollision(
                 this.player.getBounds(),
                 obstacle.getBounds()

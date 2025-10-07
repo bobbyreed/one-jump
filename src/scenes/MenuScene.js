@@ -2,6 +2,7 @@ import { Sprite, Graphics, Text, Container } from 'pixi.js';
 import BaseScene from './BaseScene.js';
 import { UI, COLORS } from '../config/Constants.js';
 import Button from '../ui/Button.js';
+import Checkbox from '../ui/Checkbox.js';
 
 export default class MenuScene extends BaseScene {
     constructor(game) {
@@ -10,6 +11,7 @@ export default class MenuScene extends BaseScene {
         this.menuPanel = null;
         this.buttons = [];
         this.highScoreText = null;
+        this.skipStoryCheckbox = null;
     }
 
     async init() {
@@ -147,7 +149,23 @@ export default class MenuScene extends BaseScene {
         this.highScoreText.x = this.menuPanel.x + UI.PANEL_WIDTH / 2;
         this.highScoreText.y = startY + (UI.BUTTON_HEIGHT + UI.BUTTON_SPACING) * 3 + 30;
         this.container.addChild(this.highScoreText);
+
+        // Skip Story checkbox
+        const checkboxY = this.highScoreText.y + 50;
+        const checkboxX = this.menuPanel.x + (UI.PANEL_WIDTH - 200) / 2;
+        this.skipStoryCheckbox = new Checkbox(
+            'Skip Story Scenes',
+            checkboxX,
+            checkboxY,
+            this.game.saveManager.data.settings.skipStory,
+            (checked) => {
+                this.game.saveManager.data.settings.skipStory = checked;
+                this.game.saveManager.save();
+                console.log(`Story skip ${checked ? 'enabled' : 'disabled'}`);
             }
+        );
+        this.container.addChild(this.skipStoryCheckbox.container);
+    }
 
     createInstructions() {
         const instructionsText = new Text({
@@ -169,17 +187,25 @@ export default class MenuScene extends BaseScene {
     }
 
     startGame() {
-        // Start new game flow: opening story → level 1 intro → level 1 game
-        this.changeScene('story', {
-            isOpening: true, // Flag to indicate this is the opening story
-            nextScene: 'story', // After opening, go to level 1 intro story
-            nextData: {
-                levelNumber: 1,
-                isIntro: true,
-                nextScene: 'game',
-                nextData: { levelNumber: 1 }
-            }
-        });
+        // Check if story should be skipped
+        const skipStory = this.game.saveManager.data.settings.skipStory;
+
+        if (skipStory) {
+            // Skip directly to game
+            this.changeScene('game', { levelNumber: 1 });
+        } else {
+            // Start new game flow: opening story → level 1 intro → level 1 game
+            this.changeScene('story', {
+                isOpening: true, // Flag to indicate this is the opening story
+                nextScene: 'story', // After opening, go to level 1 intro story
+                nextData: {
+                    levelNumber: 1,
+                    isIntro: true,
+                    nextScene: 'game',
+                    nextData: { levelNumber: 1 }
+                }
+            });
+        }
     }
 
     showHighscores() {
@@ -198,6 +224,9 @@ export default class MenuScene extends BaseScene {
     destroy() {
         this.buttons.forEach(button => button.destroy());
         this.buttons = [];
+        if (this.skipStoryCheckbox) {
+            this.skipStoryCheckbox.destroy();
+        }
         super.destroy();
     }
 }

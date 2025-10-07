@@ -20,20 +20,69 @@ export default class LevelManager {
         this.loadProgress();
     }
 
+    // Get difficulty settings for a specific level
+    getDifficultyConfig(levelNumber) {
+        // Progressive difficulty from level 1 (easy) to 10 (very hard)
+        const difficulty = levelNumber / 10; // 0.1 to 1.0
+
+        return {
+            // Obstacle count: 20 at level 1, 80 at level 10
+            obstacleCount: Math.floor(20 + (difficulty * 60)),
+
+            // Obstacle spacing: 250px at level 1, 100px at level 10
+            obstacleSpacing: Math.floor(250 - (difficulty * 150)),
+
+            // Fall distance: 5000 at level 1, 10000 at level 10
+            fallDistance: Math.floor(5000 + (difficulty * 5000)),
+
+            // Available obstacle types unlock progressively
+            availableObstacles: this.getAvailableObstacles(levelNumber)
+        };
+    }
+
+    // Determine which obstacles are available at each level
+    getAvailableObstacles(levelNumber) {
+        // Level 1-2: Basic obstacles only
+        if (levelNumber <= 2) {
+            return ['spike', 'platform', 'wall'];
+        }
+        // Level 3-4: Add movement
+        else if (levelNumber <= 4) {
+            return ['spike', 'platform', 'wall', 'spinner', 'barrel'];
+        }
+        // Level 5-6: Add hazards
+        else if (levelNumber <= 6) {
+            return ['spike', 'platform', 'wall', 'spinner', 'barrel', 'alien', 'laser'];
+        }
+        // Level 7-8: Add complex patterns
+        else if (levelNumber <= 8) {
+            return ['spike', 'platform', 'wall', 'spinner', 'barrel', 'alien', 'laser', 'meteor', 'pendulum'];
+        }
+        // Level 9-10: All obstacles
+        else {
+            return ['spike', 'platform', 'wall', 'spinner', 'barrel', 'alien', 'laser', 'meteor', 'pendulum', 'orbiter', 'pulsar'];
+        }
+    }
+
     // Get configuration for a specific level
     getLevelConfig(levelNumber) {
+        // Get difficulty settings
+        const difficultyConfig = this.getDifficultyConfig(levelNumber);
+
         // Base configuration shared by all levels
         const baseConfig = {
             id: levelNumber,
             gravity: 0.3,
             maxFallSpeed: 15,
             startHeight: -200,
-            endHeight: 3000,
+            endHeight: difficultyConfig.fallDistance,
             backgroundType: 'sky',
             windStrength: 0,
             targetScore: 10000,
             duration: 90,
-            obstacleSpacing: 150
+            obstacleSpacing: difficultyConfig.obstacleSpacing,
+            obstacleCount: difficultyConfig.obstacleCount,
+            availableObstacles: difficultyConfig.availableObstacles
         };
 
         // Level-specific configurations
