@@ -31,7 +31,6 @@ export default class Game {
             width: 1920,
             height: 1080,
             antialias: true,
-            resizeTo: window, // This enables automatic responsive resizing
             autoDensity: true, // Handles device pixel ratio automatically
             preference: 'webgpu' // Use WebGPU when available, fallback to WebGL
         });
@@ -63,6 +62,9 @@ export default class Game {
         } else {
             document.body.appendChild(this.app.canvas);
         }
+
+        // Setup responsive canvas scaling
+        this.setupCanvasScaling();
 
         // Initialize managers
         this.saveManager = new SaveManager();
@@ -125,24 +127,32 @@ export default class Game {
         if (this.sceneManager) {
             this.sceneManager.update(deltaTime);
         }
-        }
-        //I think this is causing an issue with the pixi responsive scaling
-    // setupCanvasScaling() {
-    //     const resize = () => {
-    //         const screenWidth = window.innerWidth;
-    //         const screenHeight = window.innerHeight;
-    //         const scale = Math.min(screenWidth / 1920, screenHeight / 1080);
-            
-    //         this.app.canvas.style.width = `${1920 * scale}px`;
-    //         this.app.canvas.style.height = `${1080 * scale}px`;
-    //         this.app.canvas.style.position = 'absolute';
-    //         this.app.canvas.style.left = `${(screenWidth - 1920 * scale) / 2}px`;
-    //         this.app.canvas.style.top = `${(screenHeight - 1080 * scale) / 2}px`;
-    //     };
-        
-    //     resize();
-    //     window.addEventListener('resize', resize);
-    //     }
+    }
+
+    setupCanvasScaling() {
+        const resize = () => {
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+
+            // Calculate scale to fit screen while maintaining aspect ratio
+            const scale = Math.min(screenWidth / 1920, screenHeight / 1080);
+
+            // Scale the canvas
+            this.app.canvas.style.width = `${1920 * scale}px`;
+            this.app.canvas.style.height = `${1080 * scale}px`;
+
+            // Center the canvas (letterboxing)
+            this.app.canvas.style.position = 'absolute';
+            this.app.canvas.style.left = `${(screenWidth - 1920 * scale) / 2}px`;
+            this.app.canvas.style.top = `${(screenHeight - 1080 * scale) / 2}px`;
+        };
+
+        // Initial resize
+        resize();
+
+        // Listen for window resize events
+        window.addEventListener('resize', resize);
+    }
 
     setHighScore(score) {
         if (score > this.saveManager.data.highScore) {
