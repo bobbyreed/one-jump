@@ -78,7 +78,7 @@ export default class LevelManager {
             endHeight: difficultyConfig.fallDistance,
             backgroundType: 'sky',
             windStrength: 0,
-            targetScore: 10000,
+            targetScore: 1000, // Base score for PERFECT landing, can be exceeded with bonuses
             duration: 90,
             obstacleSpacing: difficultyConfig.obstacleSpacing,
             obstacleCount: difficultyConfig.obstacleCount,
@@ -92,7 +92,7 @@ export default class LevelManager {
                 id: 1,
                 name: "Tutorial Rooftop",
                 subtitle: "Duke's Last Stand",
-                targetScore: 5000,
+                targetScore: 1000, // PERFECT landing = 1000 points base
                 duration: 60,
                 obstaclePatterns: ['single', 'double'],
                 obstacleTypes: ['bird', 'plane', 'cloud'],
@@ -113,7 +113,7 @@ export default class LevelManager {
                 id: 2,
                 name: "Test Level 2",
                 subtitle: "Testing Transitions",
-                targetScore: 5000,
+                targetScore: 1000, // PERFECT landing = 1000 points base
                 duration: 60,
                 obstaclePatterns: ['single', 'double'],
                 obstacleTypes: ['bird', 'plane', 'cloud'],
@@ -133,7 +133,7 @@ export default class LevelManager {
                 id: 3,
                 name: "City Streets",
                 subtitle: "Urban Descent",
-                targetScore: 7500,
+                targetScore: 1000, // PERFECT landing = 1000 points base
                 duration: 70,
                 obstaclePatterns: ['single', 'double', 'zigzag'],
                 obstacleTypes: ['bird', 'plane', 'balloon', 'drone'],

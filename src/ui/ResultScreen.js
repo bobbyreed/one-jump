@@ -53,8 +53,22 @@ export default class ResultScreen {
       }
     });
     this.resultTitle.anchor.set(0.5);
-    this.resultTitle.y = -50;
+    this.resultTitle.y = -60;
     this.resultPanel.addChild(this.resultTitle);
+
+    // Landing type label (PERFECT / GREAT / GOOD)
+    this.landingLabel = new Text({
+      text: '',
+      style: {
+        fontFamily: 'Arial',
+        fontSize: 24,
+        fill: COLORS.TEXT_SECONDARY,
+        fontWeight: 'bold'
+      }
+    });
+    this.landingLabel.anchor.set(0.5);
+    this.landingLabel.y = -20;
+    this.resultPanel.addChild(this.landingLabel);
 
     // Score display
     this.scoreText = new Text({
@@ -224,6 +238,8 @@ export default class ResultScreen {
     let titleText = label;
     if (label === 'PERFECT') {
       titleText = 'PERFECT LANDING!';
+    } else if (label === 'GREAT') {
+      titleText = 'GREAT LANDING!';
     } else if (label === 'GOOD') {
       titleText = 'GOOD LANDING!';
     } else if (label === 'OK') {
@@ -234,6 +250,15 @@ export default class ResultScreen {
     
     this.resultTitle.text = titleText;
     this.resultTitle.style.fill = color;
+
+    // Show landing type prominently
+    if (label === 'PERFECT' || label === 'GREAT' || label === 'GOOD') {
+      this.landingLabel.text = `Landing: ${label}`;
+      this.landingLabel.style.fill = color;
+      this.landingLabel.visible = true;
+    } else {
+      this.landingLabel.visible = false;
+    }
 
     // Animate title
     this.animateTitle();
