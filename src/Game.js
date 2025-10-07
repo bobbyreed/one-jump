@@ -69,7 +69,7 @@ export default class Game {
         this.saveManager.load();
         //level manager MUST be loaded before asset manager
         this.levelManager = new LevelManager(this);
-        this.assetManager = new AssetManager();
+        this.assetManager = new AssetManager(this);
         this.inputManager = new InputManager();
         this.sceneManager = new SceneManager(this);
 

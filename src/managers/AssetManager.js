@@ -2,7 +2,8 @@ import { Assets, Texture, Rectangle } from 'pixi.js';
 import { ASSETS, ANIMATION } from '../config/Constants.js';
 
 export default class AssetManager {
-    constructor() {
+    constructor(game = null) {
+        this.game = game;
         this.textures = new Map();
         this.animations = new Map();
     }
@@ -60,21 +61,35 @@ export default class AssetManager {
         this.animations.set('falling', [textures[6]]);
     }
 
-    async loadStoryPanels() {
+    async loadStoryPanels(panelPaths = null) {
+        // If no specific paths provided, load the default opening panels
+        const pathsToLoad = panelPaths || ASSETS.NARRATIVE_PANELS.OPENING;
         const panels = [];
 
-        for (let i = 0; i < ASSETS.NARRATIVE_PANELS.OPENING.length; i++) {
+        for (let i = 0; i < pathsToLoad.length; i++) {
             try {
-                const texture = await Assets.load(ASSETS.NARRATIVE_PANELS.OPENING[i]);
+                const texture = await Assets.load(pathsToLoad[i]);
                 panels.push(texture);
             } catch (error) {
-                console.warn(`Could not load panel ${i + 1}, using placeholder`);
+                console.warn(`Could not load panel ${pathsToLoad[i]}, using placeholder`);
                 panels.push(null); // Scene will handle placeholder creation
             }
         }
 
         this.textures.set('storyPanels', panels);
         return panels;
+    }
+
+    async loadLevelStoryPanels(levelNumber, isIntro) {
+        // Get story data from level manager
+        const storyData = this.game?.levelManager?.getStoryPanels(levelNumber, isIntro);
+
+        if (storyData && storyData.images) {
+            return await this.loadStoryPanels(storyData.images);
+        }
+
+        // Fallback to default opening panels
+        return await this.loadStoryPanels();
     }
 
     getTexture(name) {

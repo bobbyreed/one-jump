@@ -67,7 +67,6 @@ export const UI = {
 
 // Story Panel Configuration
 export const STORY = {
-    PANEL_COUNT: 5,
     PANEL_DISPLAY_TIME: 3000,
     PANEL_FADE_TIME: 800,
     PANEL_START_X: 50,
@@ -114,7 +113,14 @@ export const ASSETS = {
     },
     NARRATIVE_PANELS: {
         OPENING: Array.from({ length: 5 }, (_, i) =>
-            `/public/assets/narrativePanels/opening/opening${i + 1}.png`)
+            `/public/assets/narrativePanels/opening/opening${i + 1}.png`),
+        // Level-specific story panels
+        LEVEL_1_ENTRY: Array.from({ length: 3 }, (_, i) =>
+            `/public/assets/narrativePanels/level1/level1entry${i + 1}.png`),
+        LEVEL_1_EXIT: Array.from({ length: 2 }, (_, i) =>
+            `/public/assets/narrativePanels/level1/level1exit${i + 1}.png`),
+        LEVEL_2_ENTRY: Array.from({ length: 3 }, (_, i) =>
+            `/public/assets/narrativePanels/level2/level2entry${i + 1}.png`)
     }
 };
 

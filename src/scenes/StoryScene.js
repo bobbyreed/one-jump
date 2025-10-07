@@ -12,6 +12,7 @@ export default class StoryScene extends BaseScene {
         this.currentPanelIndex = 0;
         this.autoAdvanceTimer = null;
         this.panelTextures = [];
+        this.panelCount = 5; // Default, will be updated dynamically
 
         // UI elements
         this.nextButton = null;
@@ -22,6 +23,10 @@ export default class StoryScene extends BaseScene {
         //scene transition stuffs
         this.nextScene = 'game';
         this.nextData = {};
+
+        // Story context
+        this.levelNumber = null;
+        this.isIntro = true;
     }
 
     async init() {
@@ -48,11 +53,31 @@ export default class StoryScene extends BaseScene {
     }
 
     async loadPanelTextures() {
-        this.panelTextures = await this.game.assetManager.loadStoryPanels();
+        // Load panels based on level context if available
+        if (this.levelNumber !== null) {
+            this.panelTextures = await this.game.assetManager.loadLevelStoryPanels(
+                this.levelNumber,
+                this.isIntro
+            );
+        } else {
+            // Fallback to default opening panels
+            this.panelTextures = await this.game.assetManager.loadStoryPanels();
+        }
+
+        // Update panel count based on loaded textures
+        this.panelCount = this.panelTextures.length;
     }
 
     createPanels() {
-        for (let i = 0; i < STORY.PANEL_COUNT; i++) {
+        // Clear any existing panels first
+        this.panels.forEach(panel => {
+            if (panel && panel.parent) {
+                panel.parent.removeChild(panel);
+            }
+        });
+        this.panels = [];
+
+        for (let i = 0; i < this.panelCount; i++) {
             const panelContainer = new Container();
 
             // Panel frame
@@ -170,7 +195,7 @@ export default class StoryScene extends BaseScene {
     }
 
     showNextPanel() {
-        if (this.currentPanelIndex >= STORY.PANEL_COUNT) {
+        if (this.currentPanelIndex >= this.panelCount) {
             this.endStorySequence();
             return;
         }
@@ -187,7 +212,7 @@ export default class StoryScene extends BaseScene {
         this.animatePanelIn(panel);
 
         // Update counter
-        this.panelCounter.text = `${this.currentPanelIndex + 1} / ${STORY.PANEL_COUNT}`;
+        this.panelCounter.text = `${this.currentPanelIndex + 1} / ${this.panelCount}`;
 
         // Show UI on first panel
         if (this.currentPanelIndex === 0) {
@@ -207,7 +232,7 @@ export default class StoryScene extends BaseScene {
         this.currentPanelIndex++;
 
         // Update button text for last panel
-        if (this.currentPanelIndex === STORY.PANEL_COUNT) {
+        if (this.currentPanelIndex === this.panelCount) {
             this.nextButton.setText('Start Game');
         }
 
@@ -343,34 +368,44 @@ export default class StoryScene extends BaseScene {
 
     async enter(data = {}) {
         await super.enter(data);
-        
+
         // Store where to go after story completes
         this.nextScene = data.nextScene || 'game';
         this.nextData = data.nextData || {};
-        
+
+        // Store level context
+        this.levelNumber = data.levelNumber || null;
+        this.isIntro = data.isIntro !== undefined ? data.isIntro : true;
+
         // Reset the panels
         this.reset();
-        
+
+        // Reload panel textures for this specific story
+        await this.loadPanelTextures();
+
+        // Recreate panels with the new textures
+        this.createPanels();
+
         // Check if this is a level-specific story
         if (data.levelNumber) {
             const levelManager = this.game.levelManager;
-            
+
             // Only try to get story panels if levelManager exists
             if (levelManager && levelManager.getStoryPanels) {
                 const storyData = levelManager.getStoryPanels(data.levelNumber, data.isIntro);
-                
+
                 // Update story title if we have one
                 if (this.storyTitle && storyData && storyData.title) {
                     this.storyTitle.text = storyData.title;
                 }
             }
-            
+
             // Make sure level number is passed to game scene
             if (!this.nextData.levelNumber) {
                 this.nextData.levelNumber = data.levelNumber;
             }
         }
-    
+
     // Start showing the story panels
     this.showNextPanel();
 }

@@ -1,4 +1,5 @@
 import SaveManager from './SaveManager.js';
+import { ASSETS } from '../config/Constants.js';
 
 export default class LevelManager {
     constructor(game) {
@@ -126,82 +127,66 @@ export default class LevelManager {
     // Get story panels for transitions
     getStoryPanels(levelNumber, isIntro = true) {
         const config = this.getLevelConfig(levelNumber);
-        
+
         if (isIntro) {
             // Intro story before the level starts
-            return {
-                title: config.storyBeat.title,
-                panels: config.storyBeat.panels,
-                images: this.getWireframeImages()
-            };
+            if (levelNumber === 1) {
+                return {
+                    title: "The Beginning",
+                    panelCount: 3,
+                    images: ASSETS.NARRATIVE_PANELS.LEVEL_1_ENTRY
+                };
+            } else if (levelNumber === 2) {
+                return {
+                    title: "Level 2: The Journey Continues",
+                    panelCount: 3,
+                    images: ASSETS.NARRATIVE_PANELS.LEVEL_2_ENTRY
+                };
+            } else {
+                // Fallback to opening panels for other levels
+                return {
+                    title: config.storyBeat.title,
+                    panelCount: 5,
+                    images: ASSETS.NARRATIVE_PANELS.OPENING
+                };
+            }
         } else {
             // Outro story after completing the level
             if (levelNumber === 1) {
                 return {
                     title: "Stage 1 Complete!",
-                    panels: [
-                        "Great job on your first descent!",
-                        "You've mastered the basics.",
-                        "Ready for the next challenge?"
-                    ],
-                    images: this.getWireframeImages()
+                    panelCount: 2,
+                    images: ASSETS.NARRATIVE_PANELS.LEVEL_1_EXIT
                 };
             } else if (levelNumber === 2) {
                 return {
                     title: "Stage 2 Complete!",
-                    panels: [
-                        "Another successful landing!",
-                        "Your skills are improving.",
-                        "8 more stages await!"
-                    ],
-                    images: this.getWireframeImages()
+                    panelCount: 3,
+                    images: ASSETS.NARRATIVE_PANELS.OPENING
                 };
             } else if (levelNumber === 5) {
                 // Special midpoint story
                 return {
                     title: "Halfway There!",
-                    panels: [
-                        "You've made it halfway!",
-                        "The hardest part is behind you...",
-                        "...or is it? The campus awaits!"
-                    ],
-                    images: this.getWireframeImages()
+                    panelCount: 5,
+                    images: ASSETS.NARRATIVE_PANELS.OPENING
                 };
             } else if (levelNumber === 10) {
                 // Final victory
                 return {
                     title: "Mission Complete!",
-                    panels: [
-                        "Perfect landing at OCU!",
-                        "The crowd goes wild!",
-                        "You are a true STAR!"
-                    ],
-                    images: this.getWireframeImages()
+                    panelCount: 5,
+                    images: ASSETS.NARRATIVE_PANELS.OPENING
                 };
             } else {
                 // Generic transition for other levels
                 return {
                     title: `Stage ${levelNumber} Complete!`,
-                    panels: [
-                        "Excellent descent!",
-                        `${10 - levelNumber} stages remaining...`,
-                        "Keep up the great work!"
-                    ],
-                    images: this.getWireframeImages()
+                    panelCount: 5,
+                    images: ASSETS.NARRATIVE_PANELS.OPENING
                 };
             }
         }
-    }
-
-    // Get wireframe images (placeholder for now)
-    getWireframeImages() {
-        // Return placeholder image paths
-        // These will be replaced with actual story panel images later
-        return [
-            '/assets/story/panel1.png',
-            '/assets/story/panel2.png',
-            '/assets/story/panel3.png'
-        ];
     }
 
     // Start a level
