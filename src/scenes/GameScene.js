@@ -87,8 +87,8 @@ export default class GameScene extends BaseScene {
         this.collisionSystem = new CollisionSystem();
 
         // Initialize UI
-        
-        this.hud = new HUD(this.container, this.game.app.screen);
+
+        this.hud = new HUD(this.container, this.game.app.screen, () => this.returnToMenu());
         this.resultScreen = new ResultScreen(
                 this.game.app.screen,
                 {
