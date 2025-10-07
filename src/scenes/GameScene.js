@@ -542,7 +542,11 @@ async exit() {
     if (this.particleSystem) {
         this.particleSystem.update(deltaTime);
     }
-    
+
+    if (this.obstacleManager) {
+        this.obstacleManager.update(deltaTime);
+    }
+
     if (this.cameraSystem.followPlayer) {
     this.cameraSystem.followPlayer(this.player, deltaTime);
 }

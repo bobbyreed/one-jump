@@ -36,13 +36,25 @@ export default class ObstacleManager {
                 Math.random() * 100,
             width: 0,
             height: 0,
+            centered: false, // Flag for obstacles drawn from center
             getBounds: function () {
-                return {
-                    x: this.x,
-                    y: this.y - this.height,
-                    width: this.width,
-                    height: this.height
-                };
+                if (this.centered) {
+                    // For centered obstacles like spinners
+                    return {
+                        x: this.x - this.width / 2,
+                        y: this.y - this.height / 2,
+                        width: this.width,
+                        height: this.height
+                    };
+                } else {
+                    // For obstacles drawn from top-left or specific anchor
+                    return {
+                        x: this.x,
+                        y: this.y - this.height,
+                        width: this.width,
+                        height: this.height
+                    };
+                }
             }
         };
 
@@ -72,8 +84,11 @@ export default class ObstacleManager {
                     .fill({ color: type.color })
                     .rect(-8, -60, 16, 120)
                     .fill({ color: type.color });
-                obstacle.width = 120;
-                obstacle.height = 120;
+                // Use tighter collision bounds based on the cross shape
+                // Instead of full 120x120 square, use circular-ish bounds
+                obstacle.width = 80;  // Reduced from 120
+                obstacle.height = 80; // Reduced from 120
+                obstacle.centered = true; // Spinner is drawn centered
                 obstacle.spinSpeed = 0.02 + Math.random() * 0.03;
                 break;
 

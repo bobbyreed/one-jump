@@ -9,4 +9,6 @@ ramlife - where vertical distance is meaningless - a simple game to test-drive t
 <img alt="pixi.js logo" src="/public/assets/pixiLogo.svg" height=100>
 
 
-*all images were created using chat-gpt5 free*
+All images were created using generative AI. Used so far: 
+- ChatGPT 5 Free
+- Google Gemini 2.5 Flash Free
