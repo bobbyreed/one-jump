@@ -214,6 +214,89 @@ export default class ParticleSystem {
     }
 
     /**
+     * Create near-miss effect
+     */
+    createNearMissEffect(position, level, isGraze = false) {
+        // Color based on near-miss level (0=far, 3=closest)
+        const colors = [
+            0xFFFF00,  // Level 0 (50px) - Yellow
+            0xFFAA00,  // Level 1 (40px) - Orange
+            0xFF6600,  // Level 2 (30px) - Deep Orange
+            0xFF0000   // Level 3 (20px) - Red
+        ];
+        const color = colors[level] || 0xFFFF00;
+
+        // Create spark particles
+        const sparkCount = isGraze ? 12 : 6;
+        for (let i = 0; i < sparkCount; i++) {
+            const spark = new Graphics()
+                .circle(0, 0, isGraze ? 4 : 2)
+                .fill({ color: color, alpha: 0.9 });
+
+            spark.x = position.x + (Math.random() - 0.5) * 30;
+            spark.y = position.y + (Math.random() - 0.5) * 30;
+
+            const angle = (Math.PI * 2 / sparkCount) * i + (Math.random() - 0.5) * 0.5;
+            const speed = isGraze ? 8 : 4;
+            spark.velocity = {
+                x: Math.cos(angle) * speed,
+                y: Math.sin(angle) * speed
+            };
+            spark.lifetime = isGraze ? 40 : 25;
+
+            this.effects.addChild(spark);
+
+            this.activeParticles.push({
+                sprite: spark,
+                container: this.effects,
+                type: 'nearmiss_spark',
+                update: (p, dt) => {
+                    p.sprite.x += p.sprite.velocity.x;
+                    p.sprite.y += p.sprite.velocity.y;
+                    p.sprite.velocity.x *= 0.95;
+                    p.sprite.velocity.y *= 0.95;
+                    p.sprite.alpha -= 0.03;
+                    p.sprite.lifetime--;
+
+                    if (p.sprite.lifetime <= 0 || p.sprite.alpha <= 0) {
+                        p.container.removeChild(p.sprite);
+                        return false;
+                    }
+                    return true;
+                }
+            });
+        }
+
+        // Create streak effect for graze
+        if (isGraze) {
+            const streak = new Graphics()
+                .rect(0, 0, 40, 3)
+                .fill({ color: 0xFFFFFF, alpha: 0.8 });
+            streak.x = position.x - 20;
+            streak.y = position.y;
+            streak.rotation = Math.random() * Math.PI * 2;
+
+            this.effects.addChild(streak);
+
+            this.activeParticles.push({
+                sprite: streak,
+                container: this.effects,
+                type: 'nearmiss_streak',
+                update: (p, dt) => {
+                    p.sprite.scale.x *= 1.05;
+                    p.sprite.alpha -= 0.05;
+
+                    if (p.sprite.alpha <= 0) {
+                        p.container.removeChild(p.sprite);
+                        return false;
+                    }
+                    return true;
+                }
+            });
+        }
+    }
+
+    /**
      * Create landing success effect
      */
     createLandingEffect(position, color = COLORS.SUCCESS) {

@@ -8,7 +8,7 @@ import CameraSystem from '../systems/CameraSystem.js';
 import CollisionSystem from '../systems/CollisionSystem.js';
 import HUD from '../ui/HUD.js';
 import ResultScreen from '../ui/ResultScreen.js';
-import { LEVEL, PHYSICS, COLORS, PLAYER_STATES } from '../config/Constants.js';
+import { LEVEL, PHYSICS, COLORS, PLAYER_STATES, SCORING } from '../config/Constants.js';
 
 export default class GameScene extends BaseScene {
     constructor(game) {
@@ -50,6 +50,10 @@ export default class GameScene extends BaseScene {
         this.currentCombo = 0;
         this.nearMisses = 0;
         this.tricksPerformed = 0;
+        this.nearMissPoints = 0; // Track actual points from near-misses
+
+        // Track obstacles that have been checked for near-misses
+        this.checkedObstacles = new Set();
 
         // World container (moves with camera)
         this.worldContainer = new Container();
@@ -173,6 +177,8 @@ export default class GameScene extends BaseScene {
         this.currentCombo = 0;
         this.nearMisses = 0;
         this.tricksPerformed = 0;
+        this.nearMissPoints = 0;
+        this.checkedObstacles.clear();
     }
 
 
@@ -288,6 +294,8 @@ export default class GameScene extends BaseScene {
     this.currentCombo = 0;
     this.nearMisses = 0;
     this.tricksPerformed = 0;
+    this.nearMissPoints = 0;
+    this.checkedObstacles.clear();
     
     // Check if a specific level was requested
     if (data.levelNumber) {
@@ -396,6 +404,8 @@ resetLevel() {
     this.currentCombo = 0;
     this.nearMisses = 0;
     this.tricksPerformed = 0;
+    this.nearMissPoints = 0;
+    this.checkedObstacles.clear();
     
     // Reset player
     if (this.player) {
@@ -634,6 +644,8 @@ async exit() {
 
     checkCollisions() {
         const obstacles = this.obstacleManager.getActiveObstacles();
+        const playerBounds = this.player.getBounds();
+        const playerY = this.player.position.y;
 
         for (const obstacle of obstacles) {
             // Skip lasers that are off
@@ -641,12 +653,31 @@ async exit() {
                 continue;
             }
 
+            // Check for collision
             if (this.collisionSystem.checkCollision(
-                this.player.getBounds(),
+                playerBounds,
                 obstacle.getBounds()
             )) {
                 this.handleCrash();
                 break;
+            }
+
+            // Check for near-miss (only for obstacles player has passed)
+            // Only check obstacles within a reasonable range above player
+            const obstacleY = obstacle.y;
+            const isAbovePlayer = obstacleY < playerY;
+            const isWithinRange = Math.abs(obstacleY - playerY) < 200;
+
+            if (isAbovePlayer && isWithinRange && !this.checkedObstacles.has(obstacle)) {
+                const nearMiss = this.collisionSystem.calculateNearMiss(
+                    playerBounds,
+                    obstacle.getBounds()
+                );
+
+                if (nearMiss) {
+                    this.handleNearMiss(nearMiss, obstacle);
+                    this.checkedObstacles.add(obstacle);
+                }
             }
         }
     }
@@ -679,9 +710,11 @@ async exit() {
             const baseScore = landingResult.points;
             const timeBonus = Math.max(0, (60 - this.timeElapsed) * 10);
             const comboBonus = this.maxCombo * 100;
-            const nearMissBonus = this.nearMisses * 50;
-            
+            const nearMissBonus = this.nearMissPoints; // Use actual points earned from near-misses
+
             const totalScore = baseScore + timeBonus + comboBonus + nearMissBonus;
+
+            console.log(`Score breakdown - Base: ${baseScore}, Time: ${timeBonus}, Combo: ${comboBonus}, Near-miss: ${nearMissBonus}, Total: ${totalScore}`);
             this.gameState.score = totalScore;
 
             // Update save data
@@ -727,7 +760,7 @@ async exit() {
 
     handleCrash() {
             console.log('Crashed!');
-            
+
             this.player.crash();
             this.gameState.phase = PLAYER_STATES.CRASHED;
 
@@ -747,6 +780,30 @@ async exit() {
             // Stop game
             this.gameState.gameOver = true;
         }
+
+    handleNearMiss(nearMiss, obstacle) {
+        // Award points based on near-miss level (closer = more points)
+        const points = SCORING.NEAR_MISS_POINTS[nearMiss.level] || 100;
+
+        // Increment counters
+        this.nearMisses++;
+        this.nearMissPoints += points;
+
+        // Update combo
+        this.currentCombo++;
+        if (this.currentCombo > this.maxCombo) {
+            this.maxCombo = this.currentCombo;
+        }
+
+        // Create visual feedback at player position
+        this.particleSystem.createNearMissEffect(
+            this.player.position,
+            nearMiss.level,
+            nearMiss.isGraze
+        );
+
+        console.log(`Near-miss! Level: ${nearMiss.level}, Points: ${points}, Distance: ${nearMiss.distance.toFixed(1)}px`);
+    }
 
     updateParallax() {
         // Update background layers with parallax effect
