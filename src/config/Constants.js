@@ -120,7 +120,11 @@ export const ASSETS = {
         LEVEL_1_EXIT: Array.from({ length: 2 }, (_, i) =>
             `/public/assets/narrativePanels/level1/level1exit${i + 1}.png`),
         LEVEL_2_ENTRY: Array.from({ length: 3 }, (_, i) =>
-            `/public/assets/narrativePanels/level2/level2entry${i + 1}.png`)
+            `/public/assets/narrativePanels/level2/level2entry${i + 1}.png`),
+        LEVEL_2_EXIT: Array.from({ length: 2 }, (_, i) =>
+            `/public/assets/narrativePanels/level2/level2exit${i + 1}.png`),
+        LEVEL_3_ENTRY: Array.from({ length: 2 }, (_, i) =>
+            `/public/assets/narrativePanels/level3/level3entry${i + 1}.png`)
     }
 };
 

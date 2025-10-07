@@ -142,6 +142,12 @@ export default class LevelManager {
                     panelCount: 3,
                     images: ASSETS.NARRATIVE_PANELS.LEVEL_2_ENTRY
                 };
+            } else if (levelNumber === 3) {
+                return {
+                    title: "Level 3: Urban Descent",
+                    panelCount: 2,
+                    images: ASSETS.NARRATIVE_PANELS.LEVEL_3_ENTRY
+                };
             } else {
                 // Fallback to opening panels for other levels
                 return {
@@ -161,8 +167,8 @@ export default class LevelManager {
             } else if (levelNumber === 2) {
                 return {
                     title: "Stage 2 Complete!",
-                    panelCount: 3,
-                    images: ASSETS.NARRATIVE_PANELS.OPENING
+                    panelCount: 2,
+                    images: ASSETS.NARRATIVE_PANELS.LEVEL_2_EXIT
                 };
             } else if (levelNumber === 5) {
                 // Special midpoint story
