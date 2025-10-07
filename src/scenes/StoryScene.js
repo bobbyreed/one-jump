@@ -27,6 +27,7 @@ export default class StoryScene extends BaseScene {
         // Story context
         this.levelNumber = null;
         this.isIntro = true;
+        this.isOpening = false;
     }
 
     async init() {
@@ -373,8 +374,12 @@ export default class StoryScene extends BaseScene {
         this.nextScene = data.nextScene || 'game';
         this.nextData = data.nextData || {};
 
+        // Check if this is the opening story
+        this.isOpening = data.isOpening || false;
+
         // Store level context
-        this.levelNumber = data.levelNumber || null;
+        // If it's opening story, don't set levelNumber so it loads opening panels
+        this.levelNumber = this.isOpening ? null : (data.levelNumber || null);
         this.isIntro = data.isIntro !== undefined ? data.isIntro : true;
 
         // Reset the panels
@@ -386,8 +391,14 @@ export default class StoryScene extends BaseScene {
         // Recreate panels with the new textures
         this.createPanels();
 
-        // Check if this is a level-specific story
-        if (data.levelNumber) {
+        // Update story title based on context
+        if (this.isOpening) {
+            // Opening story - the game intro
+            if (this.storyTitle) {
+                this.storyTitle.text = 'The Call to Campus';
+            }
+        } else if (data.levelNumber) {
+            // Level-specific story
             const levelManager = this.game.levelManager;
 
             // Only try to get story panels if levelManager exists

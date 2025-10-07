@@ -92,9 +92,9 @@ export default class MenuScene extends BaseScene {
         const buttonX = this.menuPanel.x + (UI.PANEL_WIDTH - UI.BUTTON_WIDTH) / 2;
         const startY = this.menuPanel.y + 60;
 
-        // Start Game button
+        // New Game button
         const startButton = new Button(
-            'START GAME',
+            'NEW GAME',
             buttonX,
             startY,
             UI.BUTTON_WIDTH,
@@ -169,7 +169,17 @@ export default class MenuScene extends BaseScene {
     }
 
     startGame() {
-        this.changeScene('story');
+        // Start new game flow: opening story → level 1 intro → level 1 game
+        this.changeScene('story', {
+            isOpening: true, // Flag to indicate this is the opening story
+            nextScene: 'story', // After opening, go to level 1 intro story
+            nextData: {
+                levelNumber: 1,
+                isIntro: true,
+                nextScene: 'game',
+                nextData: { levelNumber: 1 }
+            }
+        });
     }
 
     showHighscores() {
