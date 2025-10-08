@@ -179,70 +179,61 @@ export default class LevelManager {
 
     // Get story panels for transitions
     getStoryPanels(levelNumber, isIntro = true) {
-        const config = this.getLevelConfig(levelNumber);
-
         if (isIntro) {
             // Intro story before the level starts
-            if (levelNumber === 1) {
-                return {
-                    title: "The Beginning",
-                    panelCount: 3,
-                    images: ASSETS.NARRATIVE_PANELS.LEVEL_1_ENTRY
-                };
-            } else if (levelNumber === 2) {
-                return {
-                    title: "Level 2: The Journey Continues",
-                    panelCount: 3,
-                    images: ASSETS.NARRATIVE_PANELS.LEVEL_2_ENTRY
-                };
-            } else if (levelNumber === 3) {
-                return {
-                    title: "Level 3: Urban Descent",
-                    panelCount: 2,
-                    images: ASSETS.NARRATIVE_PANELS.LEVEL_3_ENTRY
-                };
-            } else {
-                // Fallback to opening panels for other levels
-                return {
-                    title: config.storyBeat.title,
-                    panelCount: 5,
-                    images: ASSETS.NARRATIVE_PANELS.OPENING
-                };
-            }
+            const entryPanels = {
+                1: { title: "Level 1: Duke's Last Stand", count: 3, images: ASSETS.NARRATIVE_PANELS.LEVEL_1_ENTRY },
+                2: { title: "Level 2: The Journey Continues", count: 3, images: ASSETS.NARRATIVE_PANELS.LEVEL_2_ENTRY },
+                3: { title: "Level 3: Urban Descent", count: 3, images: ASSETS.NARRATIVE_PANELS.LEVEL_3_ENTRY },
+                4: { title: "Level 4: Into the Unknown", count: 2, images: ASSETS.NARRATIVE_PANELS.LEVEL_4_ENTRY },
+                5: { title: "Level 5: Halfway Point", count: 3, images: ASSETS.NARRATIVE_PANELS.LEVEL_5_ENTRY },
+                6: { title: "Level 6: The Second Half", count: 3, images: ASSETS.NARRATIVE_PANELS.LEVEL_6_ENTRY },
+                7: { title: "Level 7: Rising Stakes", count: 3, images: ASSETS.NARRATIVE_PANELS.LEVEL_7_ENTRY },
+                8: { title: "Level 8: Approaching the End", count: 3, images: ASSETS.NARRATIVE_PANELS.LEVEL_8_ENTRY },
+                9: { title: "Level 9: One More to Go", count: 3, images: ASSETS.NARRATIVE_PANELS.LEVEL_9_ENTRY },
+                10: { title: "Level 10: The Final Drop", count: 3, images: ASSETS.NARRATIVE_PANELS.LEVEL_10_ENTRY }
+            };
+
+            const panel = entryPanels[levelNumber];
+            return {
+                title: panel.title,
+                panelCount: panel.count,
+                images: panel.images
+            };
         } else {
             // Outro story after completing the level
-            if (levelNumber === 1) {
-                return {
-                    title: "Stage 1 Complete!",
-                    panelCount: 2,
-                    images: ASSETS.NARRATIVE_PANELS.LEVEL_1_EXIT
-                };
-            } else if (levelNumber === 2) {
-                return {
-                    title: "Stage 2 Complete!",
-                    panelCount: 2,
-                    images: ASSETS.NARRATIVE_PANELS.LEVEL_2_EXIT
-                };
-            } else if (levelNumber === 5) {
-                // Special midpoint story
+            if (levelNumber === 5) {
+                // Special midpoint story (6 panels)
                 return {
                     title: "Halfway There!",
-                    panelCount: 5,
-                    images: ASSETS.NARRATIVE_PANELS.OPENING
+                    panelCount: 6,
+                    images: ASSETS.NARRATIVE_PANELS.MIDPOINT
                 };
             } else if (levelNumber === 10) {
-                // Final victory
+                // Final victory ending (10 panels)
                 return {
                     title: "Mission Complete!",
-                    panelCount: 5,
-                    images: ASSETS.NARRATIVE_PANELS.OPENING
+                    panelCount: 10,
+                    images: ASSETS.NARRATIVE_PANELS.ENDING
                 };
             } else {
-                // Generic transition for other levels
+                // Regular level exit panels (2 panels each)
+                const exitPanels = {
+                    1: { title: "Stage 1 Complete!", images: ASSETS.NARRATIVE_PANELS.LEVEL_1_EXIT },
+                    2: { title: "Stage 2 Complete!", images: ASSETS.NARRATIVE_PANELS.LEVEL_2_EXIT },
+                    3: { title: "Stage 3 Complete!", images: ASSETS.NARRATIVE_PANELS.LEVEL_3_EXIT },
+                    4: { title: "Stage 4 Complete!", images: ASSETS.NARRATIVE_PANELS.LEVEL_4_EXIT },
+                    6: { title: "Stage 6 Complete!", images: ASSETS.NARRATIVE_PANELS.LEVEL_6_EXIT },
+                    7: { title: "Stage 7 Complete!", images: ASSETS.NARRATIVE_PANELS.LEVEL_7_EXIT },
+                    8: { title: "Stage 8 Complete!", images: ASSETS.NARRATIVE_PANELS.LEVEL_8_EXIT },
+                    9: { title: "Stage 9 Complete!", images: ASSETS.NARRATIVE_PANELS.LEVEL_9_EXIT }
+                };
+
+                const panel = exitPanels[levelNumber];
                 return {
-                    title: `Stage ${levelNumber} Complete!`,
-                    panelCount: 5,
-                    images: ASSETS.NARRATIVE_PANELS.OPENING
+                    title: panel.title,
+                    panelCount: 2,
+                    images: panel.images
                 };
             }
         }
