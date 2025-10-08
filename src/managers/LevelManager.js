@@ -35,6 +35,10 @@ export default class LevelManager {
             // Fall distance: 5000 at level 1, 10000 at level 10
             fallDistance: Math.floor(5000 + (difficulty * 5000)),
 
+            // Target score scales with difficulty: 1000 at level 1, 3000 at level 10
+            // Higher levels have more obstacles = more near-miss opportunities
+            targetScore: Math.floor(1000 + (difficulty * 2000)),
+
             // Available obstacle types unlock progressively
             availableObstacles: this.getAvailableObstacles(levelNumber)
         };
@@ -78,7 +82,7 @@ export default class LevelManager {
             endHeight: difficultyConfig.fallDistance,
             backgroundType: 'sky',
             windStrength: 0,
-            targetScore: 1000, // Base score for PERFECT landing, can be exceeded with bonuses
+            targetScore: difficultyConfig.targetScore, // Scales with level difficulty
             duration: 90,
             obstacleSpacing: difficultyConfig.obstacleSpacing,
             obstacleCount: difficultyConfig.obstacleCount,
@@ -92,7 +96,7 @@ export default class LevelManager {
                 id: 1,
                 name: "Tutorial Rooftop",
                 subtitle: "Duke's Last Stand",
-                targetScore: 1000, // PERFECT landing = 1000 points base
+                // targetScore handled by baseConfig (1000 for level 1)
                 duration: 60,
                 obstaclePatterns: ['single', 'double'],
                 obstacleTypes: ['bird', 'plane', 'cloud'],
@@ -113,7 +117,7 @@ export default class LevelManager {
                 id: 2,
                 name: "Test Level 2",
                 subtitle: "Testing Transitions",
-                targetScore: 1000, // PERFECT landing = 1000 points base
+                // targetScore handled by baseConfig (1200 for level 2)
                 duration: 60,
                 obstaclePatterns: ['single', 'double'],
                 obstacleTypes: ['bird', 'plane', 'cloud'],
@@ -133,7 +137,7 @@ export default class LevelManager {
                 id: 3,
                 name: "City Streets",
                 subtitle: "Urban Descent",
-                targetScore: 1000, // PERFECT landing = 1000 points base
+                // targetScore handled by baseConfig (1400 for level 3)
                 duration: 70,
                 obstaclePatterns: ['single', 'double', 'zigzag'],
                 obstacleTypes: ['bird', 'plane', 'balloon', 'drone'],

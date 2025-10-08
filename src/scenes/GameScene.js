@@ -719,13 +719,14 @@ async exit() {
             
             // Calculate final score (you can add more factors here)
             const baseScore = landingResult.points;
-            const timeBonus = Math.max(0, (60 - this.timeElapsed) * 10);
+            const levelDuration = this.levelConfig?.duration || 60; // Use actual level duration
+            const timeBonus = Math.max(0, (levelDuration - this.timeElapsed) * 10);
             const comboBonus = this.maxCombo * 100;
             const nearMissBonus = this.nearMissPoints; // Use actual points earned from near-misses
 
             const totalScore = baseScore + timeBonus + comboBonus + nearMissBonus;
 
-            console.log(`Score breakdown - Base: ${baseScore}, Time: ${timeBonus}, Combo: ${comboBonus}, Near-miss: ${nearMissBonus}, Total: ${totalScore}`);
+            console.log(`Score breakdown - Base: ${baseScore}, Time: ${timeBonus} (${levelDuration}s - ${this.timeElapsed.toFixed(1)}s), Combo: ${comboBonus}, Near-miss: ${nearMissBonus}, Total: ${totalScore}`);
             this.gameState.score = totalScore;
 
             // Update save data
