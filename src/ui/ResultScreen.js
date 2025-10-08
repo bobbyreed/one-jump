@@ -32,11 +32,11 @@ export default class ResultScreen {
     // Main result panel
     this.resultPanel = new Container();
 
-    // Panel background
+    // Panel background - INCREASED HEIGHT FOR MORE SPACING
     const panelBg = new Graphics()
-      .roundRect(-200, -100, 400, 200, 15)
+      .roundRect(-250, -140, 500, 280, 20)
       .fill({ color: 0x222244, alpha: 0.95 })
-      .roundRect(-200, -100, 400, 200, 15)
+      .roundRect(-250, -140, 500, 280, 20)
       .stroke({ width: 3, color: 0x666688 });
     this.resultPanel.addChild(panelBg);
 
@@ -45,7 +45,7 @@ export default class ResultScreen {
       text: '',
       style: {
         fontFamily: 'Arial Black',
-        fontSize: 42,
+        fontSize: 48,
         fill: COLORS.SUCCESS,
         fontWeight: 'bold',
         dropShadow: true,
@@ -53,7 +53,7 @@ export default class ResultScreen {
       }
     });
     this.resultTitle.anchor.set(0.5);
-    this.resultTitle.y = -60;
+    this.resultTitle.y = -95; // More space at top
     this.resultPanel.addChild(this.resultTitle);
 
     // Landing type label (PERFECT / GREAT / GOOD)
@@ -61,13 +61,13 @@ export default class ResultScreen {
       text: '',
       style: {
         fontFamily: 'Arial',
-        fontSize: 24,
+        fontSize: 22,
         fill: COLORS.TEXT_SECONDARY,
         fontWeight: 'bold'
       }
     });
     this.landingLabel.anchor.set(0.5);
-    this.landingLabel.y = -20;
+    this.landingLabel.y = -35; // More spacing
     this.resultPanel.addChild(this.landingLabel);
 
     // Score display
@@ -75,13 +75,13 @@ export default class ResultScreen {
       text: '',
       style: {
         fontFamily: 'Arial',
-        fontSize: 28,
+        fontSize: 32,
         fill: COLORS.TEXT_PRIMARY,
         fontWeight: 'bold'
       }
     });
     this.scoreText.anchor.set(0.5);
-    this.scoreText.y = 0;
+    this.scoreText.y = 10; // More spacing
     this.resultPanel.addChild(this.scoreText);
 
     // Grade display
@@ -89,13 +89,15 @@ export default class ResultScreen {
       text: '',
       style: {
         fontFamily: 'Arial Black',
-        fontSize: 36,
+        fontSize: 40,
         fill: COLORS.WARNING,
-        fontWeight: 'bold'
+        fontWeight: 'bold',
+        dropShadow: true,
+        dropShadowDistance: 3
       }
     });
     this.gradeText.anchor.set(0.5);
-    this.gradeText.y = 40;
+    this.gradeText.y = 65; // More spacing
     this.resultPanel.addChild(this.gradeText);
 
     // High score indicator
@@ -103,13 +105,15 @@ export default class ResultScreen {
       text: 'NEW HIGH SCORE! 🏆',
       style: {
         fontFamily: 'Arial',
-        fontSize: 24,
+        fontSize: 26,
         fill: COLORS.WARNING,
-        fontWeight: 'bold'
+        fontWeight: 'bold',
+        dropShadow: true,
+        dropShadowDistance: 2
       }
     });
     this.highScoreIndicator.anchor.set(0.5);
-    this.highScoreIndicator.y = 80;
+    this.highScoreIndicator.y = 115; // More spacing
     this.highScoreIndicator.visible = false;
     this.resultPanel.addChild(this.highScoreIndicator);
 
@@ -169,20 +173,23 @@ export default class ResultScreen {
     this.statsContainer = new Container();
     this.statsContainer.visible = false;
 
-    // Stats background
+    // Stats background - INCREASED SIZE
     const statsBg = new Graphics()
-      .roundRect(-200, -80, 400, 160, 10)
-      .fill({ color: 0x000000, alpha: 0.5 });
+      .roundRect(-250, -90, 500, 180, 15)
+      .fill({ color: 0x000000, alpha: 0.5 })
+      .roundRect(-250, -90, 500, 180, 15)
+      .stroke({ width: 2, color: 0x444466 });
     this.statsContainer.addChild(statsBg);
 
     // Stats title
     const statsTitle = new Text({
       text: 'LEVEL STATS',
       style: {
-        fontFamily: 'Arial',
-        fontSize: 20,
+        fontFamily: 'Arial Black',
+        fontSize: 24,
         fill: COLORS.TEXT_SECONDARY,
-        fontWeight: 'bold'
+        fontWeight: 'bold',
+        letterSpacing: 1
       }
     });
     statsTitle.anchor.set(0.5);
@@ -194,10 +201,10 @@ export default class ResultScreen {
       text: '',
       style: {
         fontFamily: 'Arial',
-        fontSize: 18,
+        fontSize: 20,
         fill: COLORS.TEXT_PRIMARY,
         align: 'center',
-        lineHeight: 24
+        lineHeight: 30
       }
     });
     this.statsText.anchor.set(0.5);
@@ -206,7 +213,7 @@ export default class ResultScreen {
 
     // Stars display
     this.starsContainer = new Container();
-    this.starsContainer.y = 40;
+    this.starsContainer.y = 50; // More spacing
     this.statsContainer.addChild(this.starsContainer);
 
     this.statsContainer.x = this.screen.width / 2;

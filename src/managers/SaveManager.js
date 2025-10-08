@@ -7,6 +7,7 @@ export default class SaveManager {
     getDefaultData() {
         return {
             version: '1.0.0',
+            username: 'Anonymous',
             highScore: 0,
             totalDistance: 0,
             totalFalls: 0,

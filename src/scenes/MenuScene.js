@@ -3,6 +3,7 @@ import BaseScene from './BaseScene.js';
 import { UI, COLORS } from '../config/Constants.js';
 import Button from '../ui/Button.js';
 import Checkbox from '../ui/Checkbox.js';
+import TextInput from '../ui/TextInput.js';
 
 export default class MenuScene extends BaseScene {
     constructor(game) {
@@ -10,8 +11,11 @@ export default class MenuScene extends BaseScene {
         this.coverSprite = null;
         this.menuPanel = null;
         this.buttons = [];
-        this.highScoreText = null;
         this.skipStoryCheckbox = null;
+        this.usernameInput = null;
+        this.usernameDisplay = null;
+        this.changeUserButton = null;
+        this.isEditingUsername = false;
     }
 
     async init() {
@@ -120,38 +124,94 @@ export default class MenuScene extends BaseScene {
         this.container.addChild(levelSelectButton.container);
         this.buttons.push(levelSelectButton);
 
-        // Highscores button
-        const highscoresButton = new Button(
-            'HIGHSCORES',
+        // Leaderboard button
+        const leaderboardButton = new Button(
+            'LEADERBOARD',
             buttonX,
             startY + (UI.BUTTON_HEIGHT + UI.BUTTON_SPACING) * 2,
             UI.BUTTON_WIDTH,
             UI.BUTTON_HEIGHT,
             COLORS.UI_SECONDARY,
-            () => this.showHighscores()
+            () => this.showLeaderboard()
         );
-        this.container.addChild(highscoresButton.container);
-        this.buttons.push(highscoresButton);
+        this.container.addChild(leaderboardButton.container);
+        this.buttons.push(leaderboardButton);
 
-        // High score display
-        this.highScoreText = new Text({
-            text: `Best Score: ${this.game.saveManager.data.highScore}`,
+        // Username section - STACKED VERTICALLY
+        const usernameY = startY + (UI.BUTTON_HEIGHT + UI.BUTTON_SPACING) * 3 + 20;
+        const usernameX = this.menuPanel.x + (UI.PANEL_WIDTH / 2) - 100; // Centered
+
+        // Username display (shown when not editing)
+        this.usernameDisplay = new Container();
+
+        const usernameLabel = new Text({
+            text: 'Logged in as:',
             style: {
                 fontFamily: 'Arial',
-                fontSize: 20,
-                fill: COLORS.TEXT_PRIMARY,
-                dropShadow: true,
-                dropShadowColor: 0x000000,
-                dropShadowDistance: 2
+                fontSize: 16,
+                fill: 0xcccccc
             }
         });
-        this.highScoreText.anchor.set(0.5);
-        this.highScoreText.x = this.menuPanel.x + UI.PANEL_WIDTH / 2;
-        this.highScoreText.y = startY + (UI.BUTTON_HEIGHT + UI.BUTTON_SPACING) * 3 + 30;
-        this.container.addChild(this.highScoreText);
+        usernameLabel.anchor.set(0.5, 0);
+        usernameLabel.x = 100;
+        usernameLabel.y = 0;
+        this.usernameDisplay.addChild(usernameLabel);
 
-        // Skip Story checkbox
-        const checkboxY = this.highScoreText.y + 50;
+        this.usernameText = new Text({
+            text: this.game.saveManager.data.username,
+            style: {
+                fontFamily: 'Arial',
+                fontSize: 22,
+                fill: 0x88ff88,
+                fontWeight: 'bold'
+            }
+        });
+        this.usernameText.anchor.set(0.5, 0);
+        this.usernameText.x = 100;
+        this.usernameText.y = 22;
+        this.usernameDisplay.addChild(this.usernameText);
+
+        this.usernameDisplay.x = usernameX;
+        this.usernameDisplay.y = usernameY;
+        this.container.addChild(this.usernameDisplay);
+
+        // Change User button - BELOW USERNAME
+        this.changeUserButton = new Button(
+            'CHANGE USER',
+            usernameX + 100 - 75, // Centered (button width / 2)
+            usernameY + 55,
+            150,
+            40,
+            0x6666ff,
+            () => this.showUsernameInput()
+        );
+        this.container.addChild(this.changeUserButton.container);
+
+        // Username input (shown when editing)
+        this.usernameInput = new TextInput(
+            'Username:',
+            usernameX,
+            usernameY,
+            280,
+            40,
+            this.game.saveManager.data.username === 'Anonymous' ? '' : this.game.saveManager.data.username,
+            20,
+            (value) => {
+                // Save username when changed (trim whitespace)
+                const trimmedValue = value.trim();
+                this.game.saveManager.data.username = trimmedValue || 'Anonymous';
+                this.game.saveManager.save();
+                console.log(`Username set to: ${this.game.saveManager.data.username}`);
+
+                // Switch back to display mode
+                this.hideUsernameInput();
+            }
+        );
+        this.usernameInput.container.visible = false;
+        this.container.addChild(this.usernameInput.container);
+
+        // Skip Story checkbox - MOVED DOWN
+        const checkboxY = usernameY + 105;
         const checkboxX = this.menuPanel.x + (UI.PANEL_WIDTH - 200) / 2;
         this.skipStoryCheckbox = new Checkbox(
             'Skip Story Scenes',
@@ -208,16 +268,52 @@ export default class MenuScene extends BaseScene {
         }
     }
 
-    showHighscores() {
-        this.changeScene('highscores');
+    showLeaderboard() {
+        this.changeScene('leaderboard');
+    }
+
+    showUsernameInput() {
+        this.isEditingUsername = true;
+        this.usernameDisplay.visible = false;
+        this.changeUserButton.container.visible = false;
+        this.usernameInput.container.visible = true;
+
+        // Focus the input and load current value
+        const currentUsername = this.game.saveManager.data.username;
+        const displayValue = currentUsername === 'Anonymous' ? '' : currentUsername;
+        this.usernameInput.setValue(displayValue);
+        setTimeout(() => this.usernameInput.focus(), 100);
+    }
+
+    hideUsernameInput() {
+        this.isEditingUsername = false;
+        this.usernameInput.container.visible = false;
+        this.usernameDisplay.visible = true;
+        this.changeUserButton.container.visible = true;
+
+        // Update username display text
+        this.usernameText.text = this.game.saveManager.data.username;
     }
 
     async enter(data) {
         await super.enter(data);
 
-        // Update high score display in case it changed
-        if (this.highScoreText) {
-            this.highScoreText.text = `Best Score: ${this.game.saveManager.data.highScore}`;
+        // Reload username from save data and ensure display mode
+        const savedUsername = this.game.saveManager.data.username;
+        if (this.usernameText) {
+            this.usernameText.text = savedUsername;
+        }
+
+        // Always show display mode when entering menu
+        if (this.isEditingUsername) {
+            this.hideUsernameInput();
+        }
+    }
+
+    update(deltaTime) {
+        super.update(deltaTime);
+        if (this.usernameInput) {
+            this.usernameInput.update(deltaTime);
         }
     }
 
@@ -226,6 +322,12 @@ export default class MenuScene extends BaseScene {
         this.buttons = [];
         if (this.skipStoryCheckbox) {
             this.skipStoryCheckbox.destroy();
+        }
+        if (this.usernameInput) {
+            this.usernameInput.destroy();
+        }
+        if (this.changeUserButton) {
+            this.changeUserButton.destroy();
         }
         super.destroy();
     }
