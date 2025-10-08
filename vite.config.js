@@ -1,6 +1,9 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+  // Base path for GitHub Pages deployment
+  base: '/',
+
   // Set the public directory for assets
   publicDir: 'public',
 
