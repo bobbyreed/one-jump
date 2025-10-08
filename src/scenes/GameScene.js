@@ -51,6 +51,7 @@ export default class GameScene extends BaseScene {
         this.nearMisses = 0;
         this.tricksPerformed = 0;
         this.nearMissPoints = 0; // Track actual points from near-misses
+        this.lastComboTime = 0; // Track time of last combo action
 
         // Track obstacles that have been checked for near-misses
         this.checkedObstacles = new Set();
@@ -178,6 +179,7 @@ export default class GameScene extends BaseScene {
         this.nearMisses = 0;
         this.tricksPerformed = 0;
         this.nearMissPoints = 0;
+        this.lastComboTime = 0;
         this.checkedObstacles.clear();
     }
 
@@ -295,6 +297,7 @@ export default class GameScene extends BaseScene {
     this.nearMisses = 0;
     this.tricksPerformed = 0;
     this.nearMissPoints = 0;
+    this.lastComboTime = 0;
     this.checkedObstacles.clear();
     
     // Check if a specific level was requested
@@ -405,6 +408,7 @@ resetLevel() {
     this.nearMisses = 0;
     this.tricksPerformed = 0;
     this.nearMissPoints = 0;
+    this.lastComboTime = 0;
     this.checkedObstacles.clear();
     
     // Reset player
@@ -568,6 +572,13 @@ async exit() {
     // Update timer
     if (this.gameState.phase === PLAYER_STATES.FALLING) {
         this.timeElapsed += deltaTime;
+
+        // Check combo timeout
+        const timeSinceLastCombo = (this.timeElapsed - this.lastComboTime) * 1000; // Convert to ms
+        if (this.currentCombo > 0 && timeSinceLastCombo > SCORING.COMBO_TIMEOUT) {
+            console.log(`Combo broken! Time since last: ${timeSinceLastCombo.toFixed(0)}ms > ${SCORING.COMBO_TIMEOUT}ms`);
+            this.currentCombo = 0;
+        }
     }
 
         
@@ -789,8 +800,9 @@ async exit() {
         this.nearMisses++;
         this.nearMissPoints += points;
 
-        // Update combo
+        // Update combo and reset timeout
         this.currentCombo++;
+        this.lastComboTime = this.timeElapsed;
         if (this.currentCombo > this.maxCombo) {
             this.maxCombo = this.currentCombo;
         }
@@ -802,7 +814,7 @@ async exit() {
             nearMiss.isGraze
         );
 
-        console.log(`Near-miss! Level: ${nearMiss.level}, Points: ${points}, Distance: ${nearMiss.distance.toFixed(1)}px`);
+        console.log(`Near-miss! Level: ${nearMiss.level}, Points: ${points}, Combo: x${this.currentCombo}, Distance: ${nearMiss.distance.toFixed(1)}px`);
     }
 
     updateParallax() {
