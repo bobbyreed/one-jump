@@ -109,69 +109,69 @@ export const COLORS = {
 // Asset Paths
 export const ASSETS = {
     SPRITES: {
-        IDLE_RUN: '/public/assets/sprites/idlerun.png',
-        COVER: '/public/assets/nukemCover.png'
+        IDLE_RUN: '/assets/sprites/idlerun.png',
+        COVER: '/assets/nukemCover.png'
     },
     NARRATIVE_PANELS: {
         // Opening sequence (6 panels)
         OPENING: Array.from({ length: 6 }, (_, i) =>
-            `/public/assets/narrativePanels/opening/opening${i + 1}.png`),
+            `/assets/narrativePanels/opening/opening${i + 1}.png`),
 
         // Level entry panels
         LEVEL_1_ENTRY: Array.from({ length: 3 }, (_, i) =>
-            `/public/assets/narrativePanels/level1/level1entry${i + 1}.png`),
+            `/assets/narrativePanels/level1/level1entry${i + 1}.png`),
         LEVEL_2_ENTRY: Array.from({ length: 3 }, (_, i) =>
-            `/public/assets/narrativePanels/level2/level2entry${i + 1}.png`),
+            `/assets/narrativePanels/level2/level2entry${i + 1}.png`),
         LEVEL_3_ENTRY: Array.from({ length: 3 }, (_, i) =>
-            `/public/assets/narrativePanels/level3/level3entry${i + 1}.png`),
+            `/assets/narrativePanels/level3/level3entry${i + 1}.png`),
         LEVEL_4_ENTRY: Array.from({ length: 2 }, (_, i) =>
-            `/public/assets/narrativePanels/level4/level4entry${i + 1}.png`),
+            `/assets/narrativePanels/level4/level4entry${i + 1}.png`),
         LEVEL_5_ENTRY: Array.from({ length: 3 }, (_, i) =>
-            `/public/assets/narrativePanels/level5/level5entry${i + 1}.png`),
+            `/assets/narrativePanels/level5/level5entry${i + 1}.png`),
         LEVEL_6_ENTRY: Array.from({ length: 3 }, (_, i) =>
-            `/public/assets/narrativePanels/level6/level6entry${i + 1}.png`),
+            `/assets/narrativePanels/level6/level6entry${i + 1}.png`),
         LEVEL_7_ENTRY: Array.from({ length: 3 }, (_, i) =>
-            `/public/assets/narrativePanels/level7/level7entry${i + 1}.png`),
+            `/assets/narrativePanels/level7/level7entry${i + 1}.png`),
         LEVEL_8_ENTRY: Array.from({ length: 3 }, (_, i) =>
-            `/public/assets/narrativePanels/level8/level8entry${i + 1}.png`),
+            `/assets/narrativePanels/level8/level8entry${i + 1}.png`),
         LEVEL_9_ENTRY: Array.from({ length: 3 }, (_, i) =>
-            `/public/assets/narrativePanels/level9/level9entry${i + 1}.png`),
+            `/assets/narrativePanels/level9/level9entry${i + 1}.png`),
         LEVEL_10_ENTRY: Array.from({ length: 3 }, (_, i) =>
-            `/public/assets/narrativePanels/level10/level10entry${i + 1}.png`),
+            `/assets/narrativePanels/level10/level10entry${i + 1}.png`),
 
         // Level exit panels
         LEVEL_1_EXIT: Array.from({ length: 2 }, (_, i) =>
-            `/public/assets/narrativePanels/level1/level1exit${i + 1}.png`),
+            `/assets/narrativePanels/level1/level1exit${i + 1}.png`),
         LEVEL_2_EXIT: Array.from({ length: 2 }, (_, i) =>
-            `/public/assets/narrativePanels/level2/level2exit${i + 1}.png`),
+            `/assets/narrativePanels/level2/level2exit${i + 1}.png`),
         LEVEL_3_EXIT: Array.from({ length: 2 }, (_, i) =>
-            `/public/assets/narrativePanels/level3/level3exit${i + 1}.png`),
+            `/assets/narrativePanels/level3/level3exit${i + 1}.png`),
         LEVEL_4_EXIT: Array.from({ length: 2 }, (_, i) =>
-            `/public/assets/narrativePanels/level4/level4exit${i + 1}.png`),
+            `/assets/narrativePanels/level4/level4exit${i + 1}.png`),
         LEVEL_5_EXIT: Array.from({ length: 2 }, (_, i) =>
-            `/public/assets/narrativePanels/level5/level5exit${i + 1}.png`),
+            `/assets/narrativePanels/level5/level5exit${i + 1}.png`),
         LEVEL_6_EXIT: Array.from({ length: 2 }, (_, i) =>
-            `/public/assets/narrativePanels/level6/level6exit${i + 1}.png`),
+            `/assets/narrativePanels/level6/level6exit${i + 1}.png`),
         LEVEL_7_EXIT: Array.from({ length: 2 }, (_, i) =>
-            `/public/assets/narrativePanels/level7/level7exit${i + 1}.png`),
+            `/assets/narrativePanels/level7/level7exit${i + 1}.png`),
         LEVEL_8_EXIT: Array.from({ length: 2 }, (_, i) =>
-            `/public/assets/narrativePanels/level8/level8exit${i + 1}.png`),
+            `/assets/narrativePanels/level8/level8exit${i + 1}.png`),
         LEVEL_9_EXIT: Array.from({ length: 2 }, (_, i) =>
-            `/public/assets/narrativePanels/level9/level9exit${i + 1}.png`),
+            `/assets/narrativePanels/level9/level9exit${i + 1}.png`),
         LEVEL_10_EXIT: Array.from({ length: 2 }, (_, i) =>
-            `/public/assets/narrativePanels/level10/level10exit${i + 1}.png`),
+            `/assets/narrativePanels/level10/level10exit${i + 1}.png`),
 
         // Special sequences
         MIDPOINT: Array.from({ length: 6 }, (_, i) =>
-            `/public/assets/narrativePanels/midpoint/midpoint${i + 1}.png`),
+            `/assets/narrativePanels/midpoint/midpoint${i + 1}.png`),
         ENDING: Array.from({ length: 10 }, (_, i) =>
-            `/public/assets/narrativePanels/ending/ending${i + 1}.png`),
+            `/assets/narrativePanels/ending/ending${i + 1}.png`),
 
         // Ending split into two parts for better visibility
         ENDING_PART1: Array.from({ length: 5 }, (_, i) =>
-            `/public/assets/narrativePanels/ending/ending${i + 1}.png`),
+            `/assets/narrativePanels/ending/ending${i + 1}.png`),
         ENDING_PART2: Array.from({ length: 5 }, (_, i) =>
-            `/public/assets/narrativePanels/ending/ending${i + 6}.png`)
+            `/assets/narrativePanels/ending/ending${i + 6}.png`)
     }
 };
 

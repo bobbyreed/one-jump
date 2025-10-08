@@ -517,7 +517,9 @@ export default class LeaderboardScene extends BaseScene {
     }
 
     showLoading(visible) {
-        this.loadingText.visible = visible;
+        if (this.loadingText) {
+            this.loadingText.visible = visible;
+        }
     }
 
     getGradeColor(grade) {

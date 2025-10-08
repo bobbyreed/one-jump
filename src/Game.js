@@ -129,6 +129,7 @@ export default class Game {
         await gameScene.init();
         await highscoresScene.init();
         await levelSelectScene.init();
+        await leaderboardScene.init();
     }
 
     // Global game methods
