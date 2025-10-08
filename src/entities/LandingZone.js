@@ -7,6 +7,7 @@ export default class LandingZone {
         this.container = new Container();
         this.landingPads = [];
         this.ground = null;
+        this.actualLandingY = LEVEL.LANDING_Y; // Track actual landing Y position
 
         // Create landing zone elements
         this.createLandingPads();
@@ -153,12 +154,17 @@ export default class LandingZone {
      * @returns {Object|null} Landing result or null if not landed
      */
     checkLanding(playerPosition) {
+        // Use actual landing Y (which may be adjusted for difficulty)
+        const landingY = this.actualLandingY;
+
         // Check if player is at landing height
-        if (playerPosition.y >= LEVEL.LANDING_Y &&
-            playerPosition.y <= LEVEL.LANDING_Y + 40) {
+        if (playerPosition.y >= landingY &&
+            playerPosition.y <= landingY + 40) {
 
             // Check which pad the player landed on
-            for (const pad of this.landingPads) {
+            // Check in reverse order (best pads last) to prioritize better landings
+            for (let i = this.landingPads.length - 1; i >= 0; i--) {
+                const pad = this.landingPads[i];
                 if (playerPosition.x >= pad.x &&
                     playerPosition.x <= pad.x + pad.width) {
 
@@ -183,7 +189,7 @@ export default class LandingZone {
         }
 
         // Check if crashed into ground
-        if (playerPosition.y > LEVEL.LANDING_Y + 40) {
+        if (playerPosition.y > landingY + 40) {
             return {
                 type: 'crash',
                 points: 0,
@@ -230,6 +236,20 @@ export default class LandingZone {
 
         // Note: This would need access to the ticker
         // In a real implementation, this would be handled by the particle system
+    }
+
+    /**
+     * Update landing zone position for different level difficulties
+     */
+    updatePosition(newLandingY) {
+        const oldY = LEVEL.LANDING_Y;
+        const deltaY = newLandingY - oldY;
+
+        // Move all elements by the delta
+        this.container.y = deltaY;
+
+        // Update stored landing Y for collision detection
+        this.actualLandingY = newLandingY;
     }
 
     /**

@@ -18,8 +18,8 @@ export const PHYSICS = {
 
     // Collision & Near-Miss
     PLAYER_HITBOX: { w: 60, h: 80 },
-    NEAR_MISS_RANGES: [50, 40, 30, 20],
-    GRAZE_BONUS_RANGE: 10,
+    NEAR_MISS_RANGES: [150, 120, 90, 60], // Center-to-center distances (accounting for hitbox sizes)
+    GRAZE_BONUS_RANGE: 50, // Very close pass
 
     // Special Mechanics
     SPEED_BOOST_MULT: 1.5,
@@ -67,7 +67,6 @@ export const UI = {
 
 // Story Panel Configuration
 export const STORY = {
-    PANEL_COUNT: 5,
     PANEL_DISPLAY_TIME: 3000,
     PANEL_FADE_TIME: 800,
     PANEL_START_X: 50,
@@ -81,9 +80,10 @@ export const STORY = {
 // Scoring Configuration
 export const SCORING = {
     LANDING_PADS: [
-        { x_offset: -150, width: 60, color: 0x44ff44, points: 1000, label: 'PERFECT' },
+        // Ordered from largest to smallest so smallest (best) pads are checked last and take priority
+        { x_offset: -180, width: 360, color: 0xccffcc, points: 100, label: 'GOOD' },
         { x_offset: -90, width: 180, color: 0x88ff88, points: 500, label: 'GREAT' },
-        { x_offset: -180, width: 360, color: 0xccffcc, points: 100, label: 'GOOD' }
+        { x_offset: -30, width: 60, color: 0x44ff44, points: 1000, label: 'PERFECT' }
     ],
     NEAR_MISS_POINTS: [100, 150, 200, 300],
     COMBO_MULTIPLIERS: [1, 2, 3, 5, 8, 10],
@@ -113,8 +113,59 @@ export const ASSETS = {
         COVER: '/public/assets/nukemCover.png'
     },
     NARRATIVE_PANELS: {
-        OPENING: Array.from({ length: 5 }, (_, i) =>
-            `/public/assets/narrativePanels/opening/opening${i + 1}.png`)
+        // Opening sequence (6 panels)
+        OPENING: Array.from({ length: 6 }, (_, i) =>
+            `/public/assets/narrativePanels/opening/opening${i + 1}.png`),
+
+        // Level entry panels
+        LEVEL_1_ENTRY: Array.from({ length: 3 }, (_, i) =>
+            `/public/assets/narrativePanels/level1/level1entry${i + 1}.png`),
+        LEVEL_2_ENTRY: Array.from({ length: 3 }, (_, i) =>
+            `/public/assets/narrativePanels/level2/level2entry${i + 1}.png`),
+        LEVEL_3_ENTRY: Array.from({ length: 3 }, (_, i) =>
+            `/public/assets/narrativePanels/level3/level3entry${i + 1}.png`),
+        LEVEL_4_ENTRY: Array.from({ length: 2 }, (_, i) =>
+            `/public/assets/narrativePanels/level4/level4entry${i + 1}.png`),
+        LEVEL_5_ENTRY: Array.from({ length: 3 }, (_, i) =>
+            `/public/assets/narrativePanels/level5/level5entry${i + 1}.png`),
+        LEVEL_6_ENTRY: Array.from({ length: 3 }, (_, i) =>
+            `/public/assets/narrativePanels/level6/level6entry${i + 1}.png`),
+        LEVEL_7_ENTRY: Array.from({ length: 3 }, (_, i) =>
+            `/public/assets/narrativePanels/level7/level7entry${i + 1}.png`),
+        LEVEL_8_ENTRY: Array.from({ length: 3 }, (_, i) =>
+            `/public/assets/narrativePanels/level8/level8entry${i + 1}.png`),
+        LEVEL_9_ENTRY: Array.from({ length: 3 }, (_, i) =>
+            `/public/assets/narrativePanels/level9/level9entry${i + 1}.png`),
+        LEVEL_10_ENTRY: Array.from({ length: 3 }, (_, i) =>
+            `/public/assets/narrativePanels/level10/level10entry${i + 1}.png`),
+
+        // Level exit panels
+        LEVEL_1_EXIT: Array.from({ length: 2 }, (_, i) =>
+            `/public/assets/narrativePanels/level1/level1exit${i + 1}.png`),
+        LEVEL_2_EXIT: Array.from({ length: 2 }, (_, i) =>
+            `/public/assets/narrativePanels/level2/level2exit${i + 1}.png`),
+        LEVEL_3_EXIT: Array.from({ length: 2 }, (_, i) =>
+            `/public/assets/narrativePanels/level3/level3exit${i + 1}.png`),
+        LEVEL_4_EXIT: Array.from({ length: 2 }, (_, i) =>
+            `/public/assets/narrativePanels/level4/level4exit${i + 1}.png`),
+        LEVEL_5_EXIT: Array.from({ length: 2 }, (_, i) =>
+            `/public/assets/narrativePanels/level5/level5exit${i + 1}.png`),
+        LEVEL_6_EXIT: Array.from({ length: 2 }, (_, i) =>
+            `/public/assets/narrativePanels/level6/level6exit${i + 1}.png`),
+        LEVEL_7_EXIT: Array.from({ length: 2 }, (_, i) =>
+            `/public/assets/narrativePanels/level7/level7exit${i + 1}.png`),
+        LEVEL_8_EXIT: Array.from({ length: 2 }, (_, i) =>
+            `/public/assets/narrativePanels/level8/level8exit${i + 1}.png`),
+        LEVEL_9_EXIT: Array.from({ length: 2 }, (_, i) =>
+            `/public/assets/narrativePanels/level9/level9exit${i + 1}.png`),
+        LEVEL_10_EXIT: Array.from({ length: 2 }, (_, i) =>
+            `/public/assets/narrativePanels/level10/level10exit${i + 1}.png`),
+
+        // Special sequences
+        MIDPOINT: Array.from({ length: 6 }, (_, i) =>
+            `/public/assets/narrativePanels/midpoint/midpoint${i + 1}.png`),
+        ENDING: Array.from({ length: 10 }, (_, i) =>
+            `/public/assets/narrativePanels/ending/ending${i + 1}.png`)
     }
 };
 
@@ -141,5 +192,12 @@ export const OBSTACLE_TYPES = [
     { type: 'spike', color: 0xff4444, damage: 100 },
     { type: 'platform', color: 0xff8844, damage: 0 },
     { type: 'spinner', color: 0xff44ff, damage: 100 },
-    { type: 'wall', color: 0x4444ff, damage: 50 }
+    { type: 'wall', color: 0x4444ff, damage: 50 },
+    { type: 'alien', color: 0x00ff88, damage: 100 },
+    { type: 'barrel', color: 0xffaa00, damage: 75 },
+    { type: 'laser', color: 0xff0000, damage: 100 },
+    { type: 'meteor', color: 0x888888, damage: 75 },
+    { type: 'orbiter', color: 0x00ffff, damage: 75 },
+    { type: 'pendulum', color: 0xffff00, damage: 75 },
+    { type: 'pulsar', color: 0xff00ff, damage: 50 }
 ];

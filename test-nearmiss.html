@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Near-Miss Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #0a0a1f;
+            color: #fff;
+        }
+        .test {
+            margin: 10px 0;
+            padding: 10px;
+            background: #1a1a2f;
+            border-radius: 5px;
+        }
+        .pass { border-left: 5px solid #44ff44; }
+        .fail { border-left: 5px solid #ff4444; }
+        h1 { color: #ffff00; }
+        h2 { color: #88ff88; }
+        .error { color: #ff4444; }
+        .success { color: #44ff44; }
+    </style>
+</head>
+<body>
+    <h1>Near-Miss System Tests</h1>
+    <div id="results"></div>
+
+    <script type="module">
+        const NEAR_MISS_RANGES = [50, 40, 30, 20];
+        const GRAZE_BONUS_RANGE = 10;
+
+        // Current (broken) implementation
+        function calculateNearMissBROKEN(distance) {
+            for (let i = 0; i < NEAR_MISS_RANGES.length; i++) {
+                if (distance <= NEAR_MISS_RANGES[i]) {
+                    return {
+                        level: i,
+                        distance: distance,
+                        isGraze: distance <= GRAZE_BONUS_RANGE
+                    };
+                }
+            }
+            return null;
+        }
+
+        // Fixed implementation
+        function calculateNearMissFIXED(distance) {
+            // Check ranges from closest to farthest
+            for (let i = NEAR_MISS_RANGES.length - 1; i >= 0; i--) {
+                if (distance <= NEAR_MISS_RANGES[i]) {
+                    return {
+                        level: i,
+                        distance: distance,
+                        isGraze: distance <= GRAZE_BONUS_RANGE
+                    };
+                }
+            }
+            return null;
+        }
+
+        const results = document.getElementById('results');
+
+        function runTest(name, testFn) {
+            try {
+                testFn();
+                results.innerHTML += `<div class="test pass"><strong class="success">✓ PASS:</strong> ${name}</div>`;
+            } catch (e) {
+                results.innerHTML += `<div class="test fail"><strong class="error">✗ FAIL:</strong> ${name}<br><span class="error">${e.message}</span></div>`;
+            }
+        }
+
+        function assert(condition, message) {
+            if (!condition) throw new Error(message);
+        }
+
+        results.innerHTML += '<h2>Testing BROKEN Implementation:</h2>';
+
+        runTest('Distance 5px (graze) should be level 3', () => {
+            const result = calculateNearMissBROKEN(5);
+            console.log('Broken: distance=5, result=', result);
+            assert(result.level === 3, `Expected level 3, got ${result.level}`);
+            assert(result.isGraze === true, `Expected graze=true, got ${result.isGraze}`);
+        });
+
+        runTest('Distance 15px should be level 3', () => {
+            const result = calculateNearMissBROKEN(15);
+            console.log('Broken: distance=15, result=', result);
+            assert(result.level === 3, `Expected level 3, got ${result.level}`);
+            assert(result.isGraze === false, `Expected graze=false, got ${result.isGraze}`);
+        });
+
+        runTest('Distance 25px should be level 2', () => {
+            const result = calculateNearMissBROKEN(25);
+            console.log('Broken: distance=25, result=', result);
+            assert(result.level === 2, `Expected level 2, got ${result.level}`);
+        });
+
+        runTest('Distance 35px should be level 1', () => {
+            const result = calculateNearMissBROKEN(35);
+            console.log('Broken: distance=35, result=', result);
+            assert(result.level === 1, `Expected level 1, got ${result.level}`);
+        });
+
+        runTest('Distance 45px should be level 0', () => {
+            const result = calculateNearMissBROKEN(45);
+            console.log('Broken: distance=45, result=', result);
+            assert(result.level === 0, `Expected level 0, got ${result.level}`);
+        });
+
+        runTest('Distance 51px should return null', () => {
+            const result = calculateNearMissBROKEN(51);
+            console.log('Broken: distance=51, result=', result);
+            assert(result === null, `Expected null, got ${JSON.stringify(result)}`);
+        });
+
+        results.innerHTML += '<h2>Testing FIXED Implementation:</h2>';
+
+        runTest('Distance 5px (graze) should be level 3', () => {
+            const result = calculateNearMissFIXED(5);
+            console.log('Fixed: distance=5, result=', result);
+            assert(result.level === 3, `Expected level 3, got ${result.level}`);
+            assert(result.isGraze === true, `Expected graze=true, got ${result.isGraze}`);
+        });
+
+        runTest('Distance 15px should be level 3', () => {
+            const result = calculateNearMissFIXED(15);
+            console.log('Fixed: distance=15, result=', result);
+            assert(result.level === 3, `Expected level 3, got ${result.level}`);
+            assert(result.isGraze === false, `Expected graze=false, got ${result.isGraze}`);
+        });
+
+        runTest('Distance 25px should be level 2', () => {
+            const result = calculateNearMissFIXED(25);
+            console.log('Fixed: distance=25, result=', result);
+            assert(result.level === 2, `Expected level 2, got ${result.level}`);
+        });
+
+        runTest('Distance 35px should be level 1', () => {
+            const result = calculateNearMissFIXED(35);
+            console.log('Fixed: distance=35, result=', result);
+            assert(result.level === 1, `Expected level 1, got ${result.level}`);
+        });
+
+        runTest('Distance 45px should be level 0', () => {
+            const result = calculateNearMissFIXED(45);
+            console.log('Fixed: distance=45, result=', result);
+            assert(result.level === 0, `Expected level 0, got ${result.level}`);
+        });
+
+        runTest('Distance 51px should return null', () => {
+            const result = calculateNearMissFIXED(51);
+            console.log('Fixed: distance=51, result=', result);
+            assert(result === null, `Expected null, got ${JSON.stringify(result)}`);
+        });
+
+        results.innerHTML += '<h2>Summary:</h2>';
+        results.innerHTML += '<p>The BROKEN implementation checks ranges in wrong order (50, 40, 30, 20). When distance is 15px:</p>';
+        results.innerHTML += '<ul><li>Check: 15 ≤ 50? YES → return level 0 (WRONG!)</li><li>Never checks smaller ranges!</li></ul>';
+        results.innerHTML += '<p>The FIXED implementation checks ranges in reverse (20, 30, 40, 50). When distance is 15px:</p>';
+        results.innerHTML += '<ul><li>Check: 15 ≤ 20? YES → return level 3 (CORRECT!)</li></ul>';
+    </script>
+</body>
+</html>

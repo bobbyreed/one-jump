@@ -1,4 +1,5 @@
 import SaveManager from './SaveManager.js';
+import { ASSETS } from '../config/Constants.js';
 
 export default class LevelManager {
     constructor(game) {
@@ -19,20 +20,73 @@ export default class LevelManager {
         this.loadProgress();
     }
 
+    // Get difficulty settings for a specific level
+    getDifficultyConfig(levelNumber) {
+        // Progressive difficulty from level 1 (easy) to 10 (very hard)
+        const difficulty = levelNumber / 10; // 0.1 to 1.0
+
+        return {
+            // Obstacle count: 20 at level 1, 80 at level 10
+            obstacleCount: Math.floor(20 + (difficulty * 60)),
+
+            // Obstacle spacing: 250px at level 1, 100px at level 10
+            obstacleSpacing: Math.floor(250 - (difficulty * 150)),
+
+            // Fall distance: 5000 at level 1, 10000 at level 10
+            fallDistance: Math.floor(5000 + (difficulty * 5000)),
+
+            // Target score scales with difficulty: 1000 at level 1, 3000 at level 10
+            // Higher levels have more obstacles = more near-miss opportunities
+            targetScore: Math.floor(1000 + (difficulty * 2000)),
+
+            // Available obstacle types unlock progressively
+            availableObstacles: this.getAvailableObstacles(levelNumber)
+        };
+    }
+
+    // Determine which obstacles are available at each level
+    getAvailableObstacles(levelNumber) {
+        // Level 1-2: Basic obstacles only
+        if (levelNumber <= 2) {
+            return ['spike', 'platform', 'wall'];
+        }
+        // Level 3-4: Add movement
+        else if (levelNumber <= 4) {
+            return ['spike', 'platform', 'wall', 'spinner', 'barrel'];
+        }
+        // Level 5-6: Add hazards
+        else if (levelNumber <= 6) {
+            return ['spike', 'platform', 'wall', 'spinner', 'barrel', 'alien', 'laser'];
+        }
+        // Level 7-8: Add complex patterns
+        else if (levelNumber <= 8) {
+            return ['spike', 'platform', 'wall', 'spinner', 'barrel', 'alien', 'laser', 'meteor', 'pendulum'];
+        }
+        // Level 9-10: All obstacles
+        else {
+            return ['spike', 'platform', 'wall', 'spinner', 'barrel', 'alien', 'laser', 'meteor', 'pendulum', 'orbiter', 'pulsar'];
+        }
+    }
+
     // Get configuration for a specific level
     getLevelConfig(levelNumber) {
+        // Get difficulty settings
+        const difficultyConfig = this.getDifficultyConfig(levelNumber);
+
         // Base configuration shared by all levels
         const baseConfig = {
             id: levelNumber,
             gravity: 0.3,
             maxFallSpeed: 15,
             startHeight: -200,
-            endHeight: 3000,
+            endHeight: difficultyConfig.fallDistance,
             backgroundType: 'sky',
             windStrength: 0,
-            targetScore: 10000,
+            targetScore: difficultyConfig.targetScore, // Scales with level difficulty
             duration: 90,
-            obstacleSpacing: 150
+            obstacleSpacing: difficultyConfig.obstacleSpacing,
+            obstacleCount: difficultyConfig.obstacleCount,
+            availableObstacles: difficultyConfig.availableObstacles
         };
 
         // Level-specific configurations
@@ -42,7 +96,7 @@ export default class LevelManager {
                 id: 1,
                 name: "Tutorial Rooftop",
                 subtitle: "Duke's Last Stand",
-                targetScore: 5000,
+                // targetScore handled by baseConfig (1000 for level 1)
                 duration: 60,
                 obstaclePatterns: ['single', 'double'],
                 obstacleTypes: ['bird', 'plane', 'cloud'],
@@ -63,7 +117,7 @@ export default class LevelManager {
                 id: 2,
                 name: "Test Level 2",
                 subtitle: "Testing Transitions",
-                targetScore: 5000,
+                // targetScore handled by baseConfig (1200 for level 2)
                 duration: 60,
                 obstaclePatterns: ['single', 'double'],
                 obstacleTypes: ['bird', 'plane', 'cloud'],
@@ -83,7 +137,7 @@ export default class LevelManager {
                 id: 3,
                 name: "City Streets",
                 subtitle: "Urban Descent",
-                targetScore: 7500,
+                // targetScore handled by baseConfig (1400 for level 3)
                 duration: 70,
                 obstaclePatterns: ['single', 'double', 'zigzag'],
                 obstacleTypes: ['bird', 'plane', 'balloon', 'drone'],
@@ -125,83 +179,64 @@ export default class LevelManager {
 
     // Get story panels for transitions
     getStoryPanels(levelNumber, isIntro = true) {
-        const config = this.getLevelConfig(levelNumber);
-        
         if (isIntro) {
             // Intro story before the level starts
+            const entryPanels = {
+                1: { title: "Level 1: Duke's Last Stand", count: 3, images: ASSETS.NARRATIVE_PANELS.LEVEL_1_ENTRY },
+                2: { title: "Level 2: The Journey Continues", count: 3, images: ASSETS.NARRATIVE_PANELS.LEVEL_2_ENTRY },
+                3: { title: "Level 3: Urban Descent", count: 3, images: ASSETS.NARRATIVE_PANELS.LEVEL_3_ENTRY },
+                4: { title: "Level 4: Into the Unknown", count: 2, images: ASSETS.NARRATIVE_PANELS.LEVEL_4_ENTRY },
+                5: { title: "Level 5: Halfway Point", count: 3, images: ASSETS.NARRATIVE_PANELS.LEVEL_5_ENTRY },
+                6: { title: "Level 6: The Second Half", count: 3, images: ASSETS.NARRATIVE_PANELS.LEVEL_6_ENTRY },
+                7: { title: "Level 7: Rising Stakes", count: 3, images: ASSETS.NARRATIVE_PANELS.LEVEL_7_ENTRY },
+                8: { title: "Level 8: Approaching the End", count: 3, images: ASSETS.NARRATIVE_PANELS.LEVEL_8_ENTRY },
+                9: { title: "Level 9: One More to Go", count: 3, images: ASSETS.NARRATIVE_PANELS.LEVEL_9_ENTRY },
+                10: { title: "Level 10: The Final Drop", count: 3, images: ASSETS.NARRATIVE_PANELS.LEVEL_10_ENTRY }
+            };
+
+            const panel = entryPanels[levelNumber];
             return {
-                title: config.storyBeat.title,
-                panels: config.storyBeat.panels,
-                images: this.getWireframeImages()
+                title: panel.title,
+                panelCount: panel.count,
+                images: panel.images
             };
         } else {
             // Outro story after completing the level
-            if (levelNumber === 1) {
-                return {
-                    title: "Stage 1 Complete!",
-                    panels: [
-                        "Great job on your first descent!",
-                        "You've mastered the basics.",
-                        "Ready for the next challenge?"
-                    ],
-                    images: this.getWireframeImages()
-                };
-            } else if (levelNumber === 2) {
-                return {
-                    title: "Stage 2 Complete!",
-                    panels: [
-                        "Another successful landing!",
-                        "Your skills are improving.",
-                        "8 more stages await!"
-                    ],
-                    images: this.getWireframeImages()
-                };
-            } else if (levelNumber === 5) {
-                // Special midpoint story
+            if (levelNumber === 5) {
+                // Special midpoint story (6 panels)
                 return {
                     title: "Halfway There!",
-                    panels: [
-                        "You've made it halfway!",
-                        "The hardest part is behind you...",
-                        "...or is it? The campus awaits!"
-                    ],
-                    images: this.getWireframeImages()
+                    panelCount: 6,
+                    images: ASSETS.NARRATIVE_PANELS.MIDPOINT
                 };
             } else if (levelNumber === 10) {
-                // Final victory
+                // Final victory ending (10 panels)
                 return {
                     title: "Mission Complete!",
-                    panels: [
-                        "Perfect landing at OCU!",
-                        "The crowd goes wild!",
-                        "You are a true STAR!"
-                    ],
-                    images: this.getWireframeImages()
+                    panelCount: 10,
+                    images: ASSETS.NARRATIVE_PANELS.ENDING
                 };
             } else {
-                // Generic transition for other levels
+                // Regular level exit panels (2 panels each)
+                const exitPanels = {
+                    1: { title: "Stage 1 Complete!", images: ASSETS.NARRATIVE_PANELS.LEVEL_1_EXIT },
+                    2: { title: "Stage 2 Complete!", images: ASSETS.NARRATIVE_PANELS.LEVEL_2_EXIT },
+                    3: { title: "Stage 3 Complete!", images: ASSETS.NARRATIVE_PANELS.LEVEL_3_EXIT },
+                    4: { title: "Stage 4 Complete!", images: ASSETS.NARRATIVE_PANELS.LEVEL_4_EXIT },
+                    6: { title: "Stage 6 Complete!", images: ASSETS.NARRATIVE_PANELS.LEVEL_6_EXIT },
+                    7: { title: "Stage 7 Complete!", images: ASSETS.NARRATIVE_PANELS.LEVEL_7_EXIT },
+                    8: { title: "Stage 8 Complete!", images: ASSETS.NARRATIVE_PANELS.LEVEL_8_EXIT },
+                    9: { title: "Stage 9 Complete!", images: ASSETS.NARRATIVE_PANELS.LEVEL_9_EXIT }
+                };
+
+                const panel = exitPanels[levelNumber];
                 return {
-                    title: `Stage ${levelNumber} Complete!`,
-                    panels: [
-                        "Excellent descent!",
-                        `${10 - levelNumber} stages remaining...`,
-                        "Keep up the great work!"
-                    ],
-                    images: this.getWireframeImages()
+                    title: panel.title,
+                    panelCount: 2,
+                    images: panel.images
                 };
             }
         }
-    }
-
-    // Get wireframe images (placeholder for now)
-    getWireframeImages() {
-        // Return placeholder image paths
-        // These will be replaced with actual story panel images later
-        return [
-            '/assets/story/panel1.png',
-            '/assets/story/panel2.png',
-            '/assets/story/panel3.png'
-        ];
     }
 
     // Start a level

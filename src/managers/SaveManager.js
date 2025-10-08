@@ -15,7 +15,8 @@ export default class SaveManager {
             settings: {
                 sfxVolume: 100,
                 musicVolume: 100,
-                particlesEnabled: true
+                particlesEnabled: true,
+                skipStory: false
             },
             statistics: {
                 perfectLandings: 0,
