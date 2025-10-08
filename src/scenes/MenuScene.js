@@ -178,9 +178,9 @@ export default class MenuScene extends BaseScene {
         // Change User button - BELOW USERNAME
         this.changeUserButton = new Button(
             'CHANGE USER',
-            usernameX + 100 - 75, // Centered (button width / 2)
+            usernameX + 100 - 90, // Centered (button width / 2)
             usernameY + 55,
-            150,
+            180,
             40,
             0x6666ff,
             () => this.showUsernameInput()
