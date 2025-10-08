@@ -51,8 +51,8 @@ export default class CollisionSystem {
             Math.pow(playerCenterY - obstacleCenterY, 2)
         );
 
-        // Check against near-miss ranges
-        for (let i = 0; i < PHYSICS.NEAR_MISS_RANGES.length; i++) {
+        // Check against near-miss ranges (from closest to farthest)
+        for (let i = PHYSICS.NEAR_MISS_RANGES.length - 1; i >= 0; i--) {
             if (distance <= PHYSICS.NEAR_MISS_RANGES[i]) {
                 return {
                     level: i,

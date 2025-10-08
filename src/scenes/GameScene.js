@@ -685,6 +685,11 @@ async exit() {
                     obstacle.getBounds()
                 );
 
+                // Debug logging
+                if (nearMiss) {
+                    console.log(`✓ NEAR-MISS DETECTED! Type: ${obstacle.type}, Level: ${nearMiss.level}, Distance: ${nearMiss.distance.toFixed(1)}px, Graze: ${nearMiss.isGraze}`);
+                }
+
                 if (nearMiss) {
                     this.handleNearMiss(nearMiss, obstacle);
                     this.checkedObstacles.add(obstacle);
@@ -813,6 +818,22 @@ async exit() {
             this.player.position,
             nearMiss.level,
             nearMiss.isGraze
+        );
+
+        // Create floating text notification
+        const messages = ['Near Miss!', 'Close!', 'So Close!', 'Amazing!'];
+        const colors = [0xFFFF00, 0xFFAA00, 0xFF6600, 0xFF0000];
+        const sizes = [20, 24, 28, 32];
+
+        const text = nearMiss.isGraze ? 'Perfect!' : messages[nearMiss.level];
+        const color = nearMiss.isGraze ? 0x00FFFF : colors[nearMiss.level];
+        const size = nearMiss.isGraze ? 36 : sizes[nearMiss.level];
+
+        this.particleSystem.createFloatingText(
+            this.player.position,
+            text,
+            color,
+            size
         );
 
         console.log(`Near-miss! Level: ${nearMiss.level}, Points: ${points}, Combo: x${this.currentCombo}, Distance: ${nearMiss.distance.toFixed(1)}px`);

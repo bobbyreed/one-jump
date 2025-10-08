@@ -1,4 +1,4 @@
-import { Graphics, Container } from 'pixi.js';
+import { Graphics, Container, Text } from 'pixi.js';
 import { COLORS } from '../config/Constants.js';
 
 export default class ParticleSystem {
@@ -294,6 +294,69 @@ export default class ParticleSystem {
                 }
             });
         }
+    }
+
+    /**
+     * Create floating text notification
+     */
+    createFloatingText(position, text, color, fontSize = 24) {
+        const floatingText = new Text({
+            text: text,
+            style: {
+                fontFamily: 'Arial Black',
+                fontSize: fontSize,
+                fill: color,
+                fontWeight: 'bold',
+                dropShadow: true,
+                dropShadowDistance: 3,
+                dropShadowColor: 0x000000,
+                dropShadowAlpha: 0.8
+            }
+        });
+
+        // Center the text
+        floatingText.anchor.set(0.5);
+        floatingText.x = position.x + (Math.random() - 0.5) * 20; // Slight random offset
+        floatingText.y = position.y - 30; // Start above player
+
+        // Animation properties
+        floatingText.velocityY = -2.5;
+        floatingText.lifetime = 0;
+        floatingText.baseAlpha = 1.0;
+        floatingText.startScale = 0.5;
+
+        this.effects.addChild(floatingText);
+
+        this.activeParticles.push({
+            sprite: floatingText,
+            container: this.effects,
+            type: 'floating_text',
+            update: (p, dt) => {
+                const sprite = p.sprite;
+                sprite.lifetime++;
+
+                // Scale in animation (first 10 frames)
+                if (sprite.lifetime < 10) {
+                    const progress = sprite.lifetime / 10;
+                    sprite.scale.set(sprite.startScale + (1 - sprite.startScale) * progress);
+                }
+
+                // Float upward with deceleration
+                sprite.y += sprite.velocityY;
+                sprite.velocityY *= 0.98;
+
+                // Fade out
+                sprite.alpha -= 0.015;
+
+                // Remove when faded
+                if (sprite.alpha <= 0 || sprite.lifetime > 120) {
+                    p.container.removeChild(sprite);
+                    return false;
+                }
+
+                return true;
+            }
+        });
     }
 
     /**

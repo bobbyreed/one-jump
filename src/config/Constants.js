@@ -18,8 +18,8 @@ export const PHYSICS = {
 
     // Collision & Near-Miss
     PLAYER_HITBOX: { w: 60, h: 80 },
-    NEAR_MISS_RANGES: [50, 40, 30, 20],
-    GRAZE_BONUS_RANGE: 10,
+    NEAR_MISS_RANGES: [150, 120, 90, 60], // Center-to-center distances (accounting for hitbox sizes)
+    GRAZE_BONUS_RANGE: 50, // Very close pass
 
     // Special Mechanics
     SPEED_BOOST_MULT: 1.5,
