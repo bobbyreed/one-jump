@@ -80,9 +80,9 @@ export default class AssetManager {
         return panels;
     }
 
-    async loadLevelStoryPanels(levelNumber, isIntro) {
+    async loadLevelStoryPanels(levelNumber, isIntro, endingPart) {
         // Get story data from level manager
-        const storyData = this.game?.levelManager?.getStoryPanels(levelNumber, isIntro);
+        const storyData = this.game?.levelManager?.getStoryPanels(levelNumber, isIntro, endingPart);
 
         if (storyData && storyData.images) {
             return await this.loadStoryPanels(storyData.images);

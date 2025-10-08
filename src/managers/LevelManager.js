@@ -178,7 +178,7 @@ export default class LevelManager {
     }
 
     // Get story panels for transitions
-    getStoryPanels(levelNumber, isIntro = true) {
+    getStoryPanels(levelNumber, isIntro = true, endingPart = 1) {
         if (isIntro) {
             // Intro story before the level starts
             const entryPanels = {
@@ -210,12 +210,20 @@ export default class LevelManager {
                     images: ASSETS.NARRATIVE_PANELS.MIDPOINT
                 };
             } else if (levelNumber === 10) {
-                // Final victory ending (10 panels)
-                return {
-                    title: "Mission Complete!",
-                    panelCount: 10,
-                    images: ASSETS.NARRATIVE_PANELS.ENDING
-                };
+                // Final victory ending - split into 2 parts for better visibility
+                if (endingPart === 1) {
+                    return {
+                        title: "Mission Complete!",
+                        panelCount: 5,
+                        images: ASSETS.NARRATIVE_PANELS.ENDING_PART1
+                    };
+                } else {
+                    return {
+                        title: "The Journey Ends...",
+                        panelCount: 5,
+                        images: ASSETS.NARRATIVE_PANELS.ENDING_PART2
+                    };
+                }
             } else {
                 // Regular level exit panels (2 panels each)
                 const exitPanels = {
@@ -391,7 +399,14 @@ export default class LevelManager {
         this.levelGrades = new Array(this.totalLevels).fill('F');
         this.levelStars = new Array(this.totalLevels).fill(0);
         this.levelBestTimes = new Array(this.totalLevels).fill(Infinity);
-        
+
+        this.saveProgress();
+    }
+
+    // Unlock all levels (for testing/debugging)
+    unlockAllLevels() {
+        console.log('Unlocking all levels for testing');
+        this.unlockedLevels = this.totalLevels;
         this.saveProgress();
     }
 }

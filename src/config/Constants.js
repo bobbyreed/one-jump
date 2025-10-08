@@ -165,7 +165,13 @@ export const ASSETS = {
         MIDPOINT: Array.from({ length: 6 }, (_, i) =>
             `/public/assets/narrativePanels/midpoint/midpoint${i + 1}.png`),
         ENDING: Array.from({ length: 10 }, (_, i) =>
-            `/public/assets/narrativePanels/ending/ending${i + 1}.png`)
+            `/public/assets/narrativePanels/ending/ending${i + 1}.png`),
+
+        // Ending split into two parts for better visibility
+        ENDING_PART1: Array.from({ length: 5 }, (_, i) =>
+            `/public/assets/narrativePanels/ending/ending${i + 1}.png`),
+        ENDING_PART2: Array.from({ length: 5 }, (_, i) =>
+            `/public/assets/narrativePanels/ending/ending${i + 6}.png`)
     }
 };
 

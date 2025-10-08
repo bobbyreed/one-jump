@@ -354,7 +354,15 @@ export default class LevelSelectScene extends BaseScene {
             if (key === 'Escape') {
                 this.game.sceneManager.changeScene('menu');
             }
-            
+
+            // Hidden debug: Shift+U to unlock all levels
+            if (key === 'KeyU' && this.game.inputManager.keys['ShiftLeft']) {
+                console.log('Debug: Unlocking all levels');
+                this.game.levelManager.unlockAllLevels();
+                this.updateLevelButtons();
+                console.log('All levels unlocked!');
+            }
+
             // Number keys for quick level select
             const num = parseInt(key.replace('Digit', '').replace('Numpad', ''));
             if (num >= 1 && num <= 9) {
@@ -511,19 +519,39 @@ export default class LevelSelectScene extends BaseScene {
 
         updateLevelButtons() {
             const levelManager = this.game.levelManager;
-            
+
             this.levelButtons.forEach((button, index) => {
                 const levelNumber = index + 1;
                 const isUnlocked = levelManager.isLevelUnlocked(levelNumber);
                 const score = levelManager.levelScores[index];
                 const stars = levelManager.levelStars[index];
                 const grade = levelManager.levelGrades[index];
-                
+
                 // Update button appearance based on unlock status
                 if (isUnlocked) {
                     button.interactive = true;
+                    button.eventMode = 'static';
+                    button.cursor = 'pointer';
                     button.alpha = 1;
-                    
+
+                    // Remove all existing event listeners to avoid duplicates
+                    button.removeAllListeners();
+
+                    // Add click handler
+                    button.on('pointerdown', () => {
+                        this.selectLevel(levelNumber);
+                    });
+
+                    // Add hover effects
+                    button.on('pointerover', () => {
+                        const bgGraphic = button.children[0];
+                        if (bgGraphic) bgGraphic.tint = 0xaaaaff;
+                    });
+                    button.on('pointerout', () => {
+                        const bgGraphic = button.children[0];
+                        if (bgGraphic) bgGraphic.tint = 0xffffff;
+                    });
+
                     // Show completion status
                     if (score > 0) {
                         // Level has been completed
@@ -532,7 +560,10 @@ export default class LevelSelectScene extends BaseScene {
                 } else {
                     // Level is locked
                     button.interactive = false;
+                    button.eventMode = 'none';
+                    button.cursor = 'default';
                     button.alpha = 0.5;
+                    button.removeAllListeners();
                     this.addLockIcon(button);
                 }
             });

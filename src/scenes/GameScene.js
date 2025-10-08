@@ -106,10 +106,39 @@ export default class GameScene extends BaseScene {
 
     // Proceed to next level
         proceedToNextLevel() {
-            console.log(`Proceeding to level ${this.currentLevel + 1}`);
+            console.log(`Proceeding from level ${this.currentLevel}`);
 
             // Clean up current level
             this.cleanup();
+
+            // Special case: Level 10 completed - show ending and return to menu
+            if (this.currentLevel === 10) {
+                const skipStory = this.game.saveManager.data.settings.skipStory;
+
+                if (skipStory) {
+                    // Skip ending, go directly to menu
+                    this.game.sceneManager.changeScene('menu');
+                } else {
+                    // Show ending part 1 (5 panels), then part 2 (5 panels), then menu
+                    this.game.sceneManager.changeScene('story', {
+                        levelNumber: 10,
+                        isIntro: false, // This is the ending
+                        endingPart: 1, // First part of ending
+                        nextScene: 'story', // Chain to second part
+                        nextData: {
+                            levelNumber: 10,
+                            isIntro: false,
+                            endingPart: 2, // Second part of ending
+                            nextScene: 'menu',
+                            nextData: {}
+                        }
+                    });
+                }
+                return;
+            }
+
+            // For levels 1-9: proceed to next level
+            console.log(`Proceeding to level ${this.currentLevel + 1}`);
 
             // Check if story should be skipped
             const skipStory = this.game.saveManager.data.settings.skipStory;
@@ -753,8 +782,9 @@ async exit() {
             );
 
             // Check if next level is available
-            const canProceed = this.currentLevel < 10 && 
-                            this.game.levelManager.isLevelUnlocked(this.currentLevel + 1);
+            // For level 10, allow proceeding to trigger the ending scene
+            const canProceed = (this.currentLevel === 10) ||
+                            (this.currentLevel < 10 && this.game.levelManager.isLevelUnlocked(this.currentLevel + 1));
 
             // Show success result screen with all the data
             this.resultScreen.showSuccess({

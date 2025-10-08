@@ -28,6 +28,7 @@ export default class StoryScene extends BaseScene {
         this.levelNumber = null;
         this.isIntro = true;
         this.isOpening = false;
+        this.endingPart = null;
     }
 
     async init() {
@@ -58,7 +59,8 @@ export default class StoryScene extends BaseScene {
         if (this.levelNumber !== null) {
             this.panelTextures = await this.game.assetManager.loadLevelStoryPanels(
                 this.levelNumber,
-                this.isIntro
+                this.isIntro,
+                this.endingPart
             );
         } else {
             // Fallback to default opening panels
@@ -455,6 +457,7 @@ export default class StoryScene extends BaseScene {
         // If it's opening story, don't set levelNumber so it loads opening panels
         this.levelNumber = this.isOpening ? null : (data.levelNumber || null);
         this.isIntro = data.isIntro !== undefined ? data.isIntro : true;
+        this.endingPart = data.endingPart || null;
 
         // Reset the panels
         this.reset();
@@ -477,7 +480,7 @@ export default class StoryScene extends BaseScene {
 
             // Only try to get story panels if levelManager exists
             if (levelManager && levelManager.getStoryPanels) {
-                const storyData = levelManager.getStoryPanels(data.levelNumber, data.isIntro);
+                const storyData = levelManager.getStoryPanels(data.levelNumber, data.isIntro, data.endingPart);
 
                 // Update story title if we have one
                 if (this.storyTitle && storyData && storyData.title) {
