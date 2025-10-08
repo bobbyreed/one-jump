@@ -4,12 +4,15 @@ import SceneManager from './managers/SceneManager.js';
 import AssetManager from './managers/AssetManager.js';
 import InputManager from './managers/InputManager.js';
 import SaveManager from './managers/SaveManager.js';
+import FirebaseManager from './managers/FirebaseManager.js';
+import LeaderboardManager from './managers/LeaderboardManager.js';
 import MenuScene from './scenes/MenuScene.js';
 import StoryScene from './scenes/StoryScene.js';
 import GameScene from './scenes/GameScene.js';
 import HighscoresScene from './scenes/HighscoresScene.js';
 import LevelManager from './managers/LevelManager.js';
 import LevelSelectScene from './scenes/LevelSelectScene.js';
+import LeaderboardScene from './scenes/LeaderboardScene.js';
 
 export default class Game {
     constructor() {
@@ -18,6 +21,8 @@ export default class Game {
         this.assetManager = null;
         this.inputManager = null;
         this.saveManager = null;
+        this.firebaseManager = null;
+        this.leaderboardManager = null;
         this.isInitialized = false;
         this.levelManager = null;
     }
@@ -69,6 +74,12 @@ export default class Game {
         // Initialize managers
         this.saveManager = new SaveManager();
         this.saveManager.load();
+
+        // Initialize Firebase and Leaderboard
+        this.firebaseManager = new FirebaseManager();
+        await this.firebaseManager.initialize();
+        this.leaderboardManager = new LeaderboardManager(this.firebaseManager);
+
         //level manager MUST be loaded before asset manager
         this.levelManager = new LevelManager(this);
         this.assetManager = new AssetManager(this);
@@ -100,6 +111,7 @@ export default class Game {
         const gameScene = new GameScene(this);
         const highscoresScene = new HighscoresScene(this);
         const levelSelectScene = new LevelSelectScene(this);
+        const leaderboardScene = new LeaderboardScene(this);
 
 
         // Register scenes with manager
@@ -107,6 +119,7 @@ export default class Game {
         this.sceneManager.registerScene('story', storyScene);
         this.sceneManager.registerScene('game', gameScene);
         this.sceneManager.registerScene('highscores', highscoresScene);
+        this.sceneManager.registerScene('leaderboard', leaderboardScene);
         this.sceneManager.registerScene('levelSelect', levelSelectScene);
 
 

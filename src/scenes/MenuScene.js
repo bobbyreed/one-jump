@@ -133,6 +133,19 @@ export default class MenuScene extends BaseScene {
         this.container.addChild(highscoresButton.container);
         this.buttons.push(highscoresButton);
 
+        // Leaderboard button
+        const leaderboardButton = new Button(
+            'LEADERBOARD',
+            buttonX,
+            startY + (UI.BUTTON_HEIGHT + UI.BUTTON_SPACING) * 3,
+            UI.BUTTON_WIDTH,
+            UI.BUTTON_HEIGHT,
+            0x4488ff, // Blue color for online feature
+            () => this.showLeaderboard()
+        );
+        this.container.addChild(leaderboardButton.container);
+        this.buttons.push(leaderboardButton);
+
         // High score display
         this.highScoreText = new Text({
             text: `Best Score: ${this.game.saveManager.data.highScore}`,
@@ -210,6 +223,10 @@ export default class MenuScene extends BaseScene {
 
     showHighscores() {
         this.changeScene('highscores');
+    }
+
+    showLeaderboard() {
+        this.changeScene('leaderboard');
     }
 
     async enter(data) {

@@ -9,6 +9,7 @@
     "dev": "http-server . -o"
   },
   "dependencies": {
+    "firebase": "^12.3.0",
     "pixi.js": "^8.8.1"
   },
   "devDependencies": {

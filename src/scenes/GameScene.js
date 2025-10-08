@@ -781,6 +781,31 @@ async exit() {
                 this.timeElapsed
             );
 
+            // Submit score to leaderboard (async, non-blocking)
+            if (this.game.leaderboardManager) {
+                this.game.leaderboardManager.submitScore(this.currentLevel, {
+                    username: this.game.saveManager.data.username || 'Anonymous',
+                    score: totalScore,
+                    time: this.timeElapsed,
+                    grade: levelResult.grade,
+                    stars: levelResult.stars,
+                    maxCombo: this.maxCombo || 0,
+                    nearMisses: this.nearMisses || 0
+                }).catch(err => console.error('Failed to submit score:', err));
+
+                // Submit to global leaderboard
+                const globalScore = this.game.levelManager.getTotalScore();
+                const levelsCompleted = this.game.levelManager.levelScores.filter(s => s > 0).length;
+                const totalStars = this.game.levelManager.levelStars.reduce((sum, s) => sum + s, 0);
+
+                this.game.leaderboardManager.submitGlobalScore({
+                    username: this.game.saveManager.data.username || 'Anonymous',
+                    totalScore: globalScore,
+                    levelsCompleted: levelsCompleted,
+                    totalStars: totalStars
+                }).catch(err => console.error('Failed to submit global score:', err));
+            }
+
             // Check if next level is available
             // For level 10, allow proceeding to trigger the ending scene
             const canProceed = (this.currentLevel === 10) ||
