@@ -124,11 +124,24 @@ export default class MenuScene extends BaseScene {
         this.container.addChild(levelSelectButton.container);
         this.buttons.push(levelSelectButton);
 
+        // Tutorial button
+        const tutorialButton = new Button(
+            'TUTORIAL',
+            buttonX,
+            startY + (UI.BUTTON_HEIGHT + UI.BUTTON_SPACING) * 2,
+            UI.BUTTON_WIDTH,
+            UI.BUTTON_HEIGHT,
+            0xFFAA00, // Orange color
+            () => this.showTutorial()
+        );
+        this.container.addChild(tutorialButton.container);
+        this.buttons.push(tutorialButton);
+
         // Leaderboard button
         const leaderboardButton = new Button(
             'LEADERBOARD',
             buttonX,
-            startY + (UI.BUTTON_HEIGHT + UI.BUTTON_SPACING) * 2,
+            startY + (UI.BUTTON_HEIGHT + UI.BUTTON_SPACING) * 3,
             UI.BUTTON_WIDTH,
             UI.BUTTON_HEIGHT,
             COLORS.UI_SECONDARY,
@@ -138,7 +151,7 @@ export default class MenuScene extends BaseScene {
         this.buttons.push(leaderboardButton);
 
         // Username section - STACKED VERTICALLY
-        const usernameY = startY + (UI.BUTTON_HEIGHT + UI.BUTTON_SPACING) * 3 + 20;
+        const usernameY = startY + (UI.BUTTON_HEIGHT + UI.BUTTON_SPACING) * 4 + 20;
         const usernameX = this.menuPanel.x + (UI.PANEL_WIDTH / 2) - 100; // Centered
 
         // Username display (shown when not editing)
@@ -270,6 +283,10 @@ export default class MenuScene extends BaseScene {
 
     showLeaderboard() {
         this.changeScene('leaderboard');
+    }
+
+    showTutorial() {
+        this.changeScene('tutorial');
     }
 
     showUsernameInput() {

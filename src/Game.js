@@ -13,6 +13,7 @@ import HighscoresScene from './scenes/HighscoresScene.js';
 import LevelManager from './managers/LevelManager.js';
 import LevelSelectScene from './scenes/LevelSelectScene.js';
 import LeaderboardScene from './scenes/LeaderboardScene.js';
+import TutorialScene from './scenes/TutorialScene.js';
 
 export default class Game {
     constructor() {
@@ -112,6 +113,7 @@ export default class Game {
         const highscoresScene = new HighscoresScene(this);
         const levelSelectScene = new LevelSelectScene(this);
         const leaderboardScene = new LeaderboardScene(this);
+        const tutorialScene = new TutorialScene(this);
 
 
         // Register scenes with manager
@@ -121,6 +123,7 @@ export default class Game {
         this.sceneManager.registerScene('highscores', highscoresScene);
         this.sceneManager.registerScene('leaderboard', leaderboardScene);
         this.sceneManager.registerScene('levelSelect', levelSelectScene);
+        this.sceneManager.registerScene('tutorial', tutorialScene);
 
 
         // Initialize all scenes
@@ -130,6 +133,7 @@ export default class Game {
         await highscoresScene.init();
         await levelSelectScene.init();
         await leaderboardScene.init();
+        await tutorialScene.init();
     }
 
     // Global game methods
