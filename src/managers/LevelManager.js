@@ -474,6 +474,11 @@ export default class LevelManager {
         return this.levelScores.reduce((sum, score) => sum + score, 0);
     }
 
+    // Get total stars earned across all levels
+    getTotalStars() {
+        return this.levelStars.reduce((sum, stars) => sum + stars, 0);
+    }
+
     // Get completion percentage
     getCompletionPercentage() {
         const completedLevels = this.levelScores.filter(score => score > 0).length;

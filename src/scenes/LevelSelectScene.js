@@ -328,7 +328,13 @@ export default class LevelSelectScene extends BaseScene {
         title.anchor.set(0.5, 0);
         infoPanelContainer.addChild(title);
 
-        // Info text
+        // Story panel image container (will be populated when level is selected)
+        this.storyImageContainer = new Container();
+        this.storyImageContainer.x = 200;
+        this.storyImageContainer.y = 80;
+        infoPanelContainer.addChild(this.storyImageContainer);
+
+        // Info text (positioned below the image)
         this.infoText = new Text({
             text: 'Select a stage to begin your descent!',
             style: {
@@ -342,10 +348,11 @@ export default class LevelSelectScene extends BaseScene {
             }
         });
         this.infoText.x = 20;
-        this.infoText.y = 60;
+        this.infoText.y = 250;
         this.infoText.anchor.set(0, 0);
         infoPanelContainer.addChild(this.infoText);
 
+        this.infoPanelContainer = infoPanelContainer;
         this.container.addChild(infoPanelContainer);
     }
 
@@ -806,9 +813,9 @@ export default class LevelSelectScene extends BaseScene {
             button.addChild(lock);
         }
 
-        selectLevel(levelNumber) {
+        async selectLevel(levelNumber) {
             this.selectedLevel = levelNumber;
-            
+
             // Update button highlights
             this.levelButtons.forEach((btn, index) => {
                 if (index + 1 === levelNumber) {
@@ -819,25 +826,69 @@ export default class LevelSelectScene extends BaseScene {
                     btn.tint = 0xFFFFFF; // Normal
                 }
             });
-            
+
             // Update info panel with level details
             const config = this.game.levelManager.getLevelConfig(levelNumber);
             const score = this.game.levelManager.levelScores[levelNumber - 1];
+            const grade = this.game.levelManager.levelGrades[levelNumber - 1];
             const bestTime = this.game.levelManager.levelBestTimes[levelNumber - 1];
 
-            let infoText = `STAGE ${levelNumber}: ${config.name}\n`;
-            infoText += `${config.subtitle} • Target: ${config.targetScore.toLocaleString()}\n`;
+            // Build detailed info text with description from story beat
+            let infoText = `${config.name}\n\n`;
+            infoText += `Altitude: ${config.altitude}\n`;
+            infoText += `Target Score: ${config.targetScore.toLocaleString()}\n`;
+            infoText += `Duration: ${config.duration}s\n\n`;
 
+            // Add story description (first panel text from story beat)
+            if (config.storyBeat && config.storyBeat.panels && config.storyBeat.panels[0]) {
+                infoText += `${config.storyBeat.panels[0]}\n\n`;
+            }
+
+            // Add completion status
             if (score > 0) {
-                infoText += `Best: ${score.toLocaleString()} • Time: ${bestTime.toFixed(1)}s`;
+                infoText += `Best Score: ${score.toLocaleString()}\n`;
+                infoText += `Grade: ${grade} • Time: ${bestTime.toFixed(1)}s`;
             } else {
                 infoText += `Not yet completed`;
             }
 
             this.infoText.text = infoText;
 
+            // Load and display story panel image
+            this.updateStoryImage(levelNumber);
+
             // Show play button
             this.playButton.container.visible = true;
+        }
+
+        async updateStoryImage(levelNumber) {
+            // Clear existing story image
+            this.storyImageContainer.removeChildren();
+
+            try {
+                // Load the first entry panel for this level
+                const panelTextures = await this.game.assetManager.loadLevelStoryPanels(levelNumber, true, null);
+
+                if (panelTextures && panelTextures.length > 0) {
+                    const sprite = new Sprite(panelTextures[0]);
+
+                    // Scale to fit in the panel (max 360x150)
+                    const maxWidth = 360;
+                    const maxHeight = 150;
+                    const scale = Math.min(
+                        maxWidth / sprite.texture.width,
+                        maxHeight / sprite.texture.height
+                    );
+                    sprite.scale.set(scale);
+
+                    // Center the sprite
+                    sprite.anchor.set(0.5);
+
+                    this.storyImageContainer.addChild(sprite);
+                }
+            } catch (error) {
+                console.warn(`Could not load story image for level ${levelNumber}:`, error);
+            }
         }
 
         startSelectedLevel() {
