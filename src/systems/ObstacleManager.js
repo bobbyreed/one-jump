@@ -222,12 +222,14 @@ export default class ObstacleManager {
                     .fill({ color: type.color })
                     .circle(obstacle.orbitRadius + satelliteSize / 3, -satelliteSize / 4, satelliteSize / 4)
                     .fill({ color: 0xffffff });
-                obstacle.width = obstacle.orbitRadius * 2 + satelliteSize * 2;
-                obstacle.height = obstacle.orbitRadius * 2 + satelliteSize * 2;
+                // Only collision on the satellite itself, not the entire orbit
+                obstacle.width = satelliteSize * 2;
+                obstacle.height = satelliteSize * 2;
                 obstacle.centered = true;
                 obstacle.orbitSpeed = 1 + Math.random() * 1.5; // radians per second
                 obstacle.orbitAngle = Math.random() * Math.PI * 2; // random start
                 obstacle.satelliteSize = satelliteSize;
+                obstacle.orbitRadius = obstacle.orbitRadius; // Store for update calculations
                 break;
 
             case 'pendulum':
@@ -242,8 +244,9 @@ export default class ObstacleManager {
                     .fill({ color: type.color })
                     .circle(0, 0, pendulumBallSize)
                     .stroke({ color: 0x000000, width: 2 });
-                obstacle.width = pendulumBallSize * 2 + 20; // Add margin for swing
-                obstacle.height = pendulumLength + pendulumBallSize;
+                // Only collision on the ball itself, not the entire swing range
+                obstacle.width = pendulumBallSize * 2;
+                obstacle.height = pendulumBallSize * 2;
                 obstacle.pendulumLength = pendulumLength;
                 obstacle.pendulumAngle = 0;
                 obstacle.pendulumSpeed = 1.5 + Math.random() * 1; // swing speed
@@ -286,7 +289,13 @@ export default class ObstacleManager {
                 obstacle.x = 1920 - obstacle.width;
             }
         } else {
-            obstacle.x = 100 + Math.random() * (1920 - 200 - obstacle.width);
+            // Use center-biased distribution by averaging multiple random values
+            // This creates a bell curve that favors the center of the screen
+            const rand1 = Math.random();
+            const rand2 = Math.random();
+            const rand3 = Math.random();
+            const centerBiasedRandom = (rand1 + rand2 + rand3) / 3;
+            obstacle.x = 100 + centerBiasedRandom * (1920 - 200 - obstacle.width);
         }
 
         // Store initial positions for animated obstacles
@@ -376,6 +385,12 @@ export default class ObstacleManager {
                 obstacle.orbitAngle += obstacle.orbitSpeed * deltaTime;
                 // Rotate the entire container to make satellite orbit
                 obstacle.container.rotation = obstacle.orbitAngle;
+
+                // Update the satellite's actual position for collision detection
+                const centerX = obstacle.container.x;
+                const centerY = obstacle.container.y;
+                obstacle.x = centerX + Math.cos(obstacle.orbitAngle) * obstacle.orbitRadius;
+                obstacle.y = centerY + Math.sin(obstacle.orbitAngle) * obstacle.orbitRadius;
             }
 
             // Pendulum swinging
@@ -384,6 +399,11 @@ export default class ObstacleManager {
                 obstacle.pendulumAngle = Math.sin(obstacle.pendulumSpeed *
                     (Date.now() / 1000)) * obstacle.pendulumMaxAngle;
                 obstacle.container.rotation = obstacle.pendulumAngle;
+
+                // Update the ball's actual position for collision detection
+                obstacle.x = obstacle.anchorX + Math.sin(obstacle.pendulumAngle) * obstacle.pendulumLength;
+                obstacle.y = obstacle.anchorY + Math.cos(obstacle.pendulumAngle) * obstacle.pendulumLength;
+                obstacle.centered = true;
             }
 
             // Pulsar expand/contract
