@@ -36,20 +36,36 @@ export default class CollisionSystem {
     }
 
     /**
-     * Calculate near-miss distance and scoring
+     * Calculate near-miss distance and scoring using edge-to-edge distance
      */
     calculateNearMiss(playerBounds, obstacleBounds) {
-        // Calculate closest distance between bounds
-        const playerCenterX = playerBounds.x + playerBounds.width / 2;
-        const playerCenterY = playerBounds.y + playerBounds.height / 2;
-        const obstacleCenterX = obstacleBounds.x + obstacleBounds.width / 2;
-        const obstacleCenterY = obstacleBounds.y + obstacleBounds.height / 2;
+        // Calculate edge-to-edge distance between bounds
+        // This is more accurate than center-to-center distance
 
-        // Simple distance calculation (could be improved with edge distance)
-        const distance = Math.sqrt(
-            Math.pow(playerCenterX - obstacleCenterX, 2) +
-            Math.pow(playerCenterY - obstacleCenterY, 2)
-        );
+        // Calculate horizontal distance between edges
+        let dx = 0;
+        if (playerBounds.x + playerBounds.width < obstacleBounds.x) {
+            // Player is to the left of obstacle
+            dx = obstacleBounds.x - (playerBounds.x + playerBounds.width);
+        } else if (obstacleBounds.x + obstacleBounds.width < playerBounds.x) {
+            // Player is to the right of obstacle
+            dx = playerBounds.x - (obstacleBounds.x + obstacleBounds.width);
+        }
+        // else: horizontal overlap, dx = 0
+
+        // Calculate vertical distance between edges
+        let dy = 0;
+        if (playerBounds.y + playerBounds.height < obstacleBounds.y) {
+            // Player is above obstacle
+            dy = obstacleBounds.y - (playerBounds.y + playerBounds.height);
+        } else if (obstacleBounds.y + obstacleBounds.height < playerBounds.y) {
+            // Player is below obstacle
+            dy = playerBounds.y - (obstacleBounds.y + obstacleBounds.height);
+        }
+        // else: vertical overlap, dy = 0
+
+        // Calculate minimum distance between edges
+        const distance = Math.sqrt(dx * dx + dy * dy);
 
         // Check against near-miss ranges (from closest to farthest)
         for (let i = PHYSICS.NEAR_MISS_RANGES.length - 1; i >= 0; i--) {

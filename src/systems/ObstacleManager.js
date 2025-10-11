@@ -341,7 +341,8 @@ export default class ObstacleManager {
             if (obstacle.type === 'barrel') {
                 obstacle.bobPhase += obstacle.bobSpeed * deltaTime;
                 const bobOffset = Math.sin(obstacle.bobPhase) * obstacle.bobDistance;
-                obstacle.container.y = obstacle.startY + bobOffset;
+                obstacle.y = obstacle.startY + bobOffset;
+                obstacle.container.y = obstacle.y;
             }
 
             // Laser on/off cycling

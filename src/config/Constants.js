@@ -18,8 +18,14 @@ export const PHYSICS = {
 
     // Collision & Near-Miss
     PLAYER_HITBOX: { w: 60, h: 80 },
-    NEAR_MISS_RANGES: [150, 120, 90, 60], // Center-to-center distances (accounting for hitbox sizes)
-    GRAZE_BONUS_RANGE: 50, // Very close pass
+    NEAR_MISS_RANGES: [80, 60, 40, 25], // Edge-to-edge distances (pixels from obstacle edge)
+    GRAZE_BONUS_RANGE: 15, // Very close pass
+
+    // Jetpack Speed Control
+    JETPACK_SLOWDOWN_MULT: 0.5,      // Reduces fall speed to 50% when engaged
+    JETPACK_BOOST_MULT: 1.5,         // Increases fall speed to 150% when disengaged
+    JETPACK_COOLDOWN: 2000,          // 2 seconds cooldown after slowdown use
+    JETPACK_SLOWDOWN_DURATION: 1500, // 1.5 seconds of slowdown per activation
 
     // Special Mechanics
     SPEED_BOOST_MULT: 1.5,
