@@ -20,6 +20,12 @@ export default class Player {
         this.isMoving = false;
         this.facingDirection = 1; // 1 = right, -1 = left
 
+        // Jetpack speed control
+        this.jetpackSlowdownActive = false;
+        this.jetpackBoostActive = false;
+        this.jetpackSlowdownTimer = 0;
+        this.jetpackCooldownTimer = 0;
+
         this.createAnimations();
     }
 
@@ -127,9 +133,33 @@ export default class Player {
     }
 
     updateFalling(deltaTime, horizontalInput) {
-        // Apply gravity
-        this.velocity.y += PHYSICS.GRAVITY_BASE * deltaTime;
-        this.velocity.y = Math.min(this.velocity.y, PHYSICS.MAX_FALL_SPEED);
+        // Update jetpack timers
+        if (this.jetpackSlowdownTimer > 0) {
+            this.jetpackSlowdownTimer -= deltaTime * 1000; // Convert to ms
+            if (this.jetpackSlowdownTimer <= 0) {
+                this.jetpackSlowdownActive = false;
+            }
+        }
+
+        if (this.jetpackCooldownTimer > 0) {
+            this.jetpackCooldownTimer -= deltaTime * 1000; // Convert to ms
+        }
+
+        // Calculate gravity multiplier based on jetpack state
+        let gravityMult = 1.0;
+        let maxSpeedMult = 1.0;
+
+        if (this.jetpackSlowdownActive) {
+            gravityMult = PHYSICS.JETPACK_SLOWDOWN_MULT;
+            maxSpeedMult = PHYSICS.JETPACK_SLOWDOWN_MULT;
+        } else if (this.jetpackBoostActive) {
+            gravityMult = PHYSICS.JETPACK_BOOST_MULT;
+            maxSpeedMult = PHYSICS.JETPACK_BOOST_MULT;
+        }
+
+        // Apply gravity with multiplier
+        this.velocity.y += PHYSICS.GRAVITY_BASE * deltaTime * gravityMult;
+        this.velocity.y = Math.min(this.velocity.y, PHYSICS.MAX_FALL_SPEED * maxSpeedMult);
 
         // Horizontal movement
         this.velocity.x = horizontalInput * PHYSICS.HORIZONTAL_SPEED;
@@ -146,6 +176,59 @@ export default class Player {
         this.state = PLAYER_STATES.FALLING;
         this.jetpackActivating = true;
         this.setAnimation('jetpackActivation');
+    }
+
+    /**
+     * Engage jetpack for slowdown (W/↑ key)
+     * Returns true if successfully engaged, false if on cooldown
+     */
+    engageJetpackSlowdown() {
+        // Can only engage if not on cooldown and currently falling
+        if (this.state !== PLAYER_STATES.FALLING) return false;
+        if (this.jetpackCooldownTimer > 0) return false;
+
+        this.jetpackSlowdownActive = true;
+        this.jetpackBoostActive = false;
+        this.jetpackSlowdownTimer = PHYSICS.JETPACK_SLOWDOWN_DURATION;
+        this.jetpackCooldownTimer = PHYSICS.JETPACK_COOLDOWN;
+
+        return true;
+    }
+
+    /**
+     * Disengage jetpack for boost (S/↓ key)
+     */
+    disengageJetpackForBoost() {
+        // Can only boost if currently falling
+        if (this.state !== PLAYER_STATES.FALLING) return false;
+
+        this.jetpackBoostActive = true;
+        this.jetpackSlowdownActive = false;
+        this.jetpackSlowdownTimer = 0;
+
+        return true;
+    }
+
+    /**
+     * Return to normal fall speed (release S/↓ key)
+     */
+    normalFallSpeed() {
+        this.jetpackBoostActive = false;
+        // Don't reset slowdown if it's still active
+    }
+
+    /**
+     * Check if jetpack is on cooldown
+     */
+    isJetpackOnCooldown() {
+        return this.jetpackCooldownTimer > 0;
+    }
+
+    /**
+     * Get remaining cooldown time in seconds
+     */
+    getJetpackCooldownRemaining() {
+        return Math.max(0, this.jetpackCooldownTimer / 1000);
     }
 
     land() {
@@ -177,6 +260,12 @@ export default class Player {
         this.facingDirection = 1;
         this.container.rotation = 0;
         this.container.scale.x = Math.abs(this.container.scale.x);
+
+        // Reset jetpack state
+        this.jetpackSlowdownActive = false;
+        this.jetpackBoostActive = false;
+        this.jetpackSlowdownTimer = 0;
+        this.jetpackCooldownTimer = 0;
 
         // Reset tint
         Object.values(this.sprites).forEach(sprite => {

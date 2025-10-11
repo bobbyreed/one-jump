@@ -56,6 +56,9 @@ export default class GameScene extends BaseScene {
         // Track obstacles that have been checked for near-misses
         this.checkedObstacles = new Set();
 
+        // Track vertical input for jetpack control
+        this.previousVerticalInput = 0;
+
         // World container (moves with camera)
         this.worldContainer = new Container();
         this.container.addChild(this.worldContainer);
@@ -210,6 +213,7 @@ export default class GameScene extends BaseScene {
         this.nearMissPoints = 0;
         this.lastComboTime = 0;
         this.checkedObstacles.clear();
+        this.previousVerticalInput = 0;
     }
 
 
@@ -328,7 +332,8 @@ export default class GameScene extends BaseScene {
     this.nearMissPoints = 0;
     this.lastComboTime = 0;
     this.checkedObstacles.clear();
-    
+    this.previousVerticalInput = 0;
+
     // Check if a specific level was requested
     if (data.levelNumber) {
         this.currentLevel = data.levelNumber;
@@ -439,7 +444,8 @@ resetLevel() {
     this.nearMissPoints = 0;
     this.lastComboTime = 0;
     this.checkedObstacles.clear();
-    
+    this.previousVerticalInput = 0;
+
     // Reset player
     if (this.player) {
         this.player.reset();
@@ -547,9 +553,15 @@ async exit() {
 
         // Get input
         const horizontalInput = this.game.inputManager.getHorizontalInput();
+        const verticalInput = this.game.inputManager.getVerticalInput();
 
         // Update player
         this.player.update(deltaTime, horizontalInput);
+
+        // Handle jetpack control during falling
+        if (this.gameState.phase === PLAYER_STATES.FALLING) {
+            this.handleJetpackControl(verticalInput);
+        }
 
         // Check game state transitions
         this.checkStateTransitions();
@@ -613,6 +625,40 @@ async exit() {
         
     }
 
+    handleJetpackControl(verticalInput) {
+        // Handle W/↑ key (slowdown) - trigger on press
+        if (verticalInput === -1 && this.previousVerticalInput !== -1) {
+            const success = this.player.engageJetpackSlowdown();
+            if (success) {
+                console.log('Jetpack slowdown engaged!');
+                // TODO: Add visual/audio feedback
+            } else {
+                // On cooldown
+                const cooldown = this.player.getJetpackCooldownRemaining();
+                if (cooldown > 0) {
+                    console.log(`Jetpack on cooldown: ${cooldown.toFixed(1)}s remaining`);
+                    // TODO: Add feedback for cooldown
+                }
+            }
+        }
+
+        // Handle S/↓ key (boost) - engage while held
+        if (verticalInput === 1) {
+            if (this.previousVerticalInput !== 1) {
+                // Just pressed
+                this.player.disengageJetpackForBoost();
+                console.log('Jetpack boost activated!');
+                // TODO: Add visual/audio feedback
+            }
+        } else if (this.previousVerticalInput === 1) {
+            // Just released S/↓
+            this.player.normalFallSpeed();
+            console.log('Jetpack boost deactivated!');
+        }
+
+        this.previousVerticalInput = verticalInput;
+    }
+
     checkStateTransitions() {
         // Check if walked off cliff
         if (this.player.state === PLAYER_STATES.WALKING &&
@@ -633,9 +679,15 @@ async exit() {
             (this.player.position.y - LEVEL.FALL_START_Y) / 10
         );
 
-        // Create particles
+        // Create particles with color based on jetpack state
         if (!this.player.jetpackActivating) {
-            this.particleSystem.createJetpackParticles(this.player.position, deltaTime);
+            let particleColor = 0xff8800; // Normal orange
+            if (this.player.jetpackSlowdownActive) {
+                particleColor = 0x00FFFF; // Cyan for slowdown
+            } else if (this.player.jetpackBoostActive) {
+                particleColor = 0xFF4444; // Red for boost
+            }
+            this.particleSystem.createJetpackParticles(this.player.position, deltaTime, particleColor);
         }
 
         if (this.player.velocity.y > 200) {
@@ -655,6 +707,12 @@ async exit() {
         // Update HUD
         this.hud.updateSpeed(Math.floor(this.player.velocity.y));
         this.hud.updateDistance(this.gameState.distance);
+        this.hud.updateJetpackStatus({
+            slowdownActive: this.player.jetpackSlowdownActive,
+            boostActive: this.player.jetpackBoostActive,
+            cooldownRemaining: this.player.getJetpackCooldownRemaining(),
+            isFalling: true
+        });
 
         // Hide instruction after falling
         if (this.gameState.distance > 50) {

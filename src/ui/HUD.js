@@ -12,6 +12,7 @@ export default class HUD {
         this.createSpeedDisplay();
         this.createDistanceDisplay();
         this.createComboDisplay();
+        this.createJetpackDisplay();
         this.createInstructionText();
         this.createMenuButton(onMenuClick);
 
@@ -121,6 +122,40 @@ export default class HUD {
         this.container.addChild(this.comboContainer);
     }
 
+    createJetpackDisplay() {
+        // Jetpack status container
+        this.jetpackContainer = new Container();
+        this.jetpackContainer.visible = false; // Hidden initially
+
+        // Background panel
+        const jetpackBg = new Graphics()
+            .roundRect(0, 0, 180, 35, 5)
+            .fill({ color: 0x000000, alpha: 0.5 });
+        this.jetpackContainer.addChild(jetpackBg);
+
+        // Status text
+        this.jetpackText = new Text({
+            text: 'JETPACK',
+            style: {
+                fontFamily: 'Arial',
+                fontSize: 18,
+                fill: COLORS.TEXT_PRIMARY,
+                fontWeight: 'bold'
+            }
+        });
+        this.jetpackText.x = 10;
+        this.jetpackText.y = 8;
+        this.jetpackContainer.addChild(this.jetpackText);
+
+        // Cooldown bar
+        this.jetpackCooldownBar = new Graphics();
+        this.jetpackContainer.addChild(this.jetpackCooldownBar);
+
+        this.jetpackContainer.x = 20;
+        this.jetpackContainer.y = 90;
+        this.container.addChild(this.jetpackContainer);
+    }
+
     createInstructionText() {
         // Instruction text (center)
         this.instructionText = new Text({
@@ -176,6 +211,49 @@ export default class HUD {
      */
     updateDistance(distance) {
         this.distanceText.text = `Distance: ${distance}m`;
+    }
+
+    /**
+     * Update jetpack status display
+     * @param {Object} status - Jetpack status object
+     * @param {boolean} status.slowdownActive - Is slowdown active
+     * @param {boolean} status.boostActive - Is boost active
+     * @param {number} status.cooldownRemaining - Cooldown time remaining (seconds)
+     * @param {boolean} status.isFalling - Is player falling
+     */
+    updateJetpackStatus(status) {
+        // Only show during falling
+        if (!status.isFalling) {
+            this.jetpackContainer.visible = false;
+            return;
+        }
+
+        this.jetpackContainer.visible = true;
+
+        // Update text and color based on state
+        if (status.slowdownActive) {
+            this.jetpackText.text = 'SLOWDOWN';
+            this.jetpackText.style.fill = 0x00FFFF; // Cyan
+        } else if (status.boostActive) {
+            this.jetpackText.text = 'BOOST';
+            this.jetpackText.style.fill = 0xFF4444; // Red
+        } else if (status.cooldownRemaining > 0) {
+            this.jetpackText.text = `COOLDOWN: ${status.cooldownRemaining.toFixed(1)}s`;
+            this.jetpackText.style.fill = 0xFFFF00; // Yellow
+        } else {
+            this.jetpackText.text = 'READY';
+            this.jetpackText.style.fill = 0x44FF44; // Green
+        }
+
+        // Draw cooldown bar if on cooldown
+        this.jetpackCooldownBar.clear();
+        if (status.cooldownRemaining > 0) {
+            const maxCooldown = 2.0; // JETPACK_COOLDOWN in seconds
+            const progress = status.cooldownRemaining / maxCooldown;
+            this.jetpackCooldownBar
+                .rect(10, 30, 160 * progress, 3)
+                .fill({ color: 0xFFFF00 });
+        }
     }
 
     /**

@@ -21,23 +21,37 @@ export default class LevelManager {
     }
 
     // Get difficulty settings for a specific level
+    // Aligned with GDD target scores and progressive difficulty
     getDifficultyConfig(levelNumber) {
+        // Define target scores per GDD (Stage 1: 10k → Stage 10: 200k)
+        const targetScores = [
+            10000,  // Stage 1
+            20000,  // Stage 2
+            35000,  // Stage 3
+            50000,  // Stage 4
+            70000,  // Stage 5
+            90000,  // Stage 6
+            110000, // Stage 7
+            135000, // Stage 8
+            160000, // Stage 9
+            200000  // Stage 10
+        ];
+
         // Progressive difficulty from level 1 (easy) to 10 (very hard)
         const difficulty = levelNumber / 10; // 0.1 to 1.0
 
         return {
-            // Obstacle count: 20 at level 1, 80 at level 10
-            obstacleCount: Math.floor(20 + (difficulty * 60)),
+            // Obstacle count: 30 at level 1, 60 at level 10
+            obstacleCount: Math.floor(30 + (difficulty * 30)),
 
-            // Obstacle spacing: 250px at level 1, 100px at level 10
-            obstacleSpacing: Math.floor(250 - (difficulty * 150)),
+            // Obstacle spacing: 200px at level 1, 120px at level 10
+            obstacleSpacing: Math.floor(200 - (difficulty * 80)),
 
             // Fall distance: 5000 at level 1, 10000 at level 10
             fallDistance: Math.floor(5000 + (difficulty * 5000)),
 
-            // Target score scales with difficulty: 1000 at level 1, 3000 at level 10
-            // Higher levels have more obstacles = more near-miss opportunities
-            targetScore: Math.floor(1000 + (difficulty * 2000)),
+            // Target score from GDD specifications
+            targetScore: targetScores[levelNumber - 1] || 10000,
 
             // Available obstacle types unlock progressively
             availableObstacles: this.getAvailableObstacles(levelNumber)
@@ -45,26 +59,49 @@ export default class LevelManager {
     }
 
     // Determine which obstacles are available at each level
+    // Aligned with GDD stage themes and progressive difficulty
     getAvailableObstacles(levelNumber) {
-        // Level 1-2: Basic obstacles only
-        if (levelNumber <= 2) {
-            return ['spike', 'platform', 'wall'];
-        }
-        // Level 3-4: Add movement
-        else if (levelNumber <= 4) {
-            return ['spike', 'platform', 'wall', 'spinner', 'barrel'];
-        }
-        // Level 5-6: Add hazards
-        else if (levelNumber <= 6) {
-            return ['spike', 'platform', 'wall', 'spinner', 'barrel', 'alien', 'laser'];
-        }
-        // Level 7-8: Add complex patterns
-        else if (levelNumber <= 8) {
-            return ['spike', 'platform', 'wall', 'spinner', 'barrel', 'alien', 'laser', 'meteor', 'pendulum'];
-        }
-        // Level 9-10: All obstacles
-        else {
-            return ['spike', 'platform', 'wall', 'spinner', 'barrel', 'alien', 'laser', 'meteor', 'pendulum', 'orbiter', 'pulsar'];
+        switch (levelNumber) {
+            case 1:
+                // Stage 1: Cosmic Perch (Tutorial) - Basic obstacles only
+                return ['spike', 'platform', 'wall'];
+
+            case 2:
+                // Stage 2: Thermosphere Thunder - Add space hazards
+                return ['spike', 'platform', 'wall', 'meteor'];
+
+            case 3:
+                // Stage 3: Mesosphere Mayhem - Add ice/spinning obstacles
+                return ['spike', 'platform', 'wall', 'meteor', 'spinner'];
+
+            case 4:
+                // Stage 4: Stratosphere Showdown - Add scientific equipment
+                return ['spike', 'platform', 'wall', 'meteor', 'spinner', 'barrel'];
+
+            case 5:
+                // Stage 5: Jet Stream Jam - Add aviation/alien hazards
+                return ['spike', 'platform', 'wall', 'meteor', 'spinner', 'barrel', 'alien'];
+
+            case 6:
+                // Stage 6: Cloud Nine Catastrophe - Add high-energy storm hazards
+                return ['spike', 'platform', 'wall', 'meteor', 'spinner', 'barrel', 'alien', 'laser', 'pulsar'];
+
+            case 7:
+                // Stage 7: Turbulence Territory - Add living/swinging obstacles
+                return ['spike', 'platform', 'wall', 'spinner', 'barrel', 'alien', 'laser', 'pulsar', 'pendulum'];
+
+            case 8:
+                // Stage 8: Helicopter Heights - Add mechanical/orbiting obstacles
+                return ['spike', 'platform', 'wall', 'spinner', 'barrel', 'alien', 'laser', 'pulsar', 'pendulum', 'orbiter'];
+
+            case 9:
+            case 10:
+                // Stage 9-10: Skyscraper Slalom & Campus Crashdown - All obstacles
+                return ['spike', 'platform', 'wall', 'spinner', 'barrel', 'alien', 'laser', 'meteor', 'pulsar', 'pendulum', 'orbiter'];
+
+            default:
+                // Fallback to basic obstacles
+                return ['spike', 'platform', 'wall'];
         }
     }
 
@@ -89,91 +126,187 @@ export default class LevelManager {
             availableObstacles: difficultyConfig.availableObstacles
         };
 
-        // Level-specific configurations
+        // Level-specific configurations aligned with GDD
         const configs = [
             {
-                // Level 1: Tutorial Rooftop (Original)
+                // Stage 1: The Cosmic Perch
                 id: 1,
-                name: "Tutorial Rooftop",
-                subtitle: "Duke's Last Stand",
-                // targetScore handled by baseConfig (1000 for level 1)
-                duration: 60,
-                obstaclePatterns: ['single', 'double'],
-                obstacleTypes: ['bird', 'plane', 'cloud'],
-                powerUpFrequency: 0.2,
+                name: "The Cosmic Perch",
+                subtitle: "Tutorial in the stars",
+                altitude: "400km (Low Earth Orbit)",
+                duration: 30,
                 windStrength: 0,
                 storyBeat: {
-                    title: "The Beginning",
+                    title: "The Cosmic Perch",
                     panels: [
-                        "Duke stands at the edge...",
-                        "One final jump to glory!",
-                        "Can he make it to OCU?"
+                        "Starsky adjusting his sunglasses in zero gravity",
+                        "Radio: 'Starsky! The freshman orientation is starting!'",
+                        "'Better hustle my hooves! Can't let my Stars down!'"
                     ]
                 }
             },
             {
-                // Level 2: TEMPORARY COPY OF LEVEL 1 FOR TESTING
-                // Will be replaced with unique content later
+                // Stage 2: Thermosphere Thunder
                 id: 2,
-                name: "Test Level 2",
-                subtitle: "Testing Transitions",
-                // targetScore handled by baseConfig (1200 for level 2)
-                duration: 60,
-                obstaclePatterns: ['single', 'double'],
-                obstacleTypes: ['bird', 'plane', 'cloud'],
-                powerUpFrequency: 0.2,
+                name: "Thermosphere Thunder",
+                subtitle: "Burning entry",
+                altitude: "300km → 85km",
+                duration: 45,
                 windStrength: 0,
                 storyBeat: {
-                    title: "Level 2 Story",
+                    title: "Thermosphere Thunder",
                     panels: [
-                        "The journey continues...",
-                        "New challenges await!",
-                        "Keep falling towards victory!"
+                        "Starsky's wool slightly singed",
+                        "Shooting star passes: 'Hey, that's my cousin!'",
+                        "Burns marshmallow on his horn: 'Waste not!'"
                     ]
                 }
             },
             {
-                // Level 3 and beyond (placeholders for now)
+                // Stage 3: Mesosphere Mayhem
                 id: 3,
-                name: "City Streets",
-                subtitle: "Urban Descent",
-                // targetScore handled by baseConfig (1400 for level 3)
-                duration: 70,
-                obstaclePatterns: ['single', 'double', 'zigzag'],
-                obstacleTypes: ['bird', 'plane', 'balloon', 'drone'],
-                powerUpFrequency: 0.25,
+                name: "Mesosphere Mayhem",
+                subtitle: "Ice and wind",
+                altitude: "85km → 50km",
+                duration: 50,
                 windStrength: 0.1,
                 storyBeat: {
-                    title: "Urban Adventure",
+                    title: "Mesosphere Mayhem",
                     panels: [
-                        "The city sprawls below...",
-                        "Traffic and towers everywhere!",
-                        "Navigate the urban jungle!"
+                        "Starsky shivers: 'Should've brought my varsity jacket!'",
+                        "Pulls out OCU pennant, uses as cape",
+                        "Does superhero pose with cape flowing"
+                    ]
+                }
+            },
+            {
+                // Stage 4: Stratosphere Showdown
+                id: 4,
+                name: "Stratosphere Showdown",
+                subtitle: "Scientific instruments",
+                altitude: "50km → 12km",
+                duration: 55,
+                windStrength: 0.05,
+                storyBeat: {
+                    title: "Stratosphere Showdown",
+                    panels: [
+                        "Weather balloon with camera",
+                        "Starsky winks: 'That's EVERY side, baby!'",
+                        "Balloon operator: 'This is going viral!'"
+                    ]
+                }
+            },
+            {
+                // Stage 5: Jet Stream Jam
+                id: 5,
+                name: "Jet Stream Jam",
+                subtitle: "Commercial aviation",
+                altitude: "12km → 10km",
+                duration: 60,
+                windStrength: 0.15,
+                storyBeat: {
+                    title: "Jet Stream Jam",
+                    panels: [
+                        "Pilot does double-take",
+                        "Kid in plane: 'Mom! I saw the OCU Ram!'",
+                        "Starsky holds sign: 'Hi Mom!'"
+                    ]
+                }
+            },
+            {
+                // Stage 6: Cloud Nine Catastrophe
+                id: 6,
+                name: "Cloud Nine Catastrophe",
+                subtitle: "Storm system",
+                altitude: "10km → 5km",
+                duration: 65,
+                windStrength: 0.2,
+                storyBeat: {
+                    title: "Cloud Nine Catastrophe",
+                    panels: [
+                        "Starsky's wool all frizzed from static",
+                        "Lightning spells 'OCU' in background",
+                        "'Even the storm knows who's the STAR!'"
+                    ]
+                }
+            },
+            {
+                // Stage 7: Turbulence Territory
+                id: 7,
+                name: "Turbulence Territory",
+                subtitle: "Living obstacles",
+                altitude: "5km → 2km",
+                duration: 70,
+                windStrength: 0.15,
+                storyBeat: {
+                    title: "Turbulence Territory",
+                    panels: [
+                        "Starsky joins V formation with geese",
+                        "Lead goose: 'This is a no-ram zone!'",
+                        "Creates his own V with confused birds"
+                    ]
+                }
+            },
+            {
+                // Stage 8: Helicopter Heights
+                id: 8,
+                name: "Helicopter Heights",
+                subtitle: "News coverage",
+                altitude: "2km → 500m",
+                duration: 75,
+                windStrength: 0.1,
+                storyBeat: {
+                    title: "Helicopter Heights",
+                    panels: [
+                        "News reporter: 'This is unprecedented!'",
+                        "Starsky: 'I prefer confidently skilled!'",
+                        "Breaking News ticker: 'RAM RATES RADICAL'"
+                    ]
+                }
+            },
+            {
+                // Stage 9: Skyscraper Slalom
+                id: 9,
+                name: "Skyscraper Slalom",
+                subtitle: "Urban maze",
+                altitude: "500m → 100m",
+                duration: 80,
+                windStrength: 0.05,
+                storyBeat: {
+                    title: "Skyscraper Slalom",
+                    panels: [
+                        "Construction workers eating lunch on beam",
+                        "Starsky: 'Just passing through!'",
+                        "Sign changes to read: 'RAM CONSTRUCTION CO.'"
+                    ]
+                }
+            },
+            {
+                // Stage 10: Campus Crashdown
+                id: 10,
+                name: "Campus Crashdown",
+                subtitle: "Home sweet home",
+                altitude: "100m → Ground",
+                duration: 90,
+                windStrength: 0,
+                storyBeat: {
+                    title: "Campus Crashdown",
+                    panels: [
+                        "OCU campus spreads below, students cheering",
+                        "'Home sweet home! Did you miss me?'",
+                        "'Time for the most EPIC entrance in university history!'"
                     ]
                 }
             }
         ];
 
-        // Return specific config or use level 1 as fallback
-        if (levelNumber <= configs.length) {
+        // Return specific config, now all 10 stages are defined
+        if (levelNumber >= 1 && levelNumber <= configs.length) {
             return { ...baseConfig, ...configs[levelNumber - 1] };
         } else {
-            // For levels 4-10, reuse level 1 config as placeholder
-            return { 
-                ...baseConfig, 
-                ...configs[0], 
-                id: levelNumber,
-                name: `Stage ${levelNumber}`,
-                subtitle: "Coming Soon",
-                storyBeat: {
-                    title: `Stage ${levelNumber}`,
-                    panels: [
-                        "This level is coming soon!",
-                        "For now, enjoy the classic obstacles.",
-                        "More content on the way!"
-                    ]
-                }
-            };
+            // Fallback for invalid level numbers
+            console.warn(`Invalid level number: ${levelNumber}. Using Stage 1 as fallback.`);
+            return { ...baseConfig, ...configs[0] };
         }
     }
 

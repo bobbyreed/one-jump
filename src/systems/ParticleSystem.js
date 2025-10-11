@@ -28,8 +28,11 @@ export default class ParticleSystem {
 
     /**
      * Create jetpack thrust particles
+     * @param {Object} position - Position {x, y}
+     * @param {number} deltaTime - Delta time
+     * @param {number} color - Particle color (optional, defaults to orange)
      */
-    createJetpackParticles(position, deltaTime) {
+    createJetpackParticles(position, deltaTime, color = 0xff8800) {
         if (Math.random() > 0.5) return; // Limit particle creation rate
 
         // Clean up if too many particles
@@ -39,7 +42,7 @@ export default class ParticleSystem {
 
         const particle = new Graphics()
             .circle(0, 0, 3 + Math.random() * 3)
-            .fill({ color: 0xff8800, alpha: 0.8 });
+            .fill({ color: color, alpha: 0.8 });
 
         particle.x = position.x + (Math.random() - 0.5) * 20;
         particle.y = position.y + 40; // Below player

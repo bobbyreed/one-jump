@@ -131,11 +131,10 @@ const PHYSICS = {
 **Keyboard (Primary)**
 ```
 ← / A:        Move left
-→ / D:        Move right  
-↑ / W:        Slow fall (costs trick meter)
-↓ / S:        Fast fall (builds trick meter)
+→ / D:        Move right
+↑ / W:        Slow fall (engage jetpack - has cooldown)
+↓ / S:        Fast fall (disengage jetpack - speed boost)
 SPACE:        Execute trick
-SHIFT:        Speed boost
 1-5:          Quick trick select
 TAB:          View stage map
 ESC:          Pause menu
@@ -172,7 +171,6 @@ Two finger:   Pause
 
 2. **Soft Collision** - Reduces score/combo
    - Grazing obstacles (damage but continue)
-   - Wind current fights
    - Speed reduction zones
 
 3. **Positive Collision** - Beneficial contact
@@ -275,7 +273,6 @@ End of stage letter grades:
 
 **Unique Mechanics**:
 - Reduced gravity (slower fall)
-- No wind currents
 - Extra-wide near-miss zones
 
 **Obstacle Patterns**:
@@ -350,20 +347,20 @@ M = Meteor, H = Heat, P = Plasma
 ---
 
 #### Stage 3: Mesosphere Mayhem
-**Theme**: Ice and wind  
-**Altitude**: 85km → 50km  
-**Length**: 50 seconds  
+**Theme**: Ice crystals and clouds
+**Altitude**: 85km → 50km
+**Length**: 50 seconds
 **Target Score**: 35,000
 
 **Obstacles**:
 - Ice crystals (shatter into fragments)
-- Wind tunnels (push left/right)
+- Spinning obstacles (rotating hazards)
 - Noctilucent clouds (obscure vision)
 
 **Unique Mechanics**:
-- Wind affects movement
 - Ice creates temporary platforms
 - Clouds hide obstacles
+- Faster falling speed
 
 **Advanced Patterns**:
 ```
@@ -372,12 +369,12 @@ Pattern A: "Crystal Cascade"
         ↓
     [Platform]
 
-Pattern B: "Wind Tunnel"
-←←←[W]←←←
-   ↓
-→→→[W]→→→
+Pattern B: "Spinner Gauntlet"
+[S↻]  [ ]  [S↺]
+[ ]  [S↻]  [ ]
+[S↺]  [ ]  [S↻]
 
-I = Ice, i = fragment, W = Wind source
+I = Ice, i = fragment, S = Spinner
 ```
 
 **Story Beat** (4 panels):
@@ -505,7 +502,7 @@ Pattern B: "Cloud Maze"
 **Weather Effects**:
 - Screen flashes white on lightning
 - Rain particle effects
-- Wind howling sounds
+- Thunder sounds
 - Darker atmosphere
 
 **Story Beat** (5 panels):
@@ -883,7 +880,7 @@ Pattern B: "Quad Landing"
 2. "20 kilometers to campus! Even Mother Nature can't stop a Star!"
    - {"prompt":"Retro video game illustration of Starsky the Ram with fist pumped triumphantly, storm clouds behind him, saying '20 kilometers to campus! Even Mother Nature can't stop a Star!' Clear sky ahead. Bold 80s/90s victory style with contrast between storm and clear sky.","size":"1024x1024","n":1}
 
-#### Stage 7: Wind Current
+#### Stage 7: Bird Formation
 
 ##### Entrance (3 panels)
 1. Geese fly by in formation, Starsky joins them
