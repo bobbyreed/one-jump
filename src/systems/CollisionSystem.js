@@ -36,6 +36,20 @@ export default class CollisionSystem {
     }
 
     /**
+     * Check if player is near a rocket (for riding mechanic)
+     */
+    checkRocketProximity(playerPos, rocket) {
+        const dx = playerPos.x - rocket.x;
+        const dy = playerPos.y - rocket.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        return {
+            isNear: distance < PHYSICS.ROCKET_PULL_RANGE,
+            distance: distance
+        };
+    }
+
+    /**
      * Calculate near-miss distance and scoring using edge-to-edge distance
      */
     calculateNearMiss(playerBounds, obstacleBounds) {

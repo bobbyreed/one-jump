@@ -80,25 +80,25 @@ export default class LevelManager {
                 return ['spike', 'platform', 'wall', 'meteor', 'spinner', 'barrel'];
 
             case 5:
-                // Stage 5: Jet Stream Jam - Add aviation/alien hazards
-                return ['spike', 'platform', 'wall', 'meteor', 'spinner', 'barrel', 'alien'];
+                // Stage 5: Jet Stream Jam - Add aviation/alien hazards + ROCKETS!
+                return ['spike', 'platform', 'wall', 'meteor', 'spinner', 'barrel', 'alien', 'rocket'];
 
             case 6:
                 // Stage 6: Cloud Nine Catastrophe - Add high-energy storm hazards
-                return ['spike', 'platform', 'wall', 'meteor', 'spinner', 'barrel', 'alien', 'laser', 'pulsar'];
+                return ['spike', 'platform', 'wall', 'meteor', 'spinner', 'barrel', 'alien', 'laser', 'pulsar', 'rocket'];
 
             case 7:
                 // Stage 7: Turbulence Territory - Add living/swinging obstacles
-                return ['spike', 'platform', 'wall', 'spinner', 'barrel', 'alien', 'laser', 'pulsar', 'pendulum'];
+                return ['spike', 'platform', 'wall', 'spinner', 'barrel', 'alien', 'laser', 'pulsar', 'pendulum', 'rocket'];
 
             case 8:
                 // Stage 8: Helicopter Heights - Add mechanical/orbiting obstacles
-                return ['spike', 'platform', 'wall', 'spinner', 'barrel', 'alien', 'laser', 'pulsar', 'pendulum', 'orbiter'];
+                return ['spike', 'platform', 'wall', 'spinner', 'barrel', 'alien', 'laser', 'pulsar', 'pendulum', 'orbiter', 'rocket'];
 
             case 9:
             case 10:
                 // Stage 9-10: Skyscraper Slalom & Campus Crashdown - All obstacles
-                return ['spike', 'platform', 'wall', 'spinner', 'barrel', 'alien', 'laser', 'meteor', 'pulsar', 'pendulum', 'orbiter'];
+                return ['spike', 'platform', 'wall', 'spinner', 'barrel', 'alien', 'laser', 'meteor', 'pulsar', 'pendulum', 'orbiter', 'rocket'];
 
             default:
                 // Fallback to basic obstacles

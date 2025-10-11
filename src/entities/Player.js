@@ -26,6 +26,11 @@ export default class Player {
         this.jetpackSlowdownTimer = 0;
         this.jetpackCooldownTimer = 0;
 
+        // Rocket riding
+        this.isRocketRiding = false;
+        this.rocketRideTimer = 0;
+        this.currentRocket = null;
+
         this.createAnimations();
     }
 
@@ -97,6 +102,10 @@ export default class Player {
 
             case PLAYER_STATES.FALLING:
                 this.updateFalling(deltaTime, horizontalInput);
+                break;
+
+            case PLAYER_STATES.ROCKET_RIDING:
+                this.updateRocketRiding(deltaTime, horizontalInput);
                 break;
 
             case PLAYER_STATES.LANDED:
@@ -231,6 +240,80 @@ export default class Player {
         return Math.max(0, this.jetpackCooldownTimer / 1000);
     }
 
+    /**
+     * Start riding a rocket
+     */
+    startRocketRide(rocket) {
+        if (this.state !== PLAYER_STATES.FALLING) return false;
+
+        this.state = PLAYER_STATES.ROCKET_RIDING;
+        this.currentRocket = rocket;
+        this.isRocketRiding = true;
+        this.rocketRideTimer = PHYSICS.ROCKET_RIDE_DURATION;
+
+        // Override velocity to match rocket
+        this.velocity.y = PHYSICS.ROCKET_RIDE_SPEED;
+
+        return true;
+    }
+
+    /**
+     * Update rocket riding state
+     */
+    updateRocketRiding(deltaTime, horizontalInput) {
+        // Count down ride timer
+        this.rocketRideTimer -= deltaTime * 1000;
+
+        // Check if still near rocket or timer expired
+        if (this.rocketRideTimer <= 0 || !this.isNearRocket()) {
+            this.endRocketRide();
+            return;
+        }
+
+        // Match rocket's upward movement
+        this.velocity.y = PHYSICS.ROCKET_RIDE_SPEED;
+
+        // Allow horizontal movement but limited
+        this.velocity.x = horizontalInput * PHYSICS.HORIZONTAL_SPEED * 0.7;
+
+        // Update position
+        this.position.x += this.velocity.x * deltaTime;
+        this.position.y += this.velocity.y * deltaTime;
+
+        // Slight tilt based on horizontal movement
+        this.container.rotation = horizontalInput * 0.1;
+    }
+
+    /**
+     * Check if player is still near the rocket
+     */
+    isNearRocket() {
+        if (!this.currentRocket) return false;
+
+        const dx = this.position.x - this.currentRocket.x;
+        const dy = this.position.y - this.currentRocket.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        return distance < PHYSICS.ROCKET_PULL_RANGE * 1.5; // Slightly larger range to stay on
+    }
+
+    /**
+     * End rocket riding
+     */
+    endRocketRide() {
+        this.state = PLAYER_STATES.FALLING;
+        this.isRocketRiding = false;
+        this.currentRocket = null;
+
+        // Apply small upward boost when dismounting
+        this.velocity.y = Math.min(this.velocity.y, -PHYSICS.ROCKET_DISMOUNT_BOOST);
+
+        // Resume normal falling animation
+        if (!this.jetpackActivating) {
+            this.setAnimation('falling');
+        }
+    }
+
     land() {
         this.state = PLAYER_STATES.LANDED;
         this.velocity.x = 0;
@@ -266,6 +349,11 @@ export default class Player {
         this.jetpackBoostActive = false;
         this.jetpackSlowdownTimer = 0;
         this.jetpackCooldownTimer = 0;
+
+        // Reset rocket riding state
+        this.isRocketRiding = false;
+        this.rocketRideTimer = 0;
+        this.currentRocket = null;
 
         // Reset tint
         Object.values(this.sprites).forEach(sprite => {
