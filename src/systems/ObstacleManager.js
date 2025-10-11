@@ -8,6 +8,14 @@ export default class ObstacleManager {
         this.obstacles = [];
         this.levelConfig = levelConfig;
 
+        // Landing zone protection buffer
+        this.landingZoneBuffer = {
+            centerX: 960,           // Center of screen
+            width: 600,             // Protected horizontal width (±300 from center)
+            minY: LEVEL.LANDING_Y - 800,  // 800 pixels above landing zone
+            maxY: LEVEL.LANDING_Y + 200   // 200 pixels below landing zone
+        };
+
         worldContainer.addChild(this.container);
     }
 
@@ -33,16 +41,89 @@ export default class ObstacleManager {
         // Generate new obstacles
         const count = config.obstacleCount || LEVEL.OBSTACLE_COUNT;
         const spacing = config.obstacleSpacing || LEVEL.OBSTACLE_SPACING;
+        let rejectedCount = 0;
 
         for (let i = 0; i < count; i++) {
             const type = availableTypes[Math.floor(Math.random() * availableTypes.length)];
             const obstacle = this.createObstacle(type, i, spacing);
 
             if (obstacle) {
-                this.container.addChild(obstacle.container);
-                this.obstacles.push(obstacle);
+                // Check if obstacle is in landing zone buffer
+                if (this.isInLandingZoneBuffer(obstacle)) {
+                    // Reject this obstacle and try to regenerate with adjusted position
+                    rejectedCount++;
+                    console.log(`Obstacle ${i} rejected - too close to landing zone`);
+
+                    // Try to reposition above the buffer zone
+                    const maxAttempts = 3;
+                    let repositioned = false;
+                    const maxY = this.landingZoneBuffer.minY - 100;
+
+                    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                        const calculatedY = LEVEL.FALL_START_Y + 300 + i * spacing + Math.random() * 100 - (spacing * 5);
+                        obstacle.y = Math.min(calculatedY, maxY); // Clamp to prevent spawning below landing
+                        obstacle.container.y = obstacle.y;
+
+                        if (!this.isInLandingZoneBuffer(obstacle)) {
+                            repositioned = true;
+                            console.log(`  ✓ Repositioned to y=${obstacle.y}`);
+                            break;
+                        }
+                    }
+
+                    // Only add if successfully repositioned
+                    if (repositioned) {
+                        this.container.addChild(obstacle.container);
+                        this.obstacles.push(obstacle);
+                    } else {
+                        console.log(`  ✗ Could not reposition, skipping obstacle`);
+                    }
+                } else {
+                    // Obstacle is safe, add it
+                    this.container.addChild(obstacle.container);
+                    this.obstacles.push(obstacle);
+                }
             }
         }
+
+        if (rejectedCount > 0) {
+            console.log(`Landing zone protection: ${rejectedCount} obstacles rejected/repositioned`);
+        }
+    }
+
+    /**
+     * Check if an obstacle is within the landing zone buffer
+     */
+    isInLandingZoneBuffer(obstacle) {
+        const buffer = this.landingZoneBuffer;
+
+        // Check vertical bounds (Y position)
+        const obstacleTop = obstacle.y - obstacle.height;
+        const obstacleBottom = obstacle.y;
+
+        const inVerticalBuffer = (
+            (obstacleTop >= buffer.minY && obstacleTop <= buffer.maxY) ||
+            (obstacleBottom >= buffer.minY && obstacleBottom <= buffer.maxY) ||
+            (obstacleTop <= buffer.minY && obstacleBottom >= buffer.maxY)
+        );
+
+        if (!inVerticalBuffer) {
+            return false; // Not in vertical range, safe
+        }
+
+        // Check horizontal bounds (X position) - only if in vertical range
+        const obstacleLeft = obstacle.centered ? obstacle.x - obstacle.width / 2 : obstacle.x;
+        const obstacleRight = obstacle.centered ? obstacle.x + obstacle.width / 2 : obstacle.x + obstacle.width;
+        const bufferLeft = buffer.centerX - buffer.width / 2;
+        const bufferRight = buffer.centerX + buffer.width / 2;
+
+        const inHorizontalBuffer = (
+            (obstacleLeft >= bufferLeft && obstacleLeft <= bufferRight) ||
+            (obstacleRight >= bufferLeft && obstacleRight <= bufferRight) ||
+            (obstacleLeft <= bufferLeft && obstacleRight >= bufferRight)
+        );
+
+        return inHorizontalBuffer;
     }
 
     // Filter obstacle types based on level restrictions
@@ -71,13 +152,16 @@ export default class ObstacleManager {
     }
 
     createObstacle(type, index, spacing = LEVEL.OBSTACLE_SPACING) {
+        // Calculate Y position with upper limit to prevent spawning below landing zone
+        const maxY = this.landingZoneBuffer.minY - 100; // Stop 100px before landing buffer
+        const calculatedY = LEVEL.FALL_START_Y + 300 + index * spacing + Math.random() * 100;
+
         const obstacle = {
             container: new Container(),
             type: type.type,
             damage: type.damage,
             x: 0,
-            y: LEVEL.FALL_START_Y + 300 + index * spacing +
-                Math.random() * 100,
+            y: Math.min(calculatedY, maxY), // Clamp to max Y
             width: 0,
             height: 0,
             centered: false, // Flag for obstacles drawn from center

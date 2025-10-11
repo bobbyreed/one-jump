@@ -110,152 +110,243 @@ export default class LevelSelectScene extends BaseScene {
 
     createLevelGrid() {
         const levelManager = this.game.levelManager;
-        const cols = 5;
-        const rows = 2;
-        const buttonSize = 150;
-        const spacing = 50;
-        const startX = 960 - (cols * (buttonSize + spacing) - spacing) / 2;
-        const startY = 300;
 
-        for (let i = 0; i < 10; i++) {
-            const col = i % cols;
-            const row = Math.floor(i / cols);
-            const x = startX + col * (buttonSize + spacing) + buttonSize / 2;
-            const y = startY + row * (buttonSize + spacing);
-
-            const levelConfig = levelManager.getLevelConfig(i + 1);
-            const isLocked = i + 1 > levelManager.unlockedLevels;
-            const grade = levelManager.levelGrades[i];
-            const score = levelManager.levelScores[i];
-
-            // Level button container
-            const buttonContainer = new Container();
-            buttonContainer.x = x;
-            buttonContainer.y = y;
-            buttonContainer.levelNumber = i + 1;
-
-            // Button background
-            const btnBg = new Graphics();
-            btnBg.roundRect(-buttonSize/2, -buttonSize/2, buttonSize, buttonSize, 10);
-            btnBg.fill(isLocked ? 0x444444 : 0x2266cc);
-            if (!isLocked) {
-                btnBg.stroke({ color: 0xffffff, width: 2 });
+        // Define regions with their levels and visual themes
+        const regions = [
+            {
+                name: 'SPACE',
+                levels: [1, 2],
+                color: 0x000428,
+                accentColor: 0xCCCCFF,  // Light purple/blue for contrast
+                startY: 200
+            },
+            {
+                name: 'UPPER ATMOSPHERE',
+                levels: [3, 4],
+                color: 0xFF4500,
+                accentColor: 0xFFFFAA,  // Light yellow for contrast
+                startY: 400
+            },
+            {
+                name: 'MID ATMOSPHERE',
+                levels: [5, 6, 7],
+                color: 0x1E90FF,
+                accentColor: 0xFFFFFF,  // White for contrast
+                startY: 600
+            },
+            {
+                name: 'GROUND APPROACH',
+                levels: [8, 9, 10],
+                color: 0x2F4F4F,
+                accentColor: 0xCDB87E,  // OCU gold for contrast
+                startY: 800
             }
-            buttonContainer.addChild(btnBg);
+        ];
 
-            // Level number
-            const levelText = new Text({
-                text: `${i + 1}`,
+        const buttonSize = 140;
+        const spacing = 35;
+
+        regions.forEach(region => {
+            // Create region container
+            const regionContainer = new Container();
+
+            // Calculate region width based on number of levels
+            const regionWidth = region.levels.length * (buttonSize + spacing) + 300;
+            const regionX = 960 - regionWidth / 2;
+
+            // Region background panel
+            const regionBg = new Graphics();
+            regionBg.roundRect(0, 0, regionWidth, 160, 15);
+            regionBg.fill({ color: region.color, alpha: 0.3 });
+            regionBg.stroke({ color: region.accentColor, width: 3 });
+            regionContainer.addChild(regionBg);
+
+            // Region label
+            const regionLabel = new Text({
+                text: region.name,
                 style: {
                     fontFamily: 'Arial Black',
-                    fontSize: 48,
-                    fill: isLocked ? 0x888888 : 0xffffff
+                    fontSize: 21,
+                    fill: region.accentColor,
+                    letterSpacing: 5,
+                    margin: 5
                 }
             });
-            levelText.anchor.set(0.5);
-            levelText.y = -20;
-            buttonContainer.addChild(levelText);
+            //regionLabel.anchor.set(-1.5, 4.5);
+            regionLabel.x = 30 - regionLabel.text.length;
+            regionLabel.y = -30;
+            regionContainer.addChild(regionLabel);
 
-            // Level name
-            const nameText = new Text({
-                text: levelConfig.name.split(' ').slice(0, 2).join('\n'),
-                style: {
-                    fontFamily: 'Arial',
-                    fontSize: 14,
-                    fill: isLocked ? 0x666666 : 0xcccccc,
-                    align: 'center',
-                    wordWrap: true,
-                    wordWrapWidth: buttonSize - 20
-                }
-            });
-            nameText.anchor.set(0.5);
-            nameText.y = 20;
-            buttonContainer.addChild(nameText);
+            // Position region container
+            regionContainer.x = regionX;
+            regionContainer.y = region.startY;
+            this.container.addChild(regionContainer);
 
-            // Grade display
-            if (grade && !isLocked) {
-                const gradeText = new Text({
-                    text: grade,
+            // Create level buttons for this region
+            region.levels.forEach((levelNum, index) => {
+                const i = levelNum - 1;
+                const x = 250 + index * (buttonSize + spacing);
+                const y = 80;
+
+                const levelConfig = levelManager.getLevelConfig(levelNum);
+                const isLocked = levelNum > levelManager.unlockedLevels;
+                const grade = levelManager.levelGrades[i];
+                const score = levelManager.levelScores[i];
+
+                // Level button container
+                const buttonContainer = new Container();
+                buttonContainer.x = x;
+                buttonContainer.y = y;
+                buttonContainer.levelNumber = levelNum;
+
+                // Button background with region-specific styling
+                const btnBg = new Graphics();
+                btnBg.roundRect(-buttonSize/2, -buttonSize/2, buttonSize, buttonSize, 10);
+                btnBg.fill(isLocked ? 0x333333 : region.color);
+                btnBg.stroke({ color: region.accentColor, width: isLocked ? 1 : 3 });
+                buttonContainer.addChild(btnBg);
+
+                // Level number
+                const levelText = new Text({
+                    text: `${levelNum}`,
                     style: {
                         fontFamily: 'Arial Black',
-                        fontSize: 24,
-                        fill: this.getGradeColor(grade),
-                        stroke: { color: 0x000000, width: 2 }
+                        fontSize: 42,
+                        fill: isLocked ? 0x666666 : 0xffffff
                     }
                 });
-                gradeText.anchor.set(0.5);
-                gradeText.x = buttonSize/2 - 20;
-                gradeText.y = -buttonSize/2 + 20;
-                buttonContainer.addChild(gradeText);
-            }
+                levelText.anchor.set(0.5);
+                levelText.y = -15;
+                buttonContainer.addChild(levelText);
 
-            // Lock icon if locked
-            if (isLocked) {
-                const lockIcon = new Text({
-                    text: '🔒',
-                    style: { fontSize: 32 }
+                // Level name (abbreviated)
+                const levelName = levelConfig.name.replace('The ', '').replace(' Thunder', '').replace(' Mayhem', '').replace(' Showdown', '').replace(' Jam', '').replace(' Catastrophe', '').replace(' Territory', '').replace(' Heights', '').replace(' Slalom', '').replace(' Crashdown', '');
+                const nameText = new Text({
+                    text: levelName,
+                    style: {
+                        fontFamily: 'Arial',
+                        fontSize: 13,
+                        fill: isLocked ? 0x555555 : region.accentColor,
+                        align: 'center',
+                        wordWrap: true,
+                        wordWrapWidth: buttonSize - 10
+                    }
                 });
-                lockIcon.anchor.set(0.5);
-                lockIcon.y = 50;
-                buttonContainer.addChild(lockIcon);
-            }
+                nameText.anchor.set(0.5);
+                nameText.y = 25;
+                buttonContainer.addChild(nameText);
 
-            // Make clickable if unlocked
-            if (!isLocked) {
-                buttonContainer.eventMode = 'static';
-                buttonContainer.cursor = 'pointer';
-                buttonContainer.on('pointerdown', () => {
-                    this.selectLevel(i + 1);
-                });
-                buttonContainer.on('pointerover', () => {
-                    btnBg.tint = 0xaaaaff;
-                });
-                buttonContainer.on('pointerout', () => {
-                    btnBg.tint = 0xffffff;
-                });
-            }
+                // Grade display in corner
+                if (grade && !isLocked && grade !== 'F') {
+                    const gradeText = new Text({
+                        text: grade,
+                        style: {
+                            fontFamily: 'Arial Black',
+                            fontSize: 20,
+                            fill: this.getGradeColor(grade),
+                            stroke: { color: 0x000000, width: 2 }
+                        }
+                    });
+                    gradeText.anchor.set(1, 0);
+                    gradeText.x = buttonSize/2 - 8;
+                    gradeText.y = -buttonSize/2 + 8;
+                    buttonContainer.addChild(gradeText);
+                }
 
-            this.container.addChild(buttonContainer);
-            this.levelButtons.push(buttonContainer);
-        }
+                // Stars display at bottom
+                if (score > 0 && !isLocked) {
+                    const stars = levelManager.levelStars[i];
+                    const starContainer = new Container();
+                    starContainer.y = buttonSize/2 - 20;
+
+                    for (let s = 0; s < 3; s++) {
+                        const star = new Graphics();
+                        const filled = s < stars;
+                        star.star(0, 0, 5, 8, 4);
+                        star.fill({ color: filled ? 0xFFD700 : 0x444444 });
+                        star.x = (s - 1) * 18;
+                        starContainer.addChild(star);
+                    }
+                    buttonContainer.addChild(starContainer);
+                }
+
+                // Lock icon if locked
+                if (isLocked) {
+                    const lockIcon = new Text({
+                        text: '🔒',
+                        style: { fontSize: 28 }
+                    });
+                    lockIcon.anchor.set(0.5);
+                    lockIcon.y = 50;
+                    buttonContainer.addChild(lockIcon);
+                }
+
+                // Make clickable if unlocked
+                if (!isLocked) {
+                    buttonContainer.eventMode = 'static';
+                    buttonContainer.cursor = 'pointer';
+                    buttonContainer.on('pointerdown', () => {
+                        this.selectLevel(levelNum);
+                    });
+                    buttonContainer.on('pointerover', () => {
+                        btnBg.tint = 0xcccccc;
+                    });
+                    buttonContainer.on('pointerout', () => {
+                        btnBg.tint = 0xffffff;
+                    });
+                }
+
+                regionContainer.addChild(buttonContainer);
+                this.levelButtons.push(buttonContainer);
+            });
+        });
     }
 
     createInfoPanel() {
+        // Info panel positioned at left edge
+        const infoPanelContainer = new Container();
+        infoPanelContainer.x = 50;
+        infoPanelContainer.y = 200;
+
         const panel = new Graphics();
-        panel.roundRect(50, 750, 400, 280, 15);
-        panel.fill({ color: 0x000000, alpha: 0.7 });
+        panel.roundRect(0, 0, 400, 520, 15);
+        panel.fill({ color: 0x000000, alpha: 0.8 });
         panel.stroke({ color: 0xCDB87E, width: 2 });
-        this.container.addChild(panel);
-        
+        infoPanelContainer.addChild(panel);
+
         // Title
         const title = new Text({
             text: 'MISSION BRIEFING',
             style: {
                 fontFamily: 'Arial Black',
-                fontSize: 24,
+                fontSize: 22,
                 fill: 0xCDB87E
             }
         });
-        title.x = 250;
-        title.y = 770;
+        title.x = 200;
+        title.y = 20;
         title.anchor.set(0.5, 0);
-        this.container.addChild(title);
-        
+        infoPanelContainer.addChild(title);
+
         // Info text
         this.infoText = new Text({
-            text: 'Select a stage to begin your descent!\n\nEarn stars by reaching score targets.\nUnlock new stages by completing previous ones.',
+            text: 'Select a stage to begin your descent!',
             style: {
                 fontFamily: 'Arial',
                 fontSize: 16,
                 fill: 0xffffff,
                 wordWrap: true,
                 wordWrapWidth: 360,
-                lineHeight: 24
+                lineHeight: 24,
+                align: 'left'
             }
         });
-        this.infoText.x = 70;
-        this.infoText.y = 810;
-        this.container.addChild(this.infoText);
+        this.infoText.x = 20;
+        this.infoText.y = 60;
+        this.infoText.anchor.set(0, 0);
+        infoPanelContainer.addChild(this.infoText);
+
+        this.container.addChild(infoPanelContainer);
     }
 
     createNavigationButtons() {
@@ -275,15 +366,15 @@ export default class LevelSelectScene extends BaseScene {
         this.playButton = new Button(
             'START MISSION →',
             1570,
-            900,
+            980,
             250,
-            70,
+            60,
             0x44ff44,
             () => this.startSelectedLevel()
         );
         this.playButton.container.visible = false;
         this.container.addChild(this.playButton.container);
-        
+
         // Total progress display
         this.createProgressDisplay();
     }
@@ -292,56 +383,56 @@ export default class LevelSelectScene extends BaseScene {
         const levelManager = this.game.levelManager;
         const totalStars = levelManager.getTotalStars ? levelManager.getTotalStars() : 0;
         const maxStars = 30; // 3 stars × 10 levels
-        
+
         const progressContainer = new Container();
         progressContainer.x = 1470;
-        progressContainer.y = 780;
-        
+        progressContainer.y = 200;
+
         // Background
         const bg = new Graphics();
-        bg.roundRect(0, 0, 400, 100, 15);
-        bg.fill({ color: 0x000000, alpha: 0.7 });
+        bg.roundRect(0, 0, 400, 520, 15);
+        bg.fill({ color: 0x000000, alpha: 0.8 });
         bg.stroke({ color: 0xCDB87E, width: 2 });
         progressContainer.addChild(bg);
-        
+
         // Progress text
         const progressText = new Text({
             text: 'OVERALL PROGRESS',
             style: {
                 fontFamily: 'Arial Black',
-                fontSize: 18,
+                fontSize: 22,
                 fill: 0xCDB87E
             }
         });
         progressText.x = 200;
         progressText.y = 20;
-        progressText.anchor.set(0.5);
+        progressText.anchor.set(0.5, 0);
         progressContainer.addChild(progressText);
-        
+
         // Star count
         const starText = new Text({
             text: `⭐ ${totalStars} / ${maxStars}`,
             style: {
                 fontFamily: 'Arial Black',
-                fontSize: 24,
+                fontSize: 32,
                 fill: 0xffffff
             }
         });
         starText.x = 200;
-        starText.y = 50;
+        starText.y = 70;
         starText.anchor.set(0.5);
         progressContainer.addChild(starText);
-        
+
         // Progress bar
         const barBg = new Graphics();
-        barBg.roundRect(20, 70, 360, 10, 5);
+        barBg.roundRect(20, 120, 360, 16, 8);
         barBg.fill(0x333333);
         progressContainer.addChild(barBg);
-        
+
         const barFill = new Graphics();
         const fillWidth = (totalStars / maxStars) * 360;
         if (fillWidth > 0) {
-            barFill.roundRect(20, 70, fillWidth, 10, 5);
+            barFill.roundRect(20, 120, fillWidth, 16, 8);
             barFill.fill(0xCDB87E);
             progressContainer.addChild(barFill);
         }
@@ -356,11 +447,15 @@ export default class LevelSelectScene extends BaseScene {
             }
 
             // Hidden debug: Shift+U to unlock all levels
-            if (key === 'KeyU' && this.game.inputManager.keys['ShiftLeft']) {
-                console.log('Debug: Unlocking all levels');
-                this.game.levelManager.unlockAllLevels();
-                this.updateLevelButtons();
-                console.log('All levels unlocked!');
+            if (key === 'KeyU') {
+                const isShiftPressed = this.game.inputManager.isKeyDown('ShiftLeft') ||
+                                     this.game.inputManager.isKeyDown('ShiftRight');
+                if (isShiftPressed) {
+                    console.log('Debug: Shift+U detected - Unlocking all levels');
+                    this.game.levelManager.unlockAllLevels();
+                    this.updateLevelButtons();
+                    console.log('All levels unlocked!');
+                }
             }
 
             // Number keys for quick level select
@@ -465,14 +560,14 @@ export default class LevelSelectScene extends BaseScene {
     // Utility functions
     getGradeColor(grade) {
         const colors = {
-            'S+': 0xffd700,
-            'S': 0xffaa00,
-            'A': 0x44ff44,
-            'B': 0x4444ff,
-            'C': 0xffff44,
-            'D': 0xff4444
+            'S': 0xFFD700,  // Gold
+            'A': 0x00FF00,  // Green
+            'B': 0x00AAFF,  // Blue
+            'C': 0xFFFF00,  // Yellow
+            'D': 0xFF8800,  // Orange
+            'F': 0xFF0000   // Red
         };
-        return colors[grade] || 0xffffff;
+        return colors[grade] || 0xFFFFFF;
     }
 
     formatTime(seconds) {
@@ -711,18 +806,6 @@ export default class LevelSelectScene extends BaseScene {
             button.addChild(lock);
         }
 
-        getGradeColor(grade) {
-            const colors = {
-                'S': 0xFFD700,  // Gold
-                'A': 0x00FF00,  // Green  
-                'B': 0x00AAFF,  // Blue
-                'C': 0xFFFF00,  // Yellow
-                'D': 0xFF8800,  // Orange
-                'F': 0xFF0000   // Red
-            };
-            return colors[grade] || 0xFFFFFF;
-        }
-
         selectLevel(levelNumber) {
             this.selectedLevel = levelNumber;
             
@@ -741,19 +824,16 @@ export default class LevelSelectScene extends BaseScene {
             const config = this.game.levelManager.getLevelConfig(levelNumber);
             const score = this.game.levelManager.levelScores[levelNumber - 1];
             const bestTime = this.game.levelManager.levelBestTimes[levelNumber - 1];
-            
-            let infoText = `STAGE ${levelNumber}: ${config.name}\n\n`;
-            infoText += `${config.subtitle}\n\n`;
-            infoText += `Target Score: ${config.targetScore.toLocaleString()}\n`;
-            infoText += `Duration: ${config.duration} seconds\n\n`;
-            
+
+            let infoText = `STAGE ${levelNumber}: ${config.name}\n`;
+            infoText += `${config.subtitle} • Target: ${config.targetScore.toLocaleString()}\n`;
+
             if (score > 0) {
-                infoText += `Best Score: ${score.toLocaleString()}\n`;
-                infoText += `Best Time: ${bestTime.toFixed(1)}s`;
+                infoText += `Best: ${score.toLocaleString()} • Time: ${bestTime.toFixed(1)}s`;
             } else {
                 infoText += `Not yet completed`;
             }
-            
+
             this.infoText.text = infoText;
 
             // Show play button

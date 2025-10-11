@@ -3,8 +3,18 @@ import { COLORS, UI, LEVEL } from '../config/Constants.js';
 import Button from './Button.js';
 
 export default class ResultScreen {
-  constructor(screen, callbacks = {}) {
-    this.screen = screen;
+  constructor(screenOrApp, callbacks = {}) {
+    // Support both screen dimensions object or full app
+    if (screenOrApp.ticker) {
+      // Full app passed
+      this.app = screenOrApp;
+      this.screen = screenOrApp.screen;
+    } else {
+      // Just screen dimensions passed
+      this.screen = screenOrApp;
+      this.app = null;
+    }
+
     this.callbacks = {
       onRestart: callbacks.onRestart || (() => {}),
       onMenu: callbacks.onMenu || (() => {}),
@@ -17,122 +27,215 @@ export default class ResultScreen {
     this.createBackdrop();
     this.createResultPanel();
     this.createButtons();
-    this.createStatsDisplay();
   }
 
   createBackdrop() {
     // Semi-transparent backdrop
     this.backdrop = new Graphics()
       .rect(0, 0, this.screen.width, this.screen.height)
-      .fill({ color: 0x000000, alpha: 0.7 });
+      .fill({ color: 0x000000, alpha: 0.8 });
     this.container.addChild(this.backdrop);
   }
 
   createResultPanel() {
-    // Main result panel
-    this.resultPanel = new Container();
+    // Main result container
+    this.resultContainer = new Container();
 
-    // Panel background - INCREASED HEIGHT FOR MORE SPACING
-    const panelBg = new Graphics()
-      .roundRect(-250, -140, 500, 280, 20)
-      .fill({ color: 0x222244, alpha: 0.95 })
-      .roundRect(-250, -140, 500, 280, 20)
-      .stroke({ width: 3, color: 0x666688 });
-    this.resultPanel.addChild(panelBg);
+    // Large panel background (650x500 for spacious layout)
+    this.panelBg = new Graphics()
+      .roundRect(-325, -250, 650, 500, 20)
+      .fill({ color: 0x1a1a2e, alpha: 0.95 })
+      .roundRect(-325, -250, 650, 500, 20)
+      .stroke({ width: 4, color: 0x4488ff });
+    this.resultContainer.addChild(this.panelBg);
 
-    // Result title (SUCCESS, PERFECT, etc.)
-    this.resultTitle = new Text({
+    // Title (PERFECT LANDING, CRASHED, etc.)
+    this.titleText = new Text({
       text: '',
       style: {
         fontFamily: 'Arial Black',
-        fontSize: 48,
-        fill: COLORS.SUCCESS,
+        fontSize: 44,
+        fill: 0xFFFFFF,
+        fontWeight: 'bold',
+        dropShadow: true,
+        dropShadowDistance: 4,
+        letterSpacing: 2
+      }
+    });
+    this.titleText.anchor.set(0.5);
+    this.titleText.y = -200;
+    this.resultContainer.addChild(this.titleText);
+
+    // Divider line under title
+    this.titleDivider = new Graphics()
+      .rect(-280, -160, 560, 2)
+      .fill({ color: 0x666688, alpha: 0.5 });
+    this.resultContainer.addChild(this.titleDivider);
+
+    // Grade and Stars section
+    this.gradeStarsContainer = new Container();
+    this.gradeStarsContainer.y = -95;
+
+    // Grade display (left side)
+    this.gradeLabel = new Text({
+      text: 'GRADE',
+      style: {
+        fontFamily: 'Arial',
+        fontSize: 18,
+        fill: 0x999999,
+        letterSpacing: 1
+      }
+    });
+    this.gradeLabel.anchor.set(0.5);
+    this.gradeLabel.x = -150;
+    this.gradeLabel.y = -25;
+    this.gradeStarsContainer.addChild(this.gradeLabel);
+
+    this.gradeText = new Text({
+      text: 'S',
+      style: {
+        fontFamily: 'Arial Black',
+        fontSize: 72,
+        fill: 0xFFD700,
         fontWeight: 'bold',
         dropShadow: true,
         dropShadowDistance: 4
       }
     });
-    this.resultTitle.anchor.set(0.5);
-    this.resultTitle.y = -95; // More space at top
-    this.resultPanel.addChild(this.resultTitle);
+    this.gradeText.anchor.set(0.5);
+    this.gradeText.x = -150;
+    this.gradeText.y = 25;
+    this.gradeStarsContainer.addChild(this.gradeText);
 
-    // Landing type label (PERFECT / GREAT / GOOD)
-    this.landingLabel = new Text({
-      text: '',
+    // Stars display (right side)
+    this.starsLabel = new Text({
+      text: 'STARS',
       style: {
         fontFamily: 'Arial',
-        fontSize: 22,
-        fill: COLORS.TEXT_SECONDARY,
-        fontWeight: 'bold'
+        fontSize: 18,
+        fill: 0x999999,
+        letterSpacing: 1
       }
     });
-    this.landingLabel.anchor.set(0.5);
-    this.landingLabel.y = -35; // More spacing
-    this.resultPanel.addChild(this.landingLabel);
+    this.starsLabel.anchor.set(0.5);
+    this.starsLabel.x = 150;
+    this.starsLabel.y = -25;
+    this.gradeStarsContainer.addChild(this.starsLabel);
 
-    // Score display
-    this.scoreText = new Text({
-      text: '',
+    this.starsContainer = new Container();
+    this.starsContainer.x = 150;
+    this.starsContainer.y = 25;
+    this.gradeStarsContainer.addChild(this.starsContainer);
+
+    this.resultContainer.addChild(this.gradeStarsContainer);
+
+    // Divider line
+    this.gradeDivider = new Graphics()
+      .rect(-280, 20, 560, 2)
+      .fill({ color: 0x666688, alpha: 0.5 });
+    this.resultContainer.addChild(this.gradeDivider);
+
+    // Score breakdown section
+    this.scoreContainer = new Container();
+    this.scoreContainer.y = 60;
+
+    // Total Score (large, centered)
+    this.totalScoreLabel = new Text({
+      text: 'FINAL SCORE',
       style: {
         fontFamily: 'Arial',
-        fontSize: 32,
-        fill: COLORS.TEXT_PRIMARY,
-        fontWeight: 'bold'
+        fontSize: 20,
+        fill: 0x999999,
+        letterSpacing: 1
       }
     });
-    this.scoreText.anchor.set(0.5);
-    this.scoreText.y = 10; // More spacing
-    this.resultPanel.addChild(this.scoreText);
+    this.totalScoreLabel.anchor.set(0.5);
+    this.totalScoreLabel.y = 0;
+    this.scoreContainer.addChild(this.totalScoreLabel);
 
-    // Grade display
-    this.gradeText = new Text({
-      text: '',
+    this.totalScoreText = new Text({
+      text: '0',
       style: {
         fontFamily: 'Arial Black',
-        fontSize: 40,
-        fill: COLORS.WARNING,
+        fontSize: 48,
+        fill: 0xFFFFFF,
         fontWeight: 'bold',
         dropShadow: true,
         dropShadowDistance: 3
       }
     });
-    this.gradeText.anchor.set(0.5);
-    this.gradeText.y = 65; // More spacing
-    this.resultPanel.addChild(this.gradeText);
+    this.totalScoreText.anchor.set(0.5);
+    this.totalScoreText.y = 38;
+    this.scoreContainer.addChild(this.totalScoreText);
 
-    // High score indicator
-    this.highScoreIndicator = new Text({
-      text: 'NEW HIGH SCORE! 🏆',
+    // Target score and percentage
+    this.targetScoreText = new Text({
+      text: 'Target: 10,000 (100%)',
       style: {
         fontFamily: 'Arial',
-        fontSize: 26,
-        fill: COLORS.WARNING,
+        fontSize: 18,
+        fill: 0x88ff88,
+        letterSpacing: 0.5
+      }
+    });
+    this.targetScoreText.anchor.set(0.5);
+    this.targetScoreText.y = 80;
+    this.scoreContainer.addChild(this.targetScoreText);
+
+    this.resultContainer.addChild(this.scoreContainer);
+
+    // Score breakdown (compact 2-column layout)
+    this.breakdownContainer = new Container();
+    this.breakdownContainer.y = 170;
+
+    this.breakdownText = new Text({
+      text: '',
+      style: {
+        fontFamily: 'Arial',
+        fontSize: 16,
+        fill: 0xcccccc,
+        align: 'center',
+        lineHeight: 24
+      }
+    });
+    this.breakdownText.anchor.set(0.5);
+    this.breakdownContainer.addChild(this.breakdownText);
+
+    this.resultContainer.addChild(this.breakdownContainer);
+
+    // High score indicator
+    this.highScoreText = new Text({
+      text: '★ NEW HIGH SCORE! ★',
+      style: {
+        fontFamily: 'Arial Black',
+        fontSize: 24,
+        fill: 0xFFD700,
         fontWeight: 'bold',
         dropShadow: true,
         dropShadowDistance: 2
       }
     });
-    this.highScoreIndicator.anchor.set(0.5);
-    this.highScoreIndicator.y = 115; // More spacing
-    this.highScoreIndicator.visible = false;
-    this.resultPanel.addChild(this.highScoreIndicator);
+    this.highScoreText.anchor.set(0.5);
+    this.highScoreText.y = 215;
+    this.highScoreText.visible = false;
+    this.resultContainer.addChild(this.highScoreText);
 
-    this.resultPanel.x = this.screen.width / 2;
-    this.resultPanel.y = this.screen.height / 2 - 50;
-    this.container.addChild(this.resultPanel);
+    this.resultContainer.x = this.screen.width / 2;
+    this.resultContainer.y = this.screen.height / 2 - 20;
+    this.container.addChild(this.resultContainer);
   }
 
   createButtons() {
     // Button container
     this.buttonContainer = new Container();
 
-    // Next Level button (only shown on success)
+    // Next Level button
     this.nextLevelButton = new Button(
       'NEXT LEVEL',
-      -160,
+      -195,
       0,
-      140,
-      50,
+      180,
+      55,
       COLORS.SUCCESS,
       () => this.callbacks.onNextLevel()
     );
@@ -144,8 +247,8 @@ export default class ResultScreen {
       'TRY AGAIN',
       0,
       0,
-      140,
-      50,
+      180,
+      55,
       COLORS.WARNING,
       () => this.callbacks.onRestart()
     );
@@ -154,71 +257,18 @@ export default class ResultScreen {
     // Menu button
     this.menuButton = new Button(
       'MAIN MENU',
-      160,
+      195,
       0,
-      140,
-      50,
+      180,
+      55,
       COLORS.UI_PRIMARY,
       () => this.callbacks.onMenu()
     );
     this.buttonContainer.addChild(this.menuButton.container);
 
     this.buttonContainer.x = this.screen.width / 2;
-    this.buttonContainer.y = this.screen.height / 2 + 120;
+    this.buttonContainer.y = this.screen.height / 2 + 280;
     this.container.addChild(this.buttonContainer);
-  }
-
-  createStatsDisplay() {
-    // Stats container (shown on success)
-    this.statsContainer = new Container();
-    this.statsContainer.visible = false;
-
-    // Stats background - INCREASED SIZE
-    const statsBg = new Graphics()
-      .roundRect(-250, -90, 500, 180, 15)
-      .fill({ color: 0x000000, alpha: 0.5 })
-      .roundRect(-250, -90, 500, 180, 15)
-      .stroke({ width: 2, color: 0x444466 });
-    this.statsContainer.addChild(statsBg);
-
-    // Stats title
-    const statsTitle = new Text({
-      text: 'LEVEL STATS',
-      style: {
-        fontFamily: 'Arial Black',
-        fontSize: 24,
-        fill: COLORS.TEXT_SECONDARY,
-        fontWeight: 'bold',
-        letterSpacing: 1
-      }
-    });
-    statsTitle.anchor.set(0.5);
-    statsTitle.y = -60;
-    this.statsContainer.addChild(statsTitle);
-
-    // Stats text
-    this.statsText = new Text({
-      text: '',
-      style: {
-        fontFamily: 'Arial',
-        fontSize: 20,
-        fill: COLORS.TEXT_PRIMARY,
-        align: 'center',
-        lineHeight: 30
-      }
-    });
-    this.statsText.anchor.set(0.5);
-    this.statsText.y = -10;
-    this.statsContainer.addChild(this.statsText);
-
-    // Stars display
-    this.starsContainer = new Container();
-    this.starsContainer.y = 50; // More spacing
-    this.statsContainer.addChild(this.starsContainer);
-
-    this.statsContainer.x = this.screen.width / 2;
-    this.statsContainer.y = this.screen.height / 2 + 250;
-    this.container.addChild(this.statsContainer);
   }
 
   /**
@@ -226,7 +276,7 @@ export default class ResultScreen {
    */
   showSuccess(data) {
     this.container.visible = true;
-    
+
     const {
       label = 'SUCCESS',
       score = 0,
@@ -238,67 +288,97 @@ export default class ResultScreen {
       time = 0,
       maxCombo = 0,
       nearMisses = 0,
-      tricks = 0
+      tricks = 0,
+      targetScore = 10000,
+      baseScore = 0,
+      timeBonus = 0,
+      comboBonus = 0,
+      nearMissBonus = 0
     } = data;
 
-    // Set result text based on landing quality
+    // Set title based on landing quality
     let titleText = label;
     if (label === 'PERFECT') {
-      titleText = 'PERFECT LANDING!';
+      titleText = '★ PERFECT LANDING! ★';
     } else if (label === 'GREAT') {
       titleText = 'GREAT LANDING!';
     } else if (label === 'GOOD') {
       titleText = 'GOOD LANDING!';
-    } else if (label === 'OK') {
-      titleText = 'NICE LANDING!';
     } else {
       titleText = 'LEVEL COMPLETE!';
     }
-    
-    this.resultTitle.text = titleText;
-    this.resultTitle.style.fill = color;
 
-    // Show landing type prominently
-    if (label === 'PERFECT' || label === 'GREAT' || label === 'GOOD') {
-      this.landingLabel.text = `Landing: ${label}`;
-      this.landingLabel.style.fill = color;
-      this.landingLabel.visible = true;
-    } else {
-      this.landingLabel.visible = false;
-    }
-
-    // Animate title
-    this.animateTitle();
-
-    // Set score
-    this.scoreText.text = `Score: ${score.toLocaleString()}`;
+    this.titleText.text = titleText;
+    this.titleText.style.fill = color;
 
     // Set grade
-    this.gradeText.text = `Grade: ${grade}`;
+    this.gradeText.text = grade;
     this.gradeText.style.fill = this.getGradeColor(grade);
 
-    // Show high score indicator if applicable
-    this.highScoreIndicator.visible = isNewHighScore;
+    // Show stars
+    this.showStars(stars);
+
+    // Set total score
+    this.totalScoreText.text = score.toLocaleString();
+
+    // Calculate percentage
+    const percentage = ((score / targetScore) * 100).toFixed(1);
+    this.targetScoreText.text = `Target: ${targetScore.toLocaleString()} (${percentage}%)`;
+
+    // Color the percentage based on performance
+    if (percentage >= 150) {
+      this.targetScoreText.style.fill = 0xFFD700; // Gold
+    } else if (percentage >= 100) {
+      this.targetScoreText.style.fill = 0x88ff88; // Green
+    } else if (percentage >= 60) {
+      this.targetScoreText.style.fill = 0xffaa00; // Orange
+    } else {
+      this.targetScoreText.style.fill = 0xff4444; // Red
+    }
+
+    // Show score breakdown
+    const breakdown = [];
+    if (baseScore) breakdown.push(`Landing: ${baseScore.toLocaleString()}`);
+    if (timeBonus) breakdown.push(`Time Bonus: ${timeBonus.toLocaleString()}`);
+    if (comboBonus) breakdown.push(`Combo Bonus: ${comboBonus.toLocaleString()}`);
+    if (nearMissBonus) breakdown.push(`Near-Miss: ${nearMissBonus.toLocaleString()}`);
+
+    if (breakdown.length > 0) {
+      // Format as compact 2-column layout
+      const leftCol = [];
+      const rightCol = [];
+      breakdown.forEach((item, i) => {
+        if (i % 2 === 0) {
+          leftCol.push(item);
+        } else {
+          rightCol.push(item);
+        }
+      });
+
+      const maxLen = Math.max(leftCol.length, rightCol.length);
+      const lines = [];
+      for (let i = 0; i < maxLen; i++) {
+        const left = leftCol[i] || '';
+        const right = rightCol[i] || '';
+        lines.push(`${left.padEnd(30)}${right}`);
+      }
+
+      this.breakdownText.text = lines.join('\n');
+    } else {
+      this.breakdownText.text = '';
+    }
+
+    // Show high score indicator
+    this.highScoreText.visible = isNewHighScore;
     if (isNewHighScore) {
       this.animateHighScore();
     }
 
-    // Show stats
-    this.showStats({
-      time,
-      maxCombo,
-      nearMisses,
-      tricks
-    });
-
-    // Display stars
-    this.showStars(stars);
-
-    // Configure buttons for success
+    // Configure buttons
     this.configureSuccessButtons(canProceed);
 
-    // Play success animation
-    this.playSuccessAnimation(color);
+    // Animate entrance
+    this.animateEntrance(color);
   }
 
   /**
@@ -306,7 +386,7 @@ export default class ResultScreen {
    */
   showFailure(data) {
     this.container.visible = true;
-    
+
     const {
       type = 'crash',
       distance = 0
@@ -314,22 +394,28 @@ export default class ResultScreen {
 
     // Set result text based on failure type
     if (type === 'crash') {
-      this.resultTitle.text = 'CRASHED!';
-      this.resultTitle.style.fill = COLORS.DANGER;
-      this.scoreText.text = `Distance: ${distance}m`;
+      this.titleText.text = 'CRASHED!';
+      this.titleText.style.fill = COLORS.DANGER;
+      this.totalScoreLabel.text = 'DISTANCE FALLEN';
+      this.totalScoreText.text = `${distance}m`;
       this.shakePanel();
     } else if (type === 'missed') {
-      this.resultTitle.text = 'MISSED THE PAD!';
-      this.resultTitle.style.fill = COLORS.WARNING;
-      this.scoreText.text = 'Try to land on the colored pads!';
+      this.titleText.text = 'MISSED THE PAD!';
+      this.titleText.style.fill = COLORS.WARNING;
+      this.totalScoreLabel.text = 'TRY TO LAND ON';
+      this.totalScoreText.text = 'THE COLORED PADS';
+      this.totalScoreText.style.fontSize = 28;
     }
 
-    // Hide grade for failures
-    this.gradeText.visible = false;
+    // Hide grade/stars/breakdown for failures
+    this.gradeStarsContainer.visible = false;
+    this.gradeDivider.visible = false;
+    this.targetScoreText.visible = false;
+    this.breakdownContainer.visible = false;
+    this.highScoreText.visible = false;
 
-    // Hide stats for failure
-    this.statsContainer.visible = false;
-    this.highScoreIndicator.visible = false;
+    // Reposition total score for failure layout
+    this.scoreContainer.y = -60;
 
     // Configure buttons for failure
     this.configureFailureButtons();
@@ -341,16 +427,16 @@ export default class ResultScreen {
   configureSuccessButtons(canProceed) {
     // Show next level button if player can proceed
     this.nextLevelButton.container.visible = canProceed;
-    
+
     if (canProceed) {
       // Three button layout
-      this.nextLevelButton.container.x = -160;
+      this.nextLevelButton.container.x = -195;
       this.retryButton.container.x = 0;
-      this.menuButton.container.x = 160;
+      this.menuButton.container.x = 195;
     } else {
       // Two button layout (final level or locked)
-      this.retryButton.container.x = -80;
-      this.menuButton.container.x = 80;
+      this.retryButton.container.x = -100;
+      this.menuButton.container.x = 100;
     }
   }
 
@@ -360,35 +446,10 @@ export default class ResultScreen {
   configureFailureButtons() {
     // Hide next level button on failure
     this.nextLevelButton.container.visible = false;
-    
+
     // Two button layout
-    this.retryButton.container.x = -80;
-    this.menuButton.container.x = 80;
-  }
-
-  /**
-   * Show statistics
-   */
-  showStats(data) {
-    const stats = [];
-    
-    if (data.time !== undefined) {
-      stats.push(`Time: ${data.time.toFixed(1)}s`);
-    }
-    if (data.maxCombo) {
-      stats.push(`Max Combo: x${data.maxCombo}`);
-    }
-    if (data.nearMisses) {
-      stats.push(`Near Misses: ${data.nearMisses}`);
-    }
-    if (data.tricks) {
-      stats.push(`Tricks: ${data.tricks}`);
-    }
-
-    if (stats.length > 0) {
-      this.statsText.text = stats.join('  •  ');
-      this.statsContainer.visible = true;
-    }
+    this.retryButton.container.x = -100;
+    this.menuButton.container.x = 100;
   }
 
   /**
@@ -397,24 +458,24 @@ export default class ResultScreen {
   showStars(earnedStars) {
     // Clear existing stars
     this.starsContainer.removeChildren();
-    
+
     for (let i = 0; i < 3; i++) {
       const star = new Graphics();
       const filled = i < earnedStars;
-      
+
       // Draw star shape
-      star.star(0, 0, 5, 20, 10);
-      star.fill({ color: filled ? 0xFFD700 : 0x444444 });
-      star.stroke({ color: filled ? 0xFFFF00 : 0x666666, width: 2 });
-      
-      star.x = (i - 1) * 60;
+      star.star(0, 0, 5, 22, 11);
+      star.fill({ color: filled ? 0xFFD700 : 0x333333 });
+      star.stroke({ color: filled ? 0xFFFF00 : 0x555555, width: 2 });
+
+      star.x = (i - 1) * 50;
       this.starsContainer.addChild(star);
-      
+
       // Animate earned stars
       if (filled) {
         star.scale.set(0);
-        const delay = i * 200;
-        
+        const delay = i * 150;
+
         setTimeout(() => {
           this.animateStar(star);
         }, delay);
@@ -428,15 +489,12 @@ export default class ResultScreen {
   animateStar(star) {
     const targetScale = 1;
     let currentScale = 0;
-    
+
     const animate = (ticker) => {
-      currentScale += ticker.deltaTime * 0.1;
+      currentScale += ticker.deltaTime * 0.15;
       if (currentScale >= targetScale) {
         star.scale.set(targetScale);
         ticker.remove(animate);
-        
-        // Sparkle effect at the end
-        this.createSparkle(star.x, star.y);
       } else {
         // Overshoot effect
         const overshoot = 1.3;
@@ -444,38 +502,10 @@ export default class ResultScreen {
         star.scale.set(scale);
       }
     };
-    
-    if (this.screen.ticker) {
-      this.screen.ticker.add(animate);
-    }
-  }
 
-  /**
-   * Create sparkle effect
-   */
-  createSparkle(x, y) {
-    const sparkle = new Graphics();
-    sparkle.star(0, 0, 4, 15, 2);
-    sparkle.fill({ color: 0xFFFFFF, alpha: 0.8 });
-    sparkle.x = x;
-    sparkle.y = y;
-    this.starsContainer.addChild(sparkle);
-    
-    let alpha = 0.8;
-    const animate = (ticker) => {
-      alpha -= ticker.deltaTime * 0.05;
-      sparkle.alpha = alpha;
-      sparkle.rotation += ticker.deltaTime * 0.1;
-      sparkle.scale.set(1 + (1 - alpha) * 2);
-      
-      if (alpha <= 0) {
-        this.starsContainer.removeChild(sparkle);
-        ticker.remove(animate);
-      }
-    };
-    
-    if (this.screen.ticker) {
-      this.screen.ticker.add(animate);
+    const ticker = this.app?.ticker || this.screen?.ticker;
+    if (ticker) {
+      ticker.add(animate);
     }
   }
 
@@ -495,27 +525,32 @@ export default class ResultScreen {
   }
 
   /**
-   * Animate title appearance
+   * Animate entrance
    */
-  animateTitle() {
-    this.resultTitle.scale.set(0);
+  animateEntrance(color) {
+    this.resultContainer.scale.set(0);
+    this.resultContainer.alpha = 0;
+
     let elapsed = 0;
-    
     const animate = (ticker) => {
       elapsed += ticker.deltaTime / 60;
-      const progress = Math.min(elapsed * 3, 1);
-      
+      const progress = Math.min(elapsed * 2.5, 1);
+
       // Bounce ease out
       const scale = 1 - Math.pow(1 - progress, 3);
-      this.resultTitle.scale.set(scale);
-      
+      this.resultContainer.scale.set(scale);
+      this.resultContainer.alpha = progress;
+
       if (progress >= 1) {
         ticker.remove(animate);
+        // Create particle burst
+        this.createParticleBurst(color);
       }
     };
-    
-    if (this.screen.ticker) {
-      this.screen.ticker.add(animate);
+
+    const ticker = this.app?.ticker || this.screen?.ticker;
+    if (ticker) {
+      ticker.add(animate);
     }
   }
 
@@ -526,17 +561,18 @@ export default class ResultScreen {
     let time = 0;
     const animate = (ticker) => {
       time += ticker.deltaTime / 60;
-      this.highScoreIndicator.scale.set(1 + Math.sin(time * 10) * 0.1);
-      
-      // Stop after 3 seconds
-      if (time > 3) {
-        this.highScoreIndicator.scale.set(1);
+      this.highScoreText.scale.set(1 + Math.sin(time * 8) * 0.1);
+
+      // Stop after 4 seconds
+      if (time > 4) {
+        this.highScoreText.scale.set(1);
         ticker.remove(animate);
       }
     };
-    
-    if (this.screen.ticker) {
-      this.screen.ticker.add(animate);
+
+    const ticker = this.app?.ticker || this.screen?.ticker;
+    if (ticker) {
+      ticker.add(animate);
     }
   }
 
@@ -544,57 +580,57 @@ export default class ResultScreen {
    * Shake panel effect for crashes
    */
   shakePanel() {
-    const originalX = this.resultPanel.x;
+    const originalX = this.resultContainer.x;
     let shakeTime = 0;
-    
+
     const animate = (ticker) => {
       shakeTime += ticker.deltaTime / 60;
       const intensity = Math.max(0, 1 - shakeTime * 2);
-      
-      this.resultPanel.x = originalX + Math.random() * 20 * intensity - 10 * intensity;
-      
-      if (shakeTime > 0.5) {
-        this.resultPanel.x = originalX;
+
+      this.resultContainer.x = originalX + Math.random() * 25 * intensity - 12.5 * intensity;
+
+      if (shakeTime > 0.6) {
+        this.resultContainer.x = originalX;
         ticker.remove(animate);
       }
     };
-    
-    if (this.screen.ticker) {
-      this.screen.ticker.add(animate);
+
+    const ticker = this.app?.ticker || this.screen?.ticker;
+    if (ticker) {
+      ticker.add(animate);
     }
   }
 
   /**
-   * Play success animation
+   * Create particle burst effect
    */
-  playSuccessAnimation(color) {
-    // Create particle burst effect
-    for (let i = 0; i < 10; i++) {
+  createParticleBurst(color) {
+    for (let i = 0; i < 12; i++) {
       const particle = new Graphics();
-      particle.circle(0, 0, 3);
+      particle.circle(0, 0, 4);
       particle.fill({ color: color });
-      
-      const angle = (Math.PI * 2 * i) / 10;
-      const speed = 5 + Math.random() * 5;
+
+      const angle = (Math.PI * 2 * i) / 12;
+      const speed = 6 + Math.random() * 4;
       particle.vx = Math.cos(angle) * speed;
       particle.vy = Math.sin(angle) * speed;
-      particle.x = this.resultPanel.x;
-      particle.y = this.resultPanel.y;
-      
+      particle.x = this.resultContainer.x;
+      particle.y = this.resultContainer.y - 180;
+
       this.container.addChild(particle);
-      
+
       const animate = (ticker) => {
         particle.x += particle.vx;
         particle.y += particle.vy;
-        particle.vy += 0.5; // Gravity
-        particle.alpha -= ticker.deltaTime * 0.02;
-        
+        particle.vy += 0.4; // Gravity
+        particle.alpha -= ticker.deltaTime * 0.015;
+
         if (particle.alpha <= 0) {
           this.container.removeChild(particle);
           ticker.remove(animate);
         }
       };
-      
+
       if (this.screen.ticker) {
         this.screen.ticker.add(animate);
       }
@@ -606,7 +642,15 @@ export default class ResultScreen {
    */
   hide() {
     this.container.visible = false;
-    this.gradeText.visible = true; // Reset for next time
+
+    // Reset visibility of elements that may have been hidden
+    this.gradeStarsContainer.visible = true;
+    this.gradeDivider.visible = true;
+    this.targetScoreText.visible = true;
+    this.breakdownContainer.visible = true;
+    this.scoreContainer.y = 60;
+    this.totalScoreText.style.fontSize = 48;
+    this.totalScoreLabel.text = 'FINAL SCORE';
   }
 
   /**
