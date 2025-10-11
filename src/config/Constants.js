@@ -112,6 +112,80 @@ export const COLORS = {
     TEXT_SECONDARY: 0xcccccc
 };
 
+// Stage-specific color palettes for visual differentiation
+export const STAGE_PALETTES = {
+    1: {
+        // Space
+        primary: 0x000428,
+        secondary: 0x001a4d,
+        accent: 0xFFFFFF,
+        obstacle: 0x888888
+    },
+    2: {
+        // Thermosphere
+        primary: 0xFF4500,
+        secondary: 0xFF6347,
+        accent: 0xFFFF00,
+        obstacle: 0xCC3300
+    },
+    3: {
+        // Mesosphere
+        primary: 0x87CEEB,
+        secondary: 0x4682B4,
+        accent: 0xFFFFFF,
+        obstacle: 0x6495ED
+    },
+    4: {
+        // Stratosphere
+        primary: 0x87CEEB,
+        secondary: 0x4169E1,
+        accent: 0xFFFFFF,
+        obstacle: 0x708090
+    },
+    5: {
+        // Jet Stream
+        primary: 0x4169E1,
+        secondary: 0x1E90FF,
+        accent: 0xFFFFFF,
+        obstacle: 0x696969
+    },
+    6: {
+        // Storm
+        primary: 0x2F4F4F,
+        secondary: 0x696969,
+        accent: 0xFFFF00,
+        obstacle: 0x4A4A4A
+    },
+    7: {
+        // Open Sky / Birds
+        primary: 0x87CEEB,
+        secondary: 0xB0E0E6,
+        accent: 0xFFFFFF,
+        obstacle: 0x696969
+    },
+    8: {
+        // Helicopters / Media
+        primary: 0x4682B4,
+        secondary: 0x5F9EA0,
+        accent: 0xFFFFFF,
+        obstacle: 0x708090
+    },
+    9: {
+        // Urban / Skyscrapers
+        primary: 0x2F4F4F,
+        secondary: 0x696969,
+        accent: 0xFFD700,
+        obstacle: 0x4A4A4A
+    },
+    10: {
+        // Campus
+        primary: 0x002147,      // OCU Blue
+        secondary: 0xCDB87E,    // OCU Gold
+        accent: 0xFFFFFF,
+        obstacle: 0xB22222
+    }
+};
+
 // Asset Paths
 export const ASSETS = {
     SPRITES: {

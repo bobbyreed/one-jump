@@ -23,18 +23,19 @@ export default class LevelManager {
     // Get difficulty settings for a specific level
     // Aligned with GDD target scores and progressive difficulty
     getDifficultyConfig(levelNumber) {
-        // Define target scores per GDD (Stage 1: 10k → Stage 10: 200k)
+        // Define target scores (adjusted for realistic gameplay)
+        // Target score earns A rank, 150% of target earns S rank (very difficult)
         const targetScores = [
-            10000,  // Stage 1
-            20000,  // Stage 2
-            35000,  // Stage 3
-            50000,  // Stage 4
-            70000,  // Stage 5
-            90000,  // Stage 6
-            110000, // Stage 7
-            135000, // Stage 8
-            160000, // Stage 9
-            200000  // Stage 10
+            3000,   // Stage 1 (A grade at 3,000, S at 4,500)
+            5000,   // Stage 2 (A grade at 5,000, S at 7,500)
+            8000,   // Stage 3 (A grade at 8,000, S at 12,000)
+            10000,  // Stage 4 (A grade at 10,000, S at 15,000)
+            13000,  // Stage 5 (A grade at 13,000, S at 19,500)
+            16000,  // Stage 6 (A grade at 16,000, S at 24,000)
+            19000,  // Stage 7 (A grade at 19,000, S at 28,500)
+            22000,  // Stage 8 (A grade at 22,000, S at 33,000)
+            25000,  // Stage 9 (A grade at 25,000, S at 37,500)
+            28000   // Stage 10 (A grade at 28,000, S at 42,000)
         ];
 
         // Progressive difficulty from level 1 (easy) to 10 (very hard)
@@ -437,13 +438,19 @@ export default class LevelManager {
     // Calculate grade based on score
     calculateGrade(score, targetScore) {
         const percentage = (score / targetScore) * 100;
-        
-        if (percentage >= 150) return 'S';
-        if (percentage >= 120) return 'A';
-        if (percentage >= 100) return 'B';
-        if (percentage >= 80) return 'C';
-        if (percentage >= 60) return 'D';
-        return 'F';
+
+        console.log(`[GRADING] Score: ${score}, Target: ${targetScore}, Percentage: ${percentage.toFixed(1)}%`);
+
+        let grade;
+        if (percentage >= 150) grade = 'S';      // 150%+ (very difficult)
+        else if (percentage >= 100) grade = 'A'; // 100%+ (target score)
+        else if (percentage >= 80) grade = 'B';  // 80%+
+        else if (percentage >= 60) grade = 'C';  // 60%+
+        else if (percentage >= 40) grade = 'D';  // 40%+
+        else grade = 'F';                        // <40%
+
+        console.log(`[GRADING] Calculated grade: ${grade}`);
+        return grade;
     }
 
     // Get numeric value for grade comparison
@@ -455,11 +462,11 @@ export default class LevelManager {
     // Calculate stars earned
     calculateStars(score, targetScore) {
         const percentage = (score / targetScore) * 100;
-        
-        if (percentage >= 150) return 3;
-        if (percentage >= 100) return 2;
-        if (percentage >= 60) return 1;
-        return 0;
+
+        if (percentage >= 150) return 3; // S rank
+        if (percentage >= 100) return 2; // A rank
+        if (percentage >= 60) return 1;  // C rank or better
+        return 0;                        // D or F rank
     }
 
     // Get total score across all levels

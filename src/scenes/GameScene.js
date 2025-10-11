@@ -6,6 +6,7 @@ import LandingZone from '../entities/LandingZone.js';
 import ParticleSystem from '../systems/ParticleSystem.js';
 import CameraSystem from '../systems/CameraSystem.js';
 import CollisionSystem from '../systems/CollisionSystem.js';
+import BackgroundManager from '../systems/BackgroundManager.js';
 import HUD from '../ui/HUD.js';
 import ResultScreen from '../ui/ResultScreen.js';
 import { LEVEL, PHYSICS, COLORS, PLAYER_STATES, SCORING } from '../config/Constants.js';
@@ -35,6 +36,7 @@ export default class GameScene extends BaseScene {
         this.particleSystem = null;
         this.cameraSystem = null;
         this.collisionSystem = null;
+        this.backgroundManager = null;
 
         // UI
         this.hud = null;
@@ -72,6 +74,9 @@ export default class GameScene extends BaseScene {
     async init() {
         await super.init();
 
+        // Initialize background manager first (adds to worldContainer at index 0)
+        this.backgroundManager = new BackgroundManager(this.game, this.worldContainer);
+
         // Create world environment
         this.createEnvironment();
 
@@ -97,7 +102,7 @@ export default class GameScene extends BaseScene {
 
         this.hud = new HUD(this.container, this.game.app.screen, () => this.returnToMenu());
         this.resultScreen = new ResultScreen(
-                this.game.app.screen,
+                this.game.app,  // Pass full app for ticker access
                 {
                     onRestart: () => this.restartLevel(),
                     onMenu: () => this.returnToMenu(),
@@ -105,6 +110,9 @@ export default class GameScene extends BaseScene {
                 }
             );
             this.container.addChild(this.resultScreen.container);
+
+        // Setup input handlers (including space-to-restart)
+        this.setupInputHandlers();
     }
 
     // Proceed to next level
@@ -371,10 +379,15 @@ export default class GameScene extends BaseScene {
 loadLevel(config) {
     // Reset level state
     this.resetLevel();
-    
+
     // Store level configuration
     this.levelConfig = config;
-    
+
+    // Initialize stage-specific background
+    if (this.backgroundManager) {
+        this.backgroundManager.initializeStage(config.id);
+    }
+
     // Apply level-specific settings
     if (this.player) {
         // Update physics based on level
@@ -490,10 +503,13 @@ async exit() {
 
     setupInputHandlers() {
         this.handleKeyDown = (keyCode) => {
-            if (keyCode === 'Space' &&
-                (this.gameState.phase === PLAYER_STATES.CRASHED ||
-                    this.gameState.phase === PLAYER_STATES.LANDED)) {
-                this.resetGame();
+            // Space to restart after crash or landing
+            if (keyCode === 'Space') {
+                if (this.gameState.phase === PLAYER_STATES.CRASHED ||
+                    this.gameState.phase === PLAYER_STATES.LANDED) {
+                    console.log('Space pressed - restarting level');
+                    this.restartLevel();
+                }
             }
         };
 
@@ -582,6 +598,12 @@ async exit() {
             this.gameState.phase === PLAYER_STATES.CRASHED) {
             this.cameraSystem.followPlayer(this.player, deltaTime);
             this.updateParallax();
+
+            // Update stage-specific backgrounds
+            if (this.backgroundManager) {
+                const cameraY = this.cameraSystem.getCameraY();
+                this.backgroundManager.update(deltaTime, cameraY);
+            }
         }
 
         switch (this.gameState.phase) {
@@ -881,7 +903,13 @@ async exit() {
                 time: this.timeElapsed,
                 maxCombo: this.maxCombo || 0,
                 nearMisses: this.nearMisses || 0,
-                tricks: this.tricksPerformed || 0
+                tricks: this.tricksPerformed || 0,
+                // Score breakdown
+                targetScore: this.levelConfig.targetScore,
+                baseScore: baseScore,
+                timeBonus: timeBonus,
+                comboBonus: comboBonus,
+                nearMissBonus: nearMissBonus
             });
 
             // Stop any ongoing animations/updates
@@ -1149,6 +1177,7 @@ async exit() {
         if (this.obstacleManager) this.obstacleManager.destroy();
         if (this.landingZone) this.landingZone.destroy();
         if (this.particleSystem) this.particleSystem.destroy();
+        if (this.backgroundManager) this.backgroundManager.destroy();
         if (this.hud) this.hud.destroy();
         if (this.resultScreen) this.resultScreen.destroy();
 
