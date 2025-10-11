@@ -331,7 +331,7 @@ export default class LevelSelectScene extends BaseScene {
         // Story panel image container (will be populated when level is selected)
         this.storyImageContainer = new Container();
         this.storyImageContainer.x = 200;
-        this.storyImageContainer.y = 80;
+        this.storyImageContainer.y = 150;
         infoPanelContainer.addChild(this.storyImageContainer);
 
         // Info text (positioned below the image)
