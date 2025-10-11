@@ -234,10 +234,10 @@ export default class LeaderboardScene extends BaseScene {
 
         try {
             if (viewId === 'global') {
-                this.leaderboardData = await this.game.leaderboardManager.getGlobalLeaderboard(50);
+                this.leaderboardData = await this.game.leaderboardManager.getGlobalLeaderboard(10);
             } else {
                 const levelNum = parseInt(viewId.replace('level', ''));
-                this.leaderboardData = await this.game.leaderboardManager.getLevelLeaderboard(levelNum, 50);
+                this.leaderboardData = await this.game.leaderboardManager.getLevelLeaderboard(levelNum, 10);
             }
 
             this.displayLeaderboard();
