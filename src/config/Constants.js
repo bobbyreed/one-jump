@@ -30,7 +30,13 @@ export const PHYSICS = {
     // Special Mechanics
     SPEED_BOOST_MULT: 1.5,
     SPEED_BOOST_DURATION: 2000,
-    WALL_BOUNCE_FORCE: 300
+    WALL_BOUNCE_FORCE: 300,
+
+    // Rocket Riding
+    ROCKET_PULL_RANGE: 100,          // Distance player can be pulled from
+    ROCKET_RIDE_SPEED: -400,         // Upward velocity when riding (negative = up)
+    ROCKET_RIDE_DURATION: 2000,      // Max time on rocket (ms)
+    ROCKET_DISMOUNT_BOOST: 100       // Small boost when leaving rocket
 };
 
 // Level/Stage Configuration
@@ -270,7 +276,8 @@ export const PLAYER_STATES = {
     FALLING: 'falling',
     LANDED: 'landed',
     CRASHED: 'crashed',
-    TRICKING: 'tricking'
+    TRICKING: 'tricking',
+    ROCKET_RIDING: 'rocket_riding'
 };
 
 // Obstacle Types
@@ -285,5 +292,6 @@ export const OBSTACLE_TYPES = [
     { type: 'meteor', color: 0x888888, damage: 75 },
     { type: 'orbiter', color: 0x00ffff, damage: 75 },
     { type: 'pendulum', color: 0xffff00, damage: 75 },
-    { type: 'pulsar', color: 0xff00ff, damage: 50 }
+    { type: 'pulsar', color: 0xff00ff, damage: 50 },
+    { type: 'rocket', color: 0xff6600, damage: 0, isHelper: true }
 ];

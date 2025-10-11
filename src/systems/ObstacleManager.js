@@ -16,6 +16,11 @@ export default class ObstacleManager {
             maxY: LEVEL.LANDING_Y + 200   // 200 pixels below landing zone
         };
 
+        // Rocket spawn timing
+        this.rocketSpawnTimer = 0;
+        this.rocketSpawnInterval = 3; // Spawn a rocket every 3 seconds
+        this.enableRocketSpawning = false; // Will be enabled for levels 5+
+
         worldContainer.addChild(this.container);
     }
 
@@ -33,8 +38,14 @@ export default class ObstacleManager {
         // Clear existing obstacles
         this.clear();
 
-        // Get available obstacle types for this level
-        const availableTypes = this.getAvailableObstacleTypes(config.availableObstacles);
+        // Enable rocket spawning if rockets are in the available list
+        this.enableRocketSpawning = config.availableObstacles && config.availableObstacles.includes('rocket');
+
+        // Filter out rockets from static obstacle generation (they'll spawn dynamically)
+        const obstaclesWithoutRockets = config.availableObstacles.filter(type => type !== 'rocket');
+
+        // Get available obstacle types for this level (excluding rockets)
+        const availableTypes = this.getAvailableObstacleTypes(obstaclesWithoutRockets);
 
         console.log(`Generating obstacles - Available types: ${availableTypes.map(t => t.type).join(', ')}`);
 
@@ -57,11 +68,12 @@ export default class ObstacleManager {
                     // Try to reposition above the buffer zone
                     const maxAttempts = 3;
                     let repositioned = false;
-                    const maxY = this.landingZoneBuffer.minY - 100;
+                    const safeEndY = LEVEL.LANDING_Y - 1200; // Stay well above landing
 
                     for (let attempt = 0; attempt < maxAttempts; attempt++) {
-                        const calculatedY = LEVEL.FALL_START_Y + 300 + i * spacing + Math.random() * 100 - (spacing * 5);
-                        obstacle.y = Math.min(calculatedY, maxY); // Clamp to prevent spawning below landing
+                        // Move it significantly upward
+                        const adjustedY = obstacle.y - (spacing * 3) - Math.random() * spacing;
+                        obstacle.y = Math.max(LEVEL.FALL_START_Y + 500, Math.min(adjustedY, safeEndY));
                         obstacle.container.y = obstacle.y;
 
                         if (!this.isInLandingZoneBuffer(obstacle)) {
@@ -152,16 +164,24 @@ export default class ObstacleManager {
     }
 
     createObstacle(type, index, spacing = LEVEL.OBSTACLE_SPACING) {
-        // Calculate Y position with upper limit to prevent spawning below landing zone
-        const maxY = this.landingZoneBuffer.minY - 100; // Stop 100px before landing buffer
-        const calculatedY = LEVEL.FALL_START_Y + 300 + index * spacing + Math.random() * 100;
+        // Calculate safe playable area - stop well before landing zone
+        const safeEndY = LEVEL.LANDING_Y - 1200; // Stop 1200px before landing pad
+        const playableHeight = safeEndY - (LEVEL.FALL_START_Y + 300);
+        const count = this.levelConfig?.obstacleCount || LEVEL.OBSTACLE_COUNT;
+
+        // Distribute obstacles evenly across playable space
+        const effectiveSpacing = Math.min(spacing, playableHeight / count);
+        const calculatedY = LEVEL.FALL_START_Y + 300 + index * effectiveSpacing + Math.random() * 50;
+
+        // Hard cap at safe end position
+        const finalY = Math.min(calculatedY, safeEndY);
 
         const obstacle = {
             container: new Container(),
             type: type.type,
             damage: type.damage,
             x: 0,
-            y: Math.min(calculatedY, maxY), // Clamp to max Y
+            y: finalY,
             width: 0,
             height: 0,
             centered: false, // Flag for obstacles drawn from center
@@ -356,6 +376,60 @@ export default class ObstacleManager {
                 obstacle.pulsarMaxSize = pulsarMaxSize;
                 obstacle.graphic = graphic; // Store reference for scaling
                 break;
+
+            case 'rocket':
+                // Rocket ship that player can ride
+                // Body
+                graphic.moveTo(0, -50)
+                    .lineTo(-20, 30)
+                    .lineTo(20, 30)
+                    .fill({ color: type.color });
+                // Window
+                graphic.circle(0, -10, 8)
+                    .fill({ color: 0x00ffff });
+                // Fins
+                graphic.moveTo(-20, 20)
+                    .lineTo(-35, 35)
+                    .lineTo(-20, 30)
+                    .fill({ color: 0xcc4400 });
+                graphic.moveTo(20, 20)
+                    .lineTo(35, 35)
+                    .lineTo(20, 30)
+                    .fill({ color: 0xcc4400 });
+                // Flames (will be animated)
+                graphic.moveTo(-15, 30)
+                    .lineTo(-10, 55)
+                    .lineTo(-5, 40)
+                    .fill({ color: 0xffaa00, alpha: 0.8 });
+                graphic.moveTo(0, 35)
+                    .lineTo(0, 60)
+                    .lineTo(5, 45)
+                    .fill({ color: 0xff6600, alpha: 0.8 });
+                graphic.moveTo(5, 40)
+                    .lineTo(10, 55)
+                    .lineTo(15, 30)
+                    .fill({ color: 0xffaa00, alpha: 0.8 });
+
+                // Create flashing neon green border
+                const border = new Graphics();
+                border.moveTo(0, -52)
+                    .lineTo(-22, 32)
+                    .lineTo(22, 32)
+                    .lineTo(0, -52)
+                    .stroke({ color: 0x00ff00, width: 3, alpha: 0.8 });
+                obstacle.container.addChild(border);
+                obstacle.border = border; // Store reference for animation
+
+                obstacle.width = 70;
+                obstacle.height = 100;
+                obstacle.centered = true;
+                obstacle.rocketSpeed = -200; // Move upward (negative Y)
+                obstacle.rocketStartY = 0; // Will be set during positioning
+                obstacle.rocketTravelDistance = 1500; // Distance to travel before reversing
+                obstacle.rocketDirection = -1; // -1 = up, 1 = down
+                obstacle.isHelper = true; // Mark as helper object, not obstacle
+                obstacle.used = false; // Track if rocket has been used
+                break;
         }
 
         obstacle.container.addChild(graphic);
@@ -395,6 +469,9 @@ export default class ObstacleManager {
             obstacle.anchorY = obstacle.y - obstacle.pendulumLength;
             obstacle.container.y = obstacle.anchorY;
         }
+        if (obstacle.type === 'rocket') {
+            obstacle.rocketStartY = obstacle.y;
+        }
 
         obstacle.container.x = obstacle.x;
         obstacle.container.y = obstacle.y;
@@ -402,7 +479,68 @@ export default class ObstacleManager {
         return obstacle;
     }
 
+    /**
+     * Count active rockets on screen
+     */
+    countActiveRockets() {
+        return this.obstacles.filter(obstacle =>
+            obstacle.type === 'rocket' && !obstacle.used
+        ).length;
+    }
+
+    /**
+     * Spawn a single rocket at a given position
+     */
+    spawnRocket(playerY) {
+        // Check if we already have 2 rockets on screen
+        if (this.countActiveRockets() >= 2) {
+            return;
+        }
+
+        const rocketType = OBSTACLE_TYPES.find(t => t.type === 'rocket');
+        if (!rocketType) return;
+
+        const rocket = this.createObstacle(rocketType, 0, 0);
+        if (!rocket) return;
+
+        // Position rocket at player's current y position (slightly below)
+        rocket.y = playerY + 200 + Math.random() * 200;
+        rocket.rocketStartY = rocket.y;
+
+        // Random x position within playable bounds
+        rocket.x = 200 + Math.random() * (1920 - 400);
+        rocket.container.x = rocket.x;
+        rocket.container.y = rocket.y;
+
+        // Add to scene and obstacles array
+        this.container.addChild(rocket.container);
+        this.obstacles.push(rocket);
+
+        console.log(`Rocket spawned at x=${rocket.x}, y=${rocket.y} (Total active: ${this.countActiveRockets()})`);
+    }
+
+    /**
+     * Remove a rocket from the scene (when used)
+     */
+    removeRocket(rocket) {
+        const index = this.obstacles.indexOf(rocket);
+        if (index > -1) {
+            this.obstacles.splice(index, 1);
+            rocket.container.destroy(true);
+        }
+    }
+
     update(deltaTime) {
+        // Handle rocket spawning timing
+        if (this.enableRocketSpawning) {
+            this.rocketSpawnTimer += deltaTime;
+            if (this.rocketSpawnTimer >= this.rocketSpawnInterval) {
+                // Spawn a rocket near the player
+                // We'll pass the player Y from GameScene
+                this.rocketSpawnTimer = 0;
+            }
+        }
+
         this.obstacles.forEach(obstacle => {
             // Spinner rotation
             if (obstacle.type === 'spinner' && obstacle.spinSpeed) {
@@ -460,6 +598,14 @@ export default class ObstacleManager {
             if (obstacle.type === 'meteor') {
                 obstacle.x += obstacle.moveSpeedX * deltaTime;
                 obstacle.y += obstacle.moveSpeedY * deltaTime;
+
+                // Prevent meteors from falling below safe zone
+                const safeEndY = LEVEL.LANDING_Y - 1200;
+                if (obstacle.y > safeEndY) {
+                    obstacle.y = safeEndY;
+                    obstacle.moveSpeedY = -obstacle.moveSpeedY; // Reverse direction
+                }
+
                 obstacle.container.x = obstacle.x;
                 obstacle.container.y = obstacle.y;
                 obstacle.container.rotation += obstacle.rotationSpeed;
@@ -507,6 +653,28 @@ export default class ObstacleManager {
 
                 // Pulse alpha for warning effect
                 obstacle.container.alpha = 0.5 + sizeProgress * 0.5;
+            }
+
+            // Rocket vertical movement
+            if (obstacle.type === 'rocket' && !obstacle.used) {
+                obstacle.y += obstacle.rocketSpeed * obstacle.rocketDirection * deltaTime;
+                obstacle.container.y = obstacle.y;
+
+                // Reverse direction at travel limits
+                const distanceTraveled = Math.abs(obstacle.y - obstacle.rocketStartY);
+                if (distanceTraveled >= obstacle.rocketTravelDistance) {
+                    obstacle.rocketDirection *= -1;
+                }
+
+                // Animate flames with pulsing
+                const flameAlpha = 0.6 + Math.sin(Date.now() * 0.01) * 0.2;
+                obstacle.container.alpha = 0.9 + flameAlpha * 0.1;
+
+                // Animate neon green border (flashing effect)
+                if (obstacle.border) {
+                    const flashAlpha = 0.4 + Math.sin(Date.now() * 0.005) * 0.4;
+                    obstacle.border.alpha = flashAlpha;
+                }
             }
         });
     }

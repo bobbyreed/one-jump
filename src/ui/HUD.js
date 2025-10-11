@@ -13,6 +13,7 @@ export default class HUD {
         this.createDistanceDisplay();
         this.createComboDisplay();
         this.createJetpackDisplay();
+        this.createLevelDisplay();
         this.createInstructionText();
         this.createMenuButton(onMenuClick);
 
@@ -156,6 +157,35 @@ export default class HUD {
         this.container.addChild(this.jetpackContainer);
     }
 
+    createLevelDisplay() {
+        // Level info container
+        const levelContainer = new Container();
+
+        // Background panel
+        const levelBg = new Graphics()
+            .roundRect(0, 0, 200, 30, 5)
+            .fill({ color: 0x000000, alpha: 0.5 });
+        levelContainer.addChild(levelBg);
+
+        // Level text
+        this.levelText = new Text({
+            text: 'Level 1: Grounded',
+            style: {
+                fontFamily: 'Arial',
+                fontSize: 18,
+                fill: COLORS.WARNING,
+                fontWeight: 'bold'
+            }
+        });
+        this.levelText.x = 10;
+        this.levelText.y = 6;
+        levelContainer.addChild(this.levelText);
+
+        levelContainer.x = 20;
+        levelContainer.y = 130;
+        this.container.addChild(levelContainer);
+    }
+
     createInstructionText() {
         // Instruction text (center)
         this.instructionText = new Text({
@@ -214,6 +244,36 @@ export default class HUD {
     }
 
     /**
+     * Set level display info
+     * @param {Object} info - Level information
+     * @param {number} info.levelNumber - Current level number
+     * @param {string} info.levelName - Full level name
+     * @param {number} info.targetScore - Target score for the level
+     */
+    setLevelInfo(info) {
+        // Shorten the level name (take first 15 characters or first 2 words)
+        const shortName = this.shortenLevelName(info.levelName);
+        this.levelText.text = `Level ${info.levelNumber}: ${shortName}`;
+    }
+
+    /**
+     * Shorten a level name for display
+     */
+    shortenLevelName(fullName) {
+        // Remove "The " prefix if present
+        let name = fullName.replace(/^The\s+/, '');
+
+        // Take first 2 words or 15 characters, whichever is shorter
+        const words = name.split(' ');
+        if (words.length <= 2) {
+            return name.length > 15 ? name.substring(0, 15) + '...' : name;
+        }
+
+        const twoWords = words.slice(0, 2).join(' ');
+        return twoWords.length > 15 ? twoWords.substring(0, 15) + '...' : twoWords;
+    }
+
+    /**
      * Update jetpack status display
      * @param {Object} status - Jetpack status object
      * @param {boolean} status.slowdownActive - Is slowdown active
@@ -241,7 +301,7 @@ export default class HUD {
             this.jetpackText.text = `COOLDOWN: ${status.cooldownRemaining.toFixed(1)}s`;
             this.jetpackText.style.fill = 0xFFFF00; // Yellow
         } else {
-            this.jetpackText.text = 'READY';
+            this.jetpackText.text = 'BOOST READY!';
             this.jetpackText.style.fill = 0x44FF44; // Green
         }
 

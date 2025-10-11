@@ -474,6 +474,43 @@ export default class ParticleSystem {
     }
 
     /**
+     * Create single explosion particle (for rocket explosions)
+     */
+    createExplosionParticle(position, velocity, color, lifetime = 0.5) {
+        const particle = new Graphics()
+            .circle(0, 0, 3 + Math.random() * 4)
+            .fill({ color: color, alpha: 1.0 });
+
+        particle.x = position.x;
+        particle.y = position.y;
+        particle.velocity = velocity;
+        particle.lifetime = lifetime;
+        particle.maxLifetime = lifetime;
+
+        this.effects.addChild(particle);
+
+        this.activeParticles.push({
+            sprite: particle,
+            container: this.effects,
+            type: 'explosion_particle',
+            update: (p, dt) => {
+                p.sprite.x += p.sprite.velocity.x * dt;
+                p.sprite.y += p.sprite.velocity.y * dt;
+                p.sprite.velocity.x *= 0.95;
+                p.sprite.velocity.y *= 0.95;
+                p.sprite.lifetime -= dt;
+                p.sprite.alpha = p.sprite.lifetime / p.sprite.maxLifetime;
+
+                if (p.sprite.lifetime <= 0) {
+                    p.container.removeChild(p.sprite);
+                    return false;
+                }
+                return true;
+            }
+        });
+    }
+
+    /**
      * Update all active particles
      */
     update(deltaTime) {

@@ -701,6 +701,15 @@ async exit() {
             (this.player.position.y - LEVEL.FALL_START_Y) / 10
         );
 
+        // Handle rocket spawning (if enabled for this level)
+        if (this.obstacleManager.enableRocketSpawning) {
+            this.obstacleManager.rocketSpawnTimer += deltaTime;
+            if (this.obstacleManager.rocketSpawnTimer >= this.obstacleManager.rocketSpawnInterval) {
+                this.obstacleManager.spawnRocket(this.player.position.y);
+                this.obstacleManager.rocketSpawnTimer = 0;
+            }
+        }
+
         // Create particles with color based on jetpack state
         if (!this.player.jetpackActivating) {
             let particleColor = 0xff8800; // Normal orange
@@ -768,9 +777,49 @@ async exit() {
         const playerY = this.player.position.y;
 
         for (const obstacle of obstacles) {
+            // Handle rocket riding mechanic (helper objects)
+            if (obstacle.type === 'rocket' && obstacle.isHelper) {
+                // Skip if rocket is already used
+                if (obstacle.used) {
+                    continue;
+                }
+
+                const rocketProximity = this.collisionSystem.checkRocketProximity(
+                    this.player.position,
+                    obstacle
+                );
+
+                if (rocketProximity.isNear && !this.player.isRocketRiding) {
+                    // Player is near rocket and not already riding
+                    console.log('Player grabbed rocket!');
+                    this.player.startRocketRide(obstacle);
+                    this.particleSystem.createFloatingText(
+                        this.player.position,
+                        'Rocket Boost!',
+                        0xff6600,
+                        24
+                    );
+
+                    // Mark rocket as used and create explosion
+                    obstacle.used = true;
+                    this.createRocketExplosion(obstacle.x, obstacle.y);
+
+                    // Remove rocket after a short delay
+                    setTimeout(() => {
+                        this.obstacleManager.removeRocket(obstacle);
+                    }, 500);
+                }
+                continue; // Skip regular collision checks for rockets
+            }
+
             // Skip lasers that are off
             if (obstacle.type === 'laser' && !obstacle.laserOn) {
                 continue;
+            }
+
+            // Skip collision check if player is invulnerable (rocket riding)
+            if (this.player.state === PLAYER_STATES.ROCKET_RIDING) {
+                continue; // Player is invulnerable while riding rocket
             }
 
             // Check for collision
@@ -938,6 +987,45 @@ async exit() {
             // Stop game
             this.gameState.gameOver = true;
         }
+
+    /**
+     * Create explosion effect when rocket is used
+     */
+    createRocketExplosion(x, y) {
+        // Create multiple particles radiating outward
+        for (let i = 0; i < 20; i++) {
+            const angle = (Math.PI * 2 * i) / 20;
+            const speed = 100 + Math.random() * 100;
+            const velocity = {
+                x: Math.cos(angle) * speed,
+                y: Math.sin(angle) * speed
+            };
+
+            this.particleSystem.createExplosionParticle(
+                { x, y },
+                velocity,
+                0xff6600, // Orange color
+                0.5
+            );
+        }
+
+        // Add extra green particles for the helper effect
+        for (let i = 0; i < 10; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 80 + Math.random() * 80;
+            const velocity = {
+                x: Math.cos(angle) * speed,
+                y: Math.sin(angle) * speed
+            };
+
+            this.particleSystem.createExplosionParticle(
+                { x, y },
+                velocity,
+                0x00ff00, // Green color
+                0.6
+            );
+        }
+    }
 
     handleNearMiss(nearMiss, obstacle) {
         // Award points based on near-miss level (closer = more points)
