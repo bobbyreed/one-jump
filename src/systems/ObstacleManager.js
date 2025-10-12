@@ -214,7 +214,9 @@ export default class ObstacleManager {
                 graphic.moveTo(0, 0)
                     .lineTo(size / 2, -size)
                     .lineTo(size, 0)
-                    .fill({ color: type.color });
+                    .closePath()
+                    .fill({ color: type.color })
+                    .stroke({ color: 0x000000, width: 2 });
                 obstacle.width = size;
                 obstacle.height = size;
                 break;
@@ -222,7 +224,8 @@ export default class ObstacleManager {
             case 'platform':
                 const platformWidth = 80 + Math.random() * 100;
                 graphic.rect(0, 0, platformWidth, 20)
-                    .fill({ color: type.color });
+                    .fill({ color: type.color })
+                    .stroke({ color: 0x000000, width: 2 });
                 obstacle.width = platformWidth;
                 obstacle.height = 20;
                 break;
@@ -230,8 +233,10 @@ export default class ObstacleManager {
             case 'spinner':
                 graphic.rect(-60, -8, 120, 16)
                     .fill({ color: type.color })
+                    .stroke({ color: 0x000000, width: 2 })
                     .rect(-8, -60, 16, 120)
-                    .fill({ color: type.color });
+                    .fill({ color: type.color })
+                    .stroke({ color: 0x000000, width: 2 });
                 // Use tighter collision bounds based on the cross shape
                 // Instead of full 120x120 square, use circular-ish bounds
                 obstacle.width = 80;  // Reduced from 120
@@ -243,7 +248,8 @@ export default class ObstacleManager {
             case 'wall':
                 const side = Math.random() > 0.5 ? 'left' : 'right';
                 graphic.rect(0, 0, 150, 30)
-                    .fill({ color: type.color });
+                    .fill({ color: type.color })
+                    .stroke({ color: 0x000000, width: 2 });
                 obstacle.width = 150;
                 obstacle.height = 30;
                 obstacle.wallSide = side;
@@ -253,8 +259,10 @@ export default class ObstacleManager {
                 // Simple UFO/alien shape - oval body with dome
                 graphic.ellipse(0, 0, 50, 25)
                     .fill({ color: type.color })
+                    .stroke({ color: 0x000000, width: 2 })
                     .ellipse(0, -15, 25, 15)
-                    .fill({ color: 0x00ffff });
+                    .fill({ color: 0x00ffff })
+                    .stroke({ color: 0x000000, width: 2 });
                 obstacle.width = 100;
                 obstacle.height = 80;
                 obstacle.centered = true;
@@ -268,6 +276,7 @@ export default class ObstacleManager {
                 // Toxic barrel shape - cylinder with hazard stripes
                 graphic.rect(-30, -40, 60, 80)
                     .fill({ color: type.color })
+                    .stroke({ color: 0x000000, width: 2 })
                     .rect(-30, -30, 60, 10)
                     .fill({ color: 0x000000 })
                     .rect(-30, -10, 60, 10)
@@ -287,7 +296,8 @@ export default class ObstacleManager {
                 // Horizontal laser beam
                 const laserWidth = 300 + Math.random() * 200;
                 graphic.rect(0, -5, laserWidth, 10)
-                    .fill({ color: type.color, alpha: 0.8 });
+                    .fill({ color: type.color, alpha: 0.8 })
+                    .stroke({ color: 0x000000, width: 2 });
                 obstacle.width = laserWidth;
                 obstacle.height = 10;
                 obstacle.laserOn = true;
@@ -302,10 +312,13 @@ export default class ObstacleManager {
                 const meteorSize = 40 + Math.random() * 40;
                 graphic.circle(0, 0, meteorSize / 2)
                     .fill({ color: type.color })
+                    .stroke({ color: 0x000000, width: 2 })
                     .circle(meteorSize / 4, -meteorSize / 4, meteorSize / 4)
                     .fill({ color: 0x666666 })
+                    .stroke({ color: 0x000000, width: 1 })
                     .circle(-meteorSize / 4, meteorSize / 4, meteorSize / 5)
-                    .fill({ color: 0xaaaaaa });
+                    .fill({ color: 0xaaaaaa })
+                    .stroke({ color: 0x000000, width: 1 });
                 obstacle.width = meteorSize;
                 obstacle.height = meteorSize;
                 obstacle.centered = true;
@@ -324,8 +337,10 @@ export default class ObstacleManager {
                 obstacle.orbitRadius = 60 + Math.random() * 40;
                 graphic.circle(obstacle.orbitRadius, 0, satelliteSize)
                     .fill({ color: type.color })
+                    .stroke({ color: 0x000000, width: 2 })
                     .circle(obstacle.orbitRadius + satelliteSize / 3, -satelliteSize / 4, satelliteSize / 4)
-                    .fill({ color: 0xffffff });
+                    .fill({ color: 0xffffff })
+                    .stroke({ color: 0x000000, width: 1 });
                 // Only collision on the satellite itself, not the entire orbit
                 obstacle.width = satelliteSize * 2;
                 obstacle.height = satelliteSize * 2;
@@ -365,8 +380,10 @@ export default class ObstacleManager {
                 const pulsarMaxSize = 80;
                 graphic.circle(0, 0, pulsarMinSize)
                     .fill({ color: type.color, alpha: 0.7 })
+                    .stroke({ color: 0x000000, width: 2 })
                     .circle(0, 0, pulsarMinSize * 0.6)
-                    .fill({ color: 0xffffff, alpha: 0.5 });
+                    .fill({ color: 0xffffff, alpha: 0.5 })
+                    .stroke({ color: 0x000000, width: 1 });
                 obstacle.width = pulsarMaxSize * 2;
                 obstacle.height = pulsarMaxSize * 2;
                 obstacle.centered = true;
@@ -383,31 +400,41 @@ export default class ObstacleManager {
                 graphic.moveTo(0, -50)
                     .lineTo(-20, 30)
                     .lineTo(20, 30)
-                    .fill({ color: type.color });
+                    .closePath()
+                    .fill({ color: type.color })
+                    .stroke({ color: 0x000000, width: 2 });
                 // Window
                 graphic.circle(0, -10, 8)
-                    .fill({ color: 0x00ffff });
+                    .fill({ color: 0x00ffff })
+                    .stroke({ color: 0x000000, width: 2 });
                 // Fins
                 graphic.moveTo(-20, 20)
                     .lineTo(-35, 35)
                     .lineTo(-20, 30)
-                    .fill({ color: 0xcc4400 });
+                    .closePath()
+                    .fill({ color: 0xcc4400 })
+                    .stroke({ color: 0x000000, width: 2 });
                 graphic.moveTo(20, 20)
                     .lineTo(35, 35)
                     .lineTo(20, 30)
-                    .fill({ color: 0xcc4400 });
+                    .closePath()
+                    .fill({ color: 0xcc4400 })
+                    .stroke({ color: 0x000000, width: 2 });
                 // Flames (will be animated)
                 graphic.moveTo(-15, 30)
                     .lineTo(-10, 55)
                     .lineTo(-5, 40)
+                    .closePath()
                     .fill({ color: 0xffaa00, alpha: 0.8 });
                 graphic.moveTo(0, 35)
                     .lineTo(0, 60)
                     .lineTo(5, 45)
+                    .closePath()
                     .fill({ color: 0xff6600, alpha: 0.8 });
                 graphic.moveTo(5, 40)
                     .lineTo(10, 55)
                     .lineTo(15, 30)
+                    .closePath()
                     .fill({ color: 0xffaa00, alpha: 0.8 });
 
                 // Create flashing neon green border
