@@ -21,7 +21,7 @@ export default class LeaderboardManager {
 
     /**
      * Submit a score to the leaderboard
-     * Only submits if it's a new personal best
+     * Only submits if it's a new personal best and user has a valid username
      */
     async submitScore(levelNumber, scoreData) {
         if (!this.firebaseManager.isInitialized()) {
@@ -32,6 +32,13 @@ export default class LeaderboardManager {
         const userId = this.firebaseManager.getUserId();
         if (!userId) {
             console.warn('No user ID, cannot submit score');
+            return false;
+        }
+
+        // Reject submissions from Anonymous users
+        const username = scoreData.username || '';
+        if (!username || username === 'Anonymous') {
+            console.log('Anonymous users cannot submit scores. Please set a username first.');
             return false;
         }
 
@@ -50,7 +57,7 @@ export default class LeaderboardManager {
 
             // Submit new high score
             const submissionData = {
-                username: scoreData.username || 'Anonymous',
+                username: username,
                 score: scoreData.score,
                 time: scoreData.time,
                 grade: scoreData.grade,
@@ -91,6 +98,13 @@ export default class LeaderboardManager {
             return false;
         }
 
+        // Reject submissions from Anonymous users
+        const username = scoreData.username || '';
+        if (!username || username === 'Anonymous') {
+            console.log('Anonymous users cannot submit global scores. Please set a username first.');
+            return false;
+        }
+
         try {
             const globalPath = 'leaderboards/global/scores';
             const userDocRef = doc(this.db, globalPath, userId);
@@ -106,7 +120,7 @@ export default class LeaderboardManager {
 
             // Submit new high score
             const submissionData = {
-                username: scoreData.username || 'Anonymous',
+                username: username,
                 totalScore: scoreData.totalScore,
                 levelsCompleted: scoreData.levelsCompleted || 0,
                 totalStars: scoreData.totalStars || 0,
@@ -165,18 +179,21 @@ export default class LeaderboardManager {
 
             querySnapshot.forEach((doc) => {
                 const data = doc.data();
-                leaderboard.push({
-                    rank: rank++,
-                    userId: doc.id,
-                    username: data.username,
-                    score: data.score,
-                    time: data.time,
-                    grade: data.grade,
-                    stars: data.stars,
-                    maxCombo: data.maxCombo,
-                    nearMisses: data.nearMisses,
-                    timestamp: data.timestamp
-                });
+                // Skip Anonymous users
+                if (data.username && data.username !== 'Anonymous') {
+                    leaderboard.push({
+                        rank: rank++,
+                        userId: doc.id,
+                        username: data.username,
+                        score: data.score,
+                        time: data.time,
+                        grade: data.grade,
+                        stars: data.stars,
+                        maxCombo: data.maxCombo,
+                        nearMisses: data.nearMisses,
+                        timestamp: data.timestamp
+                    });
+                }
             });
 
             // Cache the result
@@ -231,15 +248,18 @@ export default class LeaderboardManager {
 
             querySnapshot.forEach((doc) => {
                 const data = doc.data();
-                leaderboard.push({
-                    rank: rank++,
-                    userId: doc.id,
-                    username: data.username,
-                    totalScore: data.totalScore,
-                    levelsCompleted: data.levelsCompleted,
-                    totalStars: data.totalStars,
-                    timestamp: data.timestamp
-                });
+                // Skip Anonymous users
+                if (data.username && data.username !== 'Anonymous') {
+                    leaderboard.push({
+                        rank: rank++,
+                        userId: doc.id,
+                        username: data.username,
+                        totalScore: data.totalScore,
+                        levelsCompleted: data.levelsCompleted,
+                        totalStars: data.totalStars,
+                        timestamp: data.timestamp
+                    });
+                }
             });
 
             // Cache the result
