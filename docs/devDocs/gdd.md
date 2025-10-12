@@ -27,11 +27,10 @@
 
 ## Executive Summary
 
-**One Jump** is a high-stakes vertical falling game where Starsky the Ram, Oklahoma City University's cosmic mascot, descends from the stars to Earth through 10 increasingly challenging stages. Players earn points through daredevil near-misses and risky trick maneuvers in a retro Duke Nukem-inspired aesthetic with family-friendly charm.
+**One Jump** is a high-stakes vertical falling game where Starsky the Ram, Oklahoma City University's cosmic mascot, descends from the stars to Earth through 10 increasingly challenging stages. Players earn points through daredevil near-misses in a retro Duke Nukem-inspired aesthetic with family-friendly charm.
 
 ### Key Features
 - **10 Unique Atmospheric Stages** - From space to campus
-- **Risk/Reward Trick System** - Higher risk equals higher reward
 - **Near-Miss Mechanics** - Thread the needle for bonus points
 - **Story-Driven Campaign** - Charming narrative between stages
 - **Retro Aesthetic** - DOS-era graphics with modern polish
@@ -52,7 +51,7 @@
 Every moment balances control with chaos - you're always falling, but you're in charge of HOW you fall.
 
 #### 2. **Risk Theater**
-Every trick is a dramatic decision - safety or glory?
+Every movement is a strategic decision - safety or glory?
 
 #### 3. **Personality Plus**
 Starsky's charm and humor make failure fun and success satisfying.
@@ -62,8 +61,8 @@ Quick restart, clear feedback, and visible improvement drive replay.
 
 ### Core Loop (30 seconds)
 1. **Read** the upcoming obstacle pattern (2 seconds)
-2. **Decide** on safe path vs. trick opportunity (1 second)
-3. **Execute** movement and/or trick (3-5 seconds)
+2. **Decide** on safe path vs. risky maneuver (1 second)
+3. **Execute** movement (3-5 seconds)
 4. **React** to near-miss feedback or collision (1 second)
 5. **Repeat** with increasing speed and complexity
 
@@ -93,13 +92,8 @@ const PHYSICS = {
   HORIZONTAL_SPEED: 450,       // Left/right movement speed
   HORIZONTAL_ACCEL: 2400,      // Acceleration rate
   HORIZONTAL_DECEL: 1800,      // Deceleration rate
-  AIR_CONTROL: 0.85,           // Control multiplier while tricking
-  
-  // Tricks
-  TRICK_DURATION_BASE: 800,    // MS of no control
-  TRICK_COOLDOWN: 200,         // MS between tricks
-  TRICK_CANCEL_WINDOW: 100,    // MS to cancel into another trick
-  
+  AIR_CONTROL: 0.85,           // Air control multiplier
+
   // Collision & Near-Miss
   PLAYER_HITBOX: { w: 24, h: 36 },
   NEAR_MISS_RANGES: [50, 40, 30, 20], // Pixel thresholds
@@ -115,14 +109,14 @@ const PHYSICS = {
 #### Advanced Movement Mechanics
 
 **Momentum Conservation**
-- Horizontal momentum carries through tricks
-- Speed builds up over successful trick chains
+- Horizontal momentum is preserved during movement
+- Speed builds up over successful near-miss chains
 - Wall bounces preserve 70% of momentum
 
 **Air Strafing**
-- Hold direction before trick for wider arc
-- Release direction mid-trick for tight spin
-- Combine with walls for "wall-kick" tricks
+- Precise directional control while falling
+- Smooth acceleration and deceleration
+- Wall bounce mechanics for strategic repositioning
 
 ### Input System
 
@@ -134,8 +128,6 @@ const PHYSICS = {
 → / D:        Move right
 ↑ / W:        Slow fall (engage jetpack - has cooldown)
 ↓ / S:        Fast fall (disengage jetpack - speed boost)
-SPACE:        Execute trick
-1-5:          Quick trick select
 TAB:          View stage map
 ESC:          Pause menu
 R:            Quick restart (hold 1 second)
@@ -144,18 +136,17 @@ R:            Quick restart (hold 1 second)
 **Gamepad Support**
 ```
 Left Stick:   Movement
-Right Trigger: Trick
-Left Trigger:  Speed boost
-A/X:          Trick
+Right Trigger: Speed boost
+Left Trigger:  Slow fall
+A/X:          Confirm
 B/Circle:     Cancel
-D-Pad:        Trick selection
 ```
 
 **Mobile Touch** (Future)
 ```
 Left side:    Movement zones
-Right side:   Trick button
-Swipe up:     Speed boost
+Right side:   Action button
+Swipe up:     Slow fall
 Swipe down:   Fast fall
 Two finger:   Pause
 ```
@@ -182,9 +173,7 @@ Two finger:   Pause
 ```
 Player States:
 Normal:     [  24x36 rectangle  ]
-Tricking:   [  32x32 circle     ]
 Diving:     [  16x40 rectangle  ]
-Spinning:   [  40x20 rectangle  ]
 ```
 
 ---
@@ -202,16 +191,8 @@ Spinning:   [  40x20 rectangle  ]
 | - Close (30-40px) | 150 | x1.5 | 225 |
 | - Tight (20-30px) | 200 | x2.0 | 400 |
 | - Graze (<20px) | 300 | x3.0 | 900 |
-| **Tricks** ||||
-| - Ram Spin | 250 | xCombo | 2500 |
-| - Star Flip | 350 | xCombo | 3500 |
-| - Horn Polish | 400 | xCombo | 4000 |
-| - Cosmic Twist | 500 | xCombo | 5000 |
-| - Full Starsky | 750 | xCombo | 7500 |
 | **Combos** ||||
-| - Trick Chain | +50 per | xChain | Unlimited |
 | - Near-Miss Chain | +25 per | xChain | Unlimited |
-| - Mixed Chain | +75 per | xChain | Unlimited |
 | **Stage Completion** ||||
 | - Base Clear | 5000 | xStage# | 50000 |
 | - No Hit Bonus | 10000 | x2 | 20000 |
@@ -397,7 +378,7 @@ I = Ice, i = fragment, S = Spinner
 - Ozone pockets (slow zones)
 
 **Unique Mechanics**:
-- Balloons can be bounced off for tricks
+- Balloons can be bounced off for repositioning
 - Ozone clouds slow descent
 - Science equipment has predictable rotation
 
@@ -588,14 +569,14 @@ Pattern B: "Balloon Festival"
 ```
 
 **Interactive Elements**:
-- Reporters comment on your tricks
-- Score multiplier for photogenic moves
+- Reporters comment on your moves
+- Score multiplier for skillful navigation
 - Easter egg: Find WRAM helicopter
 
 **Story Beat** (5 panels):
 1. News reporter: "This is unprecedented!"
 2. Starsky peace sign: "Hi OCU!"
-3. Reporter: "He's doing tricks! Is he insane?!"
+3. Reporter: "He's falling with such grace! Is he insane?!"
 4. Starsky: "I prefer 'confidently skilled'!"
 5. Breaking News ticker: "RAM RATES RADICAL"
 
@@ -890,7 +871,7 @@ Pattern B: "Quad Landing"
    - {"prompt":"Retro video game close-up of an angry lead goose squawking at Starsky the Ram who responds with a pun, saying 'Don't worry, I'm just winging it!' with a cheeky grin. Bold 80s/90s cartoon style with exaggerated animal expressions and speech bubbles.","size":"1024x1024","n":1}
 
 3. Spins through the air: "Time to show these birds how migration is REALLY done!"
-   - {"prompt":"Retro video game action shot of Starsky the Ram performing aerial spins and tricks while geese watch in amazement, saying 'Time to show these birds how migration is REALLY done!' Bold 80s/90s style with motion lines and impressed bird reactions.","size":"1024x1024","n":1}
+   - {"prompt":"Retro video game action shot of Starsky the Ram performing aerial spins while geese watch in amazement, saying 'Time to show these birds how migration is REALLY done!' Bold 80s/90s style with motion lines and impressed bird reactions.","size":"1024x1024","n":1}
 
 ##### Exit (2 panels)
 1. Starsky high-fives a confused goose: "Thanks for the escort service!"
@@ -1022,12 +1003,6 @@ Pattern B: "Quad Landing"
 - "Another stage, another slay!"
 - "OCU Stars, watch this!"
 
-**During Tricks**:
-- "RAM-tastic!"
-- "Styling and profiling!"
-- "Physics? More like FUN-sics!"
-- "That's what I call higher education!"
-
 **Near Misses**:
 - "Closer than my GPA to perfect!"
 - "Threading the needle like finals week!"
@@ -1123,12 +1098,11 @@ States Required:
 - Idle (4 frames) - subtle breathing
 - Falling (2 frames) - wind in wool
 - Lean Left/Right (3 frames each)
-- Trick 1-5 (6 frames each)
 - Collision (4 frames) - impact and spin
 - Victory (6 frames) - celebration loop
 - Portrait emotions (8 types)
 
-Total frames: ~70
+Total frames: ~40
 ```
 
 **Obstacle Sprite Requirements**:
@@ -1156,12 +1130,6 @@ const PARTICLES = {
     spread: 360,
     lifetime: 0.5,
     color: 0xFFD700
-  },
-  trick_trail: {
-    count: 30,
-    follow: true,
-    fade: 0.02,
-    color: [0x002147, 0xCDB87E] // OCU colors
   },
   collision_stars: {
     count: 12,
@@ -1223,9 +1191,6 @@ Stage 10: "Home Sweet Home" - OCU fight song remix
 ```
 fallLoop:          "whoosh_loop.wav" (constant)
 moveLeft/Right:    "swish_quick.wav"
-trickStart:        "charge_up.wav"
-trickExecute:      "whoosh_spin.wav"
-trickLand:         "success_ding.wav"
 speedBoost:        "rocket_boost.wav"
 ```
 
@@ -1260,7 +1225,6 @@ new_highscore:     "fanfare_long.wav"
 ```json
 {
   "game_start": ["Let's RAM!", "Time to drop!"],
-  "trick_perfect": ["Nailed it!", "RAM-tastic!"],
   "near_miss": ["Too close!", "Whew!"],
   "collision": ["Oof!", "My horns!"],
   "combo_10": ["On fire!", "Unstoppable!"],
@@ -1327,8 +1291,8 @@ Top Left:                Top Center:              Top Right:
 
 Bottom Left:                                   Bottom Right:
 ┌──────────────┐                               ┌──────────────┐
-│ Tricks: ★★★☆☆│                               │ Stage 5/10   │
-│ Boost: ████  │                               │ 0:45         │
+│ Boost: ████  │                               │ Stage 5/10   │
+│              │                               │ 0:45         │
 └──────────────┘                               └──────────────┘
 ```
 
@@ -1342,11 +1306,6 @@ Bottom Left:                                   Bottom Right:
 - Fills up between multiplier thresholds
 - Glows and pulses at high combos
 - Shakes when about to expire
-
-**Trick Indicator**:
-- Shows available tricks as stars
-- Depletes during execution
-- Refills over time
 
 **Near-Miss Aura**:
 - Yellow glow for far (40-50px)
@@ -1364,7 +1323,6 @@ Bottom Left:                                   Bottom Right:
 │                                        │
 │  Stage Score:           45,250         │
 │  Near Misses:      x23  2,300         │
-│  Tricks:           x8   4,000         │
 │  Combo Bonus:           x5.5          │
 │  Time Bonus:            2,500         │
 │  ─────────────────────────────         │
@@ -1495,46 +1453,6 @@ class StageManager {
 }
 ```
 
-#### Trick System
-```javascript
-class TrickSystem {
-  constructor() {
-    this.availableTricks = TRICK_DEFINITIONS;
-    this.currentTrick = null;
-    this.trickMeter = 100;
-    this.cooldownTimer = 0;
-  }
-  
-  executeTrick(trickIndex, player) {
-    if (this.canPerformTrick()) {
-      const trick = this.availableTricks[trickIndex];
-      
-      this.currentTrick = {
-        ...trick,
-        startTime: performance.now(),
-        startPosition: { x: player.x, y: player.y }
-      };
-      
-      player.setState('tricking');
-      player.playAnimation(trick.animation);
-      
-      this.lockControls(trick.duration);
-      this.consumeMeter(trick.cost);
-      
-      return trick.basePoints;
-    }
-    return 0;
-  }
-  
-  updateTrickMeter(deltaTime) {
-    if (this.trickMeter < 100) {
-      this.trickMeter += TRICK_REGEN_RATE * deltaTime;
-      this.trickMeter = Math.min(100, this.trickMeter);
-    }
-  }
-}
-```
-
 ### Performance Optimizations
 
 #### Object Pooling
@@ -1598,7 +1516,6 @@ class SaveSystem {
       profile: {
         totalScore: 0,
         totalFalls: 0,
-        totalTricks: 0,
         playTime: 0
       },
       progression: {
@@ -1660,14 +1577,8 @@ const TUTORIAL_STEPS = [
     highlight: 'nearMissAura'
   },
   {
-    trigger: 'trickReady',
-    message: 'Press SPACE to perform a trick!',
-    position: 'bottom',
-    pulse: 'spaceKey'
-  },
-  {
     trigger: 'comboStart',
-    message: 'Chain actions for combo multipliers!',
+    message: 'Chain near-misses for combo multipliers!',
     highlight: 'comboMeter'
   }
 ];
@@ -1687,16 +1598,13 @@ const TUTORIAL_STEPS = [
 Challenge 1: "Thread the Needle"
 - Pass through 10 narrow gaps
 
-Challenge 2: "Trick Master"
-- Perform all 5 tricks in one run
-
-Challenge 3: "Combo King"
+Challenge 2: "Combo King"
 - Maintain 10x combo for 30 seconds
 
-Challenge 4: "Perfectionist"
+Challenge 3: "Perfectionist"
 - Complete stage with no hits
 
-Challenge 5: "Speed Demon"
+Challenge 4: "Speed Demon"
 - Complete stage in under 60 seconds
 ```
 
@@ -1776,8 +1684,6 @@ const POWERUPS = {
 ### Control Accessibility
 - **Button remapping**: Full customization
 - **One-handed mode**: All controls on one side
-- **Hold-to-continue-trick**: Instead of timing
-- **Auto-trick option**: Performs tricks automatically
 - **Difficulty assists**: As detailed above
 
 ### Cognitive Accessibility
@@ -1800,7 +1706,6 @@ Global Leaderboards:
 - Individual Stage Scores
 - Speed Records (per stage)
 - Combo Records
-- Trick Score Records
 
 OCU Leaderboard:
 - Direct friend comparison
@@ -1843,9 +1748,8 @@ const ANALYTICS_EVENTS = {
   stage_start: { stage, score, attempts },
   stage_complete: { stage, score, time, grade },
   stage_fail: { stage, obstacle_hit, score },
-  trick_performed: { trick_type, score, combo },
   near_miss: { distance, points, combo },
-  
+
   // Progression
   tutorial_complete: { time, skipped },
   achievement_unlock: { achievement_id, stage },
@@ -1923,7 +1827,7 @@ Social:
 
 ### Unique Selling Points
 1. **"From Duke to Mascot"**: Nostalgic parody meets modern polish
-2. **"Risk = Reward"**: Every trick is a gamble
+2. **"Risk = Reward"**: Every near-miss is a thrill
 3. **"10 Stages, Infinite Replayability"**: Perfect speedrun game
 4. **"School Spirit Simulator"**: Represent your university
 5. **"One Jump, One Legend"**: Simple concept, deep mastery

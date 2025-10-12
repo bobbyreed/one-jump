@@ -6,14 +6,13 @@
 
 > **"From Space to Campus in One Epic Descent"**
 
-A high-stakes vertical falling game where Starsky the Ram descends from the stars to Earth through 10 increasingly challenging atmospheric stages. Navigate through space debris, weather phenomena, and urban obstacles while performing daredevil tricks and near-misses for maximum points.
+A high-stakes vertical falling game where Starsky the Ram descends from the stars to Earth through 10 increasingly challenging atmospheric stages. Navigate through space debris, weather phenomena, and urban obstacles while threading the needle for near-misses and maximum points.
 
 ## 🎮 Features
 
 - **10 Unique Atmospheric Stages** - Journey from Low Earth Orbit to the OCU campus
 - **Stage-Specific Visuals** - Parallax backgrounds with dynamic weather and environmental effects
 - **Risk/Reward Gameplay** - Thread the needle between obstacles for bonus points
-- **Trick System** - Perform aerial maneuvers for style points and combo multipliers
 - **Progressive Difficulty** - Each stage introduces new obstacles and mechanics
 - **Story-Driven Campaign** - Comic-style narrative panels between stages
 - **Leaderboard System** - Firebase-powered global and per-level rankings

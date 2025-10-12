@@ -288,7 +288,6 @@ export default class ResultScreen {
       time = 0,
       maxCombo = 0,
       nearMisses = 0,
-      tricks = 0,
       targetScore = 10000,
       baseScore = 0,
       timeBonus = 0,

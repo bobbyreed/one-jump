@@ -11,11 +11,6 @@ export const PHYSICS = {
     HORIZONTAL_DECEL: 1800,
     AIR_CONTROL: 0.85,
 
-    // Tricks (prepared for future implementation)
-    TRICK_DURATION_BASE: 800,
-    TRICK_COOLDOWN: 200,
-    TRICK_CANCEL_WINDOW: 100,
-
     // Collision & Near-Miss
     PLAYER_HITBOX: { w: 60, h: 80 },
     NEAR_MISS_RANGES: [80, 60, 40, 25], // Edge-to-edge distances (pixels from obstacle edge)
@@ -276,7 +271,6 @@ export const PLAYER_STATES = {
     FALLING: 'falling',
     LANDED: 'landed',
     CRASHED: 'crashed',
-    TRICKING: 'tricking',
     ROCKET_RIDING: 'rocket_riding'
 };
 
