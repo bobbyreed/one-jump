@@ -32,7 +32,10 @@ export default class SaveManager {
                 stagesUnlocked: 1,
                 stageScores: Array(10).fill(0),
                 stageGrades: Array(10).fill(''),
-                stageTimes: Array(10).fill(0)
+                stageTimes: Array(10).fill(0),
+                stageMaxSpeeds: Array(10).fill(0),
+                stageLongestTimes: Array(10).fill(0),
+                stageLowestScores: Array(10).fill(Infinity)
             }
         };
     }
@@ -95,6 +98,42 @@ export default class SaveManager {
     setStageScore(stageIndex, score) {
         if (score > this.data.stageProgress.stageScores[stageIndex]) {
             this.data.stageProgress.stageScores[stageIndex] = score;
+            this.save();
+            return true;
+        }
+        return false;
+    }
+
+    setStageMaxSpeed(stageIndex, speed) {
+        if (!this.data.stageProgress.stageMaxSpeeds) {
+            this.data.stageProgress.stageMaxSpeeds = Array(10).fill(0);
+        }
+        if (speed > this.data.stageProgress.stageMaxSpeeds[stageIndex]) {
+            this.data.stageProgress.stageMaxSpeeds[stageIndex] = speed;
+            this.save();
+            return true;
+        }
+        return false;
+    }
+
+    setStageLongestTime(stageIndex, time) {
+        if (!this.data.stageProgress.stageLongestTimes) {
+            this.data.stageProgress.stageLongestTimes = Array(10).fill(0);
+        }
+        if (time > this.data.stageProgress.stageLongestTimes[stageIndex]) {
+            this.data.stageProgress.stageLongestTimes[stageIndex] = time;
+            this.save();
+            return true;
+        }
+        return false;
+    }
+
+    setStageLowestScore(stageIndex, score) {
+        if (!this.data.stageProgress.stageLowestScores) {
+            this.data.stageProgress.stageLowestScores = Array(10).fill(Infinity);
+        }
+        if (score < this.data.stageProgress.stageLowestScores[stageIndex]) {
+            this.data.stageProgress.stageLowestScores[stageIndex] = score;
             this.save();
             return true;
         }

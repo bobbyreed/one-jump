@@ -157,18 +157,23 @@ export default class Player {
         // Calculate gravity multiplier based on jetpack state
         let gravityMult = 1.0;
         let maxSpeedMult = 1.0;
+        let removeSpeedCap = false;
 
         if (this.jetpackSlowdownActive) {
             gravityMult = PHYSICS.JETPACK_SLOWDOWN_MULT;
             maxSpeedMult = PHYSICS.JETPACK_SLOWDOWN_MULT;
         } else if (this.jetpackBoostActive) {
             gravityMult = PHYSICS.JETPACK_BOOST_MULT;
-            maxSpeedMult = PHYSICS.JETPACK_BOOST_MULT;
+            removeSpeedCap = true; // No speed limit during boost
         }
 
         // Apply gravity with multiplier
         this.velocity.y += PHYSICS.GRAVITY_BASE * deltaTime * gravityMult;
-        this.velocity.y = Math.min(this.velocity.y, PHYSICS.MAX_FALL_SPEED * maxSpeedMult);
+
+        // Apply speed cap (except during boost)
+        if (!removeSpeedCap) {
+            this.velocity.y = Math.min(this.velocity.y, PHYSICS.MAX_FALL_SPEED * maxSpeedMult);
+        }
 
         // Horizontal movement
         this.velocity.x = horizontalInput * PHYSICS.HORIZONTAL_SPEED;

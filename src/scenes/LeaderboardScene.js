@@ -7,6 +7,7 @@ export default class LeaderboardScene extends BaseScene {
     constructor(game) {
         super(game);
         this.currentView = 'global'; // 'global' or 'level1'-'level10'
+        this.currentCategory = 'highScore'; // 'highScore', 'maxSpeed', 'longestTime', 'shortestTime', 'lowestScore'
         this.leaderboardData = [];
         this.leaderboardContainer = null;
         this.loadingText = null;
@@ -22,13 +23,16 @@ export default class LeaderboardScene extends BaseScene {
         // Create title
         this.createTitle();
 
-        // Create tab navigation
+        // Create category tabs (for metric selection)
+        this.createCategoryTabs();
+
+        // Create tab navigation (for level selection)
         this.createTabs();
 
         // Create leaderboard container
         this.leaderboardContainer = new Container();
         this.leaderboardContainer.x = 100;
-        this.leaderboardContainer.y = 300;
+        this.leaderboardContainer.y = 360;
         this.container.addChild(this.leaderboardContainer);
 
         // Create loading indicator
@@ -95,10 +99,73 @@ export default class LeaderboardScene extends BaseScene {
         this.container.addChild(this.subtitle);
     }
 
+    createCategoryTabs() {
+        const categoryContainer = new Container();
+        categoryContainer.x = 100;
+        categoryContainer.y = 180;
+
+        const categories = [
+            { id: 'highScore', label: 'HIGH SCORE' },
+            { id: 'maxSpeed', label: 'FASTEST SPEED' },
+            { id: 'longestTime', label: 'LONGEST TIME' },
+            { id: 'shortestTime', label: 'SHORTEST TIME' },
+            { id: 'lowestScore', label: 'LOWEST SCORE' }
+        ];
+
+        const categoryWidth = 300;
+        const categoryHeight = 50;
+        const categorySpacing = 15;
+
+        categories.forEach((category, index) => {
+            const x = index * (categoryWidth + categorySpacing);
+
+            const categoryBg = new Graphics();
+            categoryBg.roundRect(0, 0, categoryWidth, categoryHeight, 5);
+            categoryBg.fill({ color: category.id === this.currentCategory ? 0xff8844 : 0x334466 });
+
+            const categoryText = new Text({
+                text: category.label,
+                style: {
+                    fontFamily: 'Arial',
+                    fontSize: 18,
+                    fill: 0xffffff,
+                    fontWeight: 'bold'
+                }
+            });
+            categoryText.anchor.set(0.5);
+            categoryText.x = categoryWidth / 2;
+            categoryText.y = categoryHeight / 2;
+
+            const categoryButton = new Container();
+            categoryButton.x = x;
+            categoryButton.addChild(categoryBg);
+            categoryButton.addChild(categoryText);
+
+            categoryButton.eventMode = 'static';
+            categoryButton.cursor = 'pointer';
+            categoryButton.on('pointerdown', () => this.switchCategory(category.id));
+            categoryButton.on('pointerover', () => {
+                if (category.id !== this.currentCategory) {
+                    categoryBg.tint = 0xaaaaff;
+                }
+            });
+            categoryButton.on('pointerout', () => {
+                categoryBg.tint = 0xffffff;
+            });
+
+            // Store reference for updating active state
+            categoryButton.userData = { category, categoryBg };
+            categoryContainer.addChild(categoryButton);
+        });
+
+        this.categoryContainer = categoryContainer;
+        this.container.addChild(categoryContainer);
+    }
+
     createTabs() {
         const tabContainer = new Container();
         tabContainer.x = 100;
-        tabContainer.y = 200;
+        tabContainer.y = 260;
 
         const tabs = [
             { id: 'global', label: 'GLOBAL' },
@@ -206,6 +273,24 @@ export default class LeaderboardScene extends BaseScene {
         this.container.addChild(this.refreshButton.container);
     }
 
+    async switchCategory(categoryId) {
+        this.currentCategory = categoryId;
+
+        // Update category tab appearance
+        this.categoryContainer.children.forEach(categoryButton => {
+            const { category, categoryBg } = categoryButton.userData;
+            categoryBg.clear();
+            categoryBg.roundRect(0, 0, 300, 50, 5);
+            categoryBg.fill({ color: category.id === categoryId ? 0xff8844 : 0x334466 });
+        });
+
+        // Update subtitle with category name
+        this.updateSubtitle();
+
+        // Reload leaderboard with new category
+        await this.loadLeaderboard(this.currentView);
+    }
+
     async switchView(viewId) {
         this.currentView = viewId;
 
@@ -218,15 +303,29 @@ export default class LeaderboardScene extends BaseScene {
         });
 
         // Update subtitle
-        if (viewId === 'global') {
-            this.subtitle.text = 'Global Rankings - Total Score';
-        } else {
-            const levelNum = parseInt(viewId.replace('level', ''));
-            this.subtitle.text = `Level ${levelNum} Rankings`;
-        }
+        this.updateSubtitle();
 
         // Load leaderboard
         await this.loadLeaderboard(viewId);
+    }
+
+    updateSubtitle() {
+        const categoryNames = {
+            'highScore': 'High Score',
+            'maxSpeed': 'Fastest Speed',
+            'longestTime': 'Longest Time',
+            'shortestTime': 'Shortest Time',
+            'lowestScore': 'Lowest Score'
+        };
+
+        const categoryName = categoryNames[this.currentCategory];
+
+        if (this.currentView === 'global') {
+            this.subtitle.text = `Global Rankings - ${categoryName}`;
+        } else {
+            const levelNum = parseInt(this.currentView.replace('level', ''));
+            this.subtitle.text = `Level ${levelNum} - ${categoryName}`;
+        }
     }
 
     async loadLeaderboard(viewId) {
@@ -234,10 +333,31 @@ export default class LeaderboardScene extends BaseScene {
 
         try {
             if (viewId === 'global') {
+                // For global view, only high score is available
                 this.leaderboardData = await this.game.leaderboardManager.getGlobalLeaderboard(10);
             } else {
                 const levelNum = parseInt(viewId.replace('level', ''));
-                this.leaderboardData = await this.game.leaderboardManager.getLevelLeaderboard(levelNum, 10);
+
+                // Load appropriate leaderboard based on current category
+                switch (this.currentCategory) {
+                    case 'highScore':
+                        this.leaderboardData = await this.game.leaderboardManager.getLevelLeaderboard(levelNum, 10);
+                        break;
+                    case 'maxSpeed':
+                        this.leaderboardData = await this.game.leaderboardManager.getSpeedLeaderboard(levelNum, 10);
+                        break;
+                    case 'longestTime':
+                        this.leaderboardData = await this.game.leaderboardManager.getLongestTimeLeaderboard(levelNum, 10);
+                        break;
+                    case 'shortestTime':
+                        this.leaderboardData = await this.game.leaderboardManager.getShortestTimeLeaderboard(levelNum, 10);
+                        break;
+                    case 'lowestScore':
+                        this.leaderboardData = await this.game.leaderboardManager.getLowestScoreLeaderboard(levelNum, 10);
+                        break;
+                    default:
+                        this.leaderboardData = await this.game.leaderboardManager.getLevelLeaderboard(levelNum, 10);
+                }
             }
 
             this.displayLeaderboard();
@@ -366,65 +486,216 @@ export default class LeaderboardScene extends BaseScene {
                 starsText.y = y + 15;
                 scrollContainer.addChild(starsText);
             } else {
-                // Level view: score, grade, time
-                const scoreText = new Text({
-                    text: entry.score.toLocaleString(),
-                    style: {
-                        fontFamily: 'Arial Black',
-                        fontSize: 22,
-                        fill: 0xFFD700
-                    }
-                });
-                scoreText.anchor.set(1, 0);
-                scoreText.x = 1300;
-                scoreText.y = y + 12;
-                scrollContainer.addChild(scoreText);
-
-                // Grade
-                const gradeText = new Text({
-                    text: entry.grade,
-                    style: {
-                        fontFamily: 'Arial Black',
-                        fontSize: 20,
-                        fill: this.getGradeColor(entry.grade)
-                    }
-                });
-                gradeText.anchor.set(0.5, 0);
-                gradeText.x = 1420;
-                gradeText.y = y + 12;
-                scrollContainer.addChild(gradeText);
-
-                // Time
-                const timeText = new Text({
-                    text: `${entry.time.toFixed(1)}s`,
-                    style: {
-                        fontFamily: 'Arial',
-                        fontSize: 16,
-                        fill: 0xcccccc
-                    }
-                });
-                timeText.anchor.set(1, 0);
-                timeText.x = 1580;
-                timeText.y = y + 15;
-                scrollContainer.addChild(timeText);
-
-                // Stars
-                const starsText = new Text({
-                    text: `⭐${entry.stars}`,
-                    style: {
-                        fontFamily: 'Arial',
-                        fontSize: 16,
-                        fill: 0xffffff
-                    }
-                });
-                starsText.anchor.set(1, 0);
-                starsText.x = 1680;
-                starsText.y = y + 15;
-                scrollContainer.addChild(starsText);
+                // Level view: show columns based on category
+                switch (this.currentCategory) {
+                    case 'highScore':
+                        this.displayHighScoreColumns(scrollContainer, entry, y);
+                        break;
+                    case 'maxSpeed':
+                        this.displaySpeedColumns(scrollContainer, entry, y);
+                        break;
+                    case 'longestTime':
+                    case 'shortestTime':
+                        this.displayTimeColumns(scrollContainer, entry, y);
+                        break;
+                    case 'lowestScore':
+                        this.displayLowScoreColumns(scrollContainer, entry, y);
+                        break;
+                }
             }
         });
 
         this.leaderboardContainer.addChild(scrollContainer);
+    }
+
+    displayHighScoreColumns(container, entry, y) {
+        // Score
+        const scoreText = new Text({
+            text: entry.score.toLocaleString(),
+            style: {
+                fontFamily: 'Arial Black',
+                fontSize: 22,
+                fill: 0xFFD700
+            }
+        });
+        scoreText.anchor.set(1, 0);
+        scoreText.x = 1300;
+        scoreText.y = y + 12;
+        container.addChild(scoreText);
+
+        // Grade
+        const gradeText = new Text({
+            text: entry.grade,
+            style: {
+                fontFamily: 'Arial Black',
+                fontSize: 20,
+                fill: this.getGradeColor(entry.grade)
+            }
+        });
+        gradeText.anchor.set(0.5, 0);
+        gradeText.x = 1420;
+        gradeText.y = y + 12;
+        container.addChild(gradeText);
+
+        // Time
+        const timeText = new Text({
+            text: `${entry.time.toFixed(1)}s`,
+            style: {
+                fontFamily: 'Arial',
+                fontSize: 16,
+                fill: 0xcccccc
+            }
+        });
+        timeText.anchor.set(1, 0);
+        timeText.x = 1580;
+        timeText.y = y + 15;
+        container.addChild(timeText);
+
+        // Stars
+        const starsText = new Text({
+            text: `⭐${entry.stars}`,
+            style: {
+                fontFamily: 'Arial',
+                fontSize: 16,
+                fill: 0xffffff
+            }
+        });
+        starsText.anchor.set(1, 0);
+        starsText.x = 1680;
+        starsText.y = y + 15;
+        container.addChild(starsText);
+    }
+
+    displaySpeedColumns(container, entry, y) {
+        // Speed (primary metric)
+        const speedText = new Text({
+            text: `${Math.floor(entry.speed)} px/s`,
+            style: {
+                fontFamily: 'Arial Black',
+                fontSize: 22,
+                fill: 0xFF8844
+            }
+        });
+        speedText.anchor.set(1, 0);
+        speedText.x = 1350;
+        speedText.y = y + 12;
+        container.addChild(speedText);
+
+        // Grade
+        const gradeText = new Text({
+            text: entry.grade,
+            style: {
+                fontFamily: 'Arial Black',
+                fontSize: 20,
+                fill: this.getGradeColor(entry.grade)
+            }
+        });
+        gradeText.anchor.set(0.5, 0);
+        gradeText.x = 1500;
+        gradeText.y = y + 12;
+        container.addChild(gradeText);
+
+        // Time
+        const timeText = new Text({
+            text: `${entry.time.toFixed(1)}s`,
+            style: {
+                fontFamily: 'Arial',
+                fontSize: 16,
+                fill: 0xcccccc
+            }
+        });
+        timeText.anchor.set(1, 0);
+        timeText.x = 1680;
+        timeText.y = y + 15;
+        container.addChild(timeText);
+    }
+
+    displayTimeColumns(container, entry, y) {
+        // Time (primary metric)
+        const timeText = new Text({
+            text: `${entry.time.toFixed(2)}s`,
+            style: {
+                fontFamily: 'Arial Black',
+                fontSize: 22,
+                fill: 0x88DDFF
+            }
+        });
+        timeText.anchor.set(1, 0);
+        timeText.x = 1350;
+        timeText.y = y + 12;
+        container.addChild(timeText);
+
+        // Grade
+        const gradeText = new Text({
+            text: entry.grade,
+            style: {
+                fontFamily: 'Arial Black',
+                fontSize: 20,
+                fill: this.getGradeColor(entry.grade)
+            }
+        });
+        gradeText.anchor.set(0.5, 0);
+        gradeText.x = 1500;
+        gradeText.y = y + 12;
+        container.addChild(gradeText);
+
+        // Score
+        const scoreText = new Text({
+            text: entry.score.toLocaleString(),
+            style: {
+                fontFamily: 'Arial',
+                fontSize: 16,
+                fill: 0xcccccc
+            }
+        });
+        scoreText.anchor.set(1, 0);
+        scoreText.x = 1680;
+        scoreText.y = y + 15;
+        container.addChild(scoreText);
+    }
+
+    displayLowScoreColumns(container, entry, y) {
+        // Score (primary metric)
+        const scoreText = new Text({
+            text: entry.score.toLocaleString(),
+            style: {
+                fontFamily: 'Arial Black',
+                fontSize: 22,
+                fill: 0x88FF88
+            }
+        });
+        scoreText.anchor.set(1, 0);
+        scoreText.x = 1350;
+        scoreText.y = y + 12;
+        container.addChild(scoreText);
+
+        // Grade
+        const gradeText = new Text({
+            text: entry.grade,
+            style: {
+                fontFamily: 'Arial Black',
+                fontSize: 20,
+                fill: this.getGradeColor(entry.grade)
+            }
+        });
+        gradeText.anchor.set(0.5, 0);
+        gradeText.x = 1500;
+        gradeText.y = y + 12;
+        container.addChild(gradeText);
+
+        // Time
+        const timeText = new Text({
+            text: `${entry.time.toFixed(1)}s`,
+            style: {
+                fontFamily: 'Arial',
+                fontSize: 16,
+                fill: 0xcccccc
+            }
+        });
+        timeText.anchor.set(1, 0);
+        timeText.x = 1680;
+        timeText.y = y + 15;
+        container.addChild(timeText);
     }
 
     createLeaderboardHeader() {
@@ -471,31 +742,109 @@ export default class LeaderboardScene extends BaseScene {
             starsHeader.y = 17;
             this.leaderboardContainer.addChild(starsHeader);
         } else {
-            // Level headers
-            const scoreHeader = new Text({ text: 'SCORE', style: headerStyle });
-            scoreHeader.anchor.set(1, 0);
-            scoreHeader.x = 1300;
-            scoreHeader.y = 17;
-            this.leaderboardContainer.addChild(scoreHeader);
-
-            const gradeHeader = new Text({ text: 'GRADE', style: headerStyle });
-            gradeHeader.anchor.set(0.5, 0);
-            gradeHeader.x = 1420;
-            gradeHeader.y = 17;
-            this.leaderboardContainer.addChild(gradeHeader);
-
-            const timeHeader = new Text({ text: 'TIME', style: headerStyle });
-            timeHeader.anchor.set(1, 0);
-            timeHeader.x = 1580;
-            timeHeader.y = 17;
-            this.leaderboardContainer.addChild(timeHeader);
-
-            const starsHeader = new Text({ text: 'STARS', style: headerStyle });
-            starsHeader.anchor.set(1, 0);
-            starsHeader.x = 1680;
-            starsHeader.y = 17;
-            this.leaderboardContainer.addChild(starsHeader);
+            // Level headers based on category
+            switch (this.currentCategory) {
+                case 'highScore':
+                    this.createHighScoreHeaders(headerStyle);
+                    break;
+                case 'maxSpeed':
+                    this.createSpeedHeaders(headerStyle);
+                    break;
+                case 'longestTime':
+                case 'shortestTime':
+                    this.createTimeHeaders(headerStyle);
+                    break;
+                case 'lowestScore':
+                    this.createLowScoreHeaders(headerStyle);
+                    break;
+            }
         }
+    }
+
+    createHighScoreHeaders(headerStyle) {
+        const scoreHeader = new Text({ text: 'SCORE', style: headerStyle });
+        scoreHeader.anchor.set(1, 0);
+        scoreHeader.x = 1300;
+        scoreHeader.y = 17;
+        this.leaderboardContainer.addChild(scoreHeader);
+
+        const gradeHeader = new Text({ text: 'GRADE', style: headerStyle });
+        gradeHeader.anchor.set(0.5, 0);
+        gradeHeader.x = 1420;
+        gradeHeader.y = 17;
+        this.leaderboardContainer.addChild(gradeHeader);
+
+        const timeHeader = new Text({ text: 'TIME', style: headerStyle });
+        timeHeader.anchor.set(1, 0);
+        timeHeader.x = 1580;
+        timeHeader.y = 17;
+        this.leaderboardContainer.addChild(timeHeader);
+
+        const starsHeader = new Text({ text: 'STARS', style: headerStyle });
+        starsHeader.anchor.set(1, 0);
+        starsHeader.x = 1680;
+        starsHeader.y = 17;
+        this.leaderboardContainer.addChild(starsHeader);
+    }
+
+    createSpeedHeaders(headerStyle) {
+        const speedHeader = new Text({ text: 'SPEED', style: headerStyle });
+        speedHeader.anchor.set(1, 0);
+        speedHeader.x = 1350;
+        speedHeader.y = 17;
+        this.leaderboardContainer.addChild(speedHeader);
+
+        const gradeHeader = new Text({ text: 'GRADE', style: headerStyle });
+        gradeHeader.anchor.set(0.5, 0);
+        gradeHeader.x = 1500;
+        gradeHeader.y = 17;
+        this.leaderboardContainer.addChild(gradeHeader);
+
+        const timeHeader = new Text({ text: 'TIME', style: headerStyle });
+        timeHeader.anchor.set(1, 0);
+        timeHeader.x = 1680;
+        timeHeader.y = 17;
+        this.leaderboardContainer.addChild(timeHeader);
+    }
+
+    createTimeHeaders(headerStyle) {
+        const timeHeader = new Text({ text: 'TIME', style: headerStyle });
+        timeHeader.anchor.set(1, 0);
+        timeHeader.x = 1350;
+        timeHeader.y = 17;
+        this.leaderboardContainer.addChild(timeHeader);
+
+        const gradeHeader = new Text({ text: 'GRADE', style: headerStyle });
+        gradeHeader.anchor.set(0.5, 0);
+        gradeHeader.x = 1500;
+        gradeHeader.y = 17;
+        this.leaderboardContainer.addChild(gradeHeader);
+
+        const scoreHeader = new Text({ text: 'SCORE', style: headerStyle });
+        scoreHeader.anchor.set(1, 0);
+        scoreHeader.x = 1680;
+        scoreHeader.y = 17;
+        this.leaderboardContainer.addChild(scoreHeader);
+    }
+
+    createLowScoreHeaders(headerStyle) {
+        const scoreHeader = new Text({ text: 'SCORE', style: headerStyle });
+        scoreHeader.anchor.set(1, 0);
+        scoreHeader.x = 1350;
+        scoreHeader.y = 17;
+        this.leaderboardContainer.addChild(scoreHeader);
+
+        const gradeHeader = new Text({ text: 'GRADE', style: headerStyle });
+        gradeHeader.anchor.set(0.5, 0);
+        gradeHeader.x = 1500;
+        gradeHeader.y = 17;
+        this.leaderboardContainer.addChild(gradeHeader);
+
+        const timeHeader = new Text({ text: 'TIME', style: headerStyle });
+        timeHeader.anchor.set(1, 0);
+        timeHeader.x = 1680;
+        timeHeader.y = 17;
+        this.leaderboardContainer.addChild(timeHeader);
     }
 
     displayError() {
