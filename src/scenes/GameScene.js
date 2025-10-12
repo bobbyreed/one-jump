@@ -51,9 +51,9 @@ export default class GameScene extends BaseScene {
         this.maxCombo = 0;
         this.currentCombo = 0;
         this.nearMisses = 0;
-        this.tricksPerformed = 0;
         this.nearMissPoints = 0; // Track actual points from near-misses
         this.lastComboTime = 0; // Track time of last combo action
+        this.maxSpeed = 0; // Track maximum speed achieved
 
         // Track obstacles that have been checked for near-misses
         this.checkedObstacles = new Set();
@@ -217,9 +217,9 @@ export default class GameScene extends BaseScene {
         this.maxCombo = 0;
         this.currentCombo = 0;
         this.nearMisses = 0;
-        this.tricksPerformed = 0;
         this.nearMissPoints = 0;
         this.lastComboTime = 0;
+        this.maxSpeed = 0;
         this.checkedObstacles.clear();
         this.previousVerticalInput = 0;
     }
@@ -336,7 +336,6 @@ export default class GameScene extends BaseScene {
     this.maxCombo = 0;
     this.currentCombo = 0;
     this.nearMisses = 0;
-    this.tricksPerformed = 0;
     this.nearMissPoints = 0;
     this.lastComboTime = 0;
     this.checkedObstacles.clear();
@@ -453,9 +452,9 @@ resetLevel() {
     this.maxCombo = 0;
     this.currentCombo = 0;
     this.nearMisses = 0;
-    this.tricksPerformed = 0;
     this.nearMissPoints = 0;
     this.lastComboTime = 0;
+    this.maxSpeed = 0;
     this.checkedObstacles.clear();
     this.previousVerticalInput = 0;
 
@@ -701,6 +700,11 @@ async exit() {
             (this.player.position.y - LEVEL.FALL_START_Y) / 10
         );
 
+        // Track maximum speed achieved
+        if (this.player.velocity.y > this.maxSpeed) {
+            this.maxSpeed = this.player.velocity.y;
+        }
+
         // Handle rocket spawning (if enabled for this level)
         if (this.obstacleManager.enableRocketSpawning) {
             this.obstacleManager.rocketSpawnTimer += deltaTime;
@@ -912,8 +916,13 @@ async exit() {
 
             // Submit score to leaderboard (async, non-blocking)
             if (this.game.leaderboardManager) {
+                const username = this.game.saveManager.data.username || 'Anonymous';
+                console.log(`[LEADERBOARD] Submitting scores for user: "${username}"`);
+                console.log(`[LEADERBOARD] Level: ${this.currentLevel}, Score: ${totalScore}, Time: ${this.timeElapsed.toFixed(2)}s, Max Speed: ${Math.floor(this.maxSpeed)}`);
+
+                // Submit high score
                 this.game.leaderboardManager.submitScore(this.currentLevel, {
-                    username: this.game.saveManager.data.username || 'Anonymous',
+                    username: username,
                     score: totalScore,
                     time: this.timeElapsed,
                     grade: levelResult.grade,
@@ -921,6 +930,38 @@ async exit() {
                     maxCombo: this.maxCombo || 0,
                     nearMisses: this.nearMisses || 0
                 }).catch(err => console.error('Failed to submit score:', err));
+
+                // Submit max speed
+                this.game.leaderboardManager.submitSpeedScore(this.currentLevel, {
+                    username: username,
+                    speed: Math.floor(this.maxSpeed),
+                    time: this.timeElapsed,
+                    grade: levelResult.grade
+                }).catch(err => console.error('Failed to submit speed:', err));
+
+                // Submit longest time
+                this.game.leaderboardManager.submitLongestTimeScore(this.currentLevel, {
+                    username: username,
+                    time: this.timeElapsed,
+                    score: totalScore,
+                    grade: levelResult.grade
+                }).catch(err => console.error('Failed to submit longest time:', err));
+
+                // Submit shortest time (same as regular time, but different leaderboard)
+                this.game.leaderboardManager.submitShortestTimeScore(this.currentLevel, {
+                    username: username,
+                    time: this.timeElapsed,
+                    score: totalScore,
+                    grade: levelResult.grade
+                }).catch(err => console.error('Failed to submit shortest time:', err));
+
+                // Submit lowest score
+                this.game.leaderboardManager.submitLowestScore(this.currentLevel, {
+                    username: username,
+                    score: totalScore,
+                    time: this.timeElapsed,
+                    grade: levelResult.grade
+                }).catch(err => console.error('Failed to submit lowest score:', err));
 
                 // Submit to global leaderboard
                 const globalScore = this.game.levelManager.getTotalScore();
@@ -952,7 +993,6 @@ async exit() {
                 time: this.timeElapsed,
                 maxCombo: this.maxCombo || 0,
                 nearMisses: this.nearMisses || 0,
-                tricks: this.tricksPerformed || 0,
                 // Score breakdown
                 targetScore: this.levelConfig.targetScore,
                 baseScore: baseScore,

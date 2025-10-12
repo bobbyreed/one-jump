@@ -331,6 +331,419 @@ export default class LeaderboardManager {
     }
 
     /**
+     * Submit max speed to leaderboard
+     */
+    async submitSpeedScore(levelNumber, speedData) {
+        if (!this.firebaseManager.isInitialized()) {
+            console.warn('Firebase not initialized, cannot submit speed');
+            return false;
+        }
+
+        const userId = this.firebaseManager.getUserId();
+        if (!userId) return false;
+
+        const username = speedData.username || '';
+        if (!username || username === 'Anonymous') {
+            return false;
+        }
+
+        try {
+            const leaderboardPath = `leaderboards/level${levelNumber}/speeds`;
+            const userDocRef = doc(this.db, leaderboardPath, userId);
+
+            // Check if this is a personal best
+            const existingDoc = await getDoc(userDocRef);
+            const existingSpeed = existingDoc.exists() ? existingDoc.data().speed : 0;
+
+            if (speedData.speed <= existingSpeed) {
+                return false;
+            }
+
+            await setDoc(userDocRef, {
+                username: username,
+                speed: speedData.speed,
+                time: speedData.time,
+                grade: speedData.grade,
+                timestamp: serverTimestamp(),
+                userId: userId
+            });
+
+            console.log(`Speed submitted for level ${levelNumber}: ${speedData.speed}`);
+            this.cache.delete(`speed_level${levelNumber}`);
+            return true;
+
+        } catch (error) {
+            console.error('Error submitting speed:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Submit longest time to leaderboard
+     */
+    async submitLongestTimeScore(levelNumber, timeData) {
+        if (!this.firebaseManager.isInitialized()) return false;
+
+        const userId = this.firebaseManager.getUserId();
+        if (!userId) return false;
+
+        const username = timeData.username || '';
+        if (!username || username === 'Anonymous') return false;
+
+        try {
+            const leaderboardPath = `leaderboards/level${levelNumber}/longestTimes`;
+            const userDocRef = doc(this.db, leaderboardPath, userId);
+
+            const existingDoc = await getDoc(userDocRef);
+            const existingTime = existingDoc.exists() ? existingDoc.data().time : 0;
+
+            // For longest time, bigger is better
+            if (timeData.time <= existingTime) {
+                return false;
+            }
+
+            await setDoc(userDocRef, {
+                username: username,
+                time: timeData.time,
+                score: timeData.score,
+                grade: timeData.grade,
+                timestamp: serverTimestamp(),
+                userId: userId
+            });
+
+            console.log(`Longest time submitted for level ${levelNumber}: ${timeData.time}`);
+            this.cache.delete(`longestTime_level${levelNumber}`);
+            return true;
+
+        } catch (error) {
+            console.error('Error submitting longest time:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Submit shortest time to leaderboard
+     */
+    async submitShortestTimeScore(levelNumber, timeData) {
+        if (!this.firebaseManager.isInitialized()) return false;
+
+        const userId = this.firebaseManager.getUserId();
+        if (!userId) return false;
+
+        const username = timeData.username || '';
+        if (!username || username === 'Anonymous') return false;
+
+        try {
+            const leaderboardPath = `leaderboards/level${levelNumber}/shortestTimes`;
+            const userDocRef = doc(this.db, leaderboardPath, userId);
+
+            const existingDoc = await getDoc(userDocRef);
+            const existingTime = existingDoc.exists() ? existingDoc.data().time : Infinity;
+
+            // For shortest time, smaller is better
+            if (timeData.time >= existingTime) {
+                return false;
+            }
+
+            await setDoc(userDocRef, {
+                username: username,
+                time: timeData.time,
+                score: timeData.score,
+                grade: timeData.grade,
+                timestamp: serverTimestamp(),
+                userId: userId
+            });
+
+            console.log(`Shortest time submitted for level ${levelNumber}: ${timeData.time}`);
+            this.cache.delete(`shortestTime_level${levelNumber}`);
+            return true;
+
+        } catch (error) {
+            console.error('Error submitting shortest time:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Submit lowest score to leaderboard
+     */
+    async submitLowestScore(levelNumber, scoreData) {
+        if (!this.firebaseManager.isInitialized()) return false;
+
+        const userId = this.firebaseManager.getUserId();
+        if (!userId) return false;
+
+        const username = scoreData.username || '';
+        if (!username || username === 'Anonymous') return false;
+
+        try {
+            const leaderboardPath = `leaderboards/level${levelNumber}/lowestScores`;
+            const userDocRef = doc(this.db, leaderboardPath, userId);
+
+            const existingDoc = await getDoc(userDocRef);
+            const existingScore = existingDoc.exists() ? existingDoc.data().score : Infinity;
+
+            // For lowest score, smaller is better
+            if (scoreData.score >= existingScore) {
+                return false;
+            }
+
+            await setDoc(userDocRef, {
+                username: username,
+                score: scoreData.score,
+                time: scoreData.time,
+                grade: scoreData.grade,
+                timestamp: serverTimestamp(),
+                userId: userId
+            });
+
+            console.log(`Lowest score submitted for level ${levelNumber}: ${scoreData.score}`);
+            this.cache.delete(`lowestScore_level${levelNumber}`);
+            return true;
+
+        } catch (error) {
+            console.error('Error submitting lowest score:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Get speed leaderboard for a specific level
+     */
+    async getSpeedLeaderboard(levelNumber, limitCount = 50) {
+        if (!this.firebaseManager.isInitialized()) {
+            return [];
+        }
+
+        const cacheKey = `speed_level${levelNumber}`;
+
+        if (this.cache.has(cacheKey)) {
+            const cached = this.cache.get(cacheKey);
+            if (Date.now() - cached.timestamp < this.cacheExpiry) {
+                return cached.data;
+            }
+        }
+
+        try {
+            const leaderboardPath = `leaderboards/level${levelNumber}/speeds`;
+            const scoresRef = collection(this.db, leaderboardPath);
+
+            const q = query(
+                scoresRef,
+                orderBy('speed', 'desc'),
+                limit(limitCount)
+            );
+
+            const querySnapshot = await getDocs(q);
+            const leaderboard = [];
+            let rank = 1;
+
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                if (data.username && data.username !== 'Anonymous') {
+                    leaderboard.push({
+                        rank: rank++,
+                        userId: doc.id,
+                        username: data.username,
+                        speed: data.speed,
+                        time: data.time,
+                        grade: data.grade,
+                        timestamp: data.timestamp
+                    });
+                }
+            });
+
+            this.cache.set(cacheKey, {
+                data: leaderboard,
+                timestamp: Date.now()
+            });
+
+            return leaderboard;
+
+        } catch (error) {
+            console.error('Error fetching speed leaderboard:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Get longest time leaderboard for a specific level
+     */
+    async getLongestTimeLeaderboard(levelNumber, limitCount = 50) {
+        if (!this.firebaseManager.isInitialized()) {
+            return [];
+        }
+
+        const cacheKey = `longestTime_level${levelNumber}`;
+
+        if (this.cache.has(cacheKey)) {
+            const cached = this.cache.get(cacheKey);
+            if (Date.now() - cached.timestamp < this.cacheExpiry) {
+                return cached.data;
+            }
+        }
+
+        try {
+            const leaderboardPath = `leaderboards/level${levelNumber}/longestTimes`;
+            const scoresRef = collection(this.db, leaderboardPath);
+
+            const q = query(
+                scoresRef,
+                orderBy('time', 'desc'),
+                limit(limitCount)
+            );
+
+            const querySnapshot = await getDocs(q);
+            const leaderboard = [];
+            let rank = 1;
+
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                if (data.username && data.username !== 'Anonymous') {
+                    leaderboard.push({
+                        rank: rank++,
+                        userId: doc.id,
+                        username: data.username,
+                        time: data.time,
+                        score: data.score,
+                        grade: data.grade,
+                        timestamp: data.timestamp
+                    });
+                }
+            });
+
+            this.cache.set(cacheKey, {
+                data: leaderboard,
+                timestamp: Date.now()
+            });
+
+            return leaderboard;
+
+        } catch (error) {
+            console.error('Error fetching longest time leaderboard:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Get shortest time leaderboard for a specific level
+     */
+    async getShortestTimeLeaderboard(levelNumber, limitCount = 50) {
+        if (!this.firebaseManager.isInitialized()) {
+            return [];
+        }
+
+        const cacheKey = `shortestTime_level${levelNumber}`;
+
+        if (this.cache.has(cacheKey)) {
+            const cached = this.cache.get(cacheKey);
+            if (Date.now() - cached.timestamp < this.cacheExpiry) {
+                return cached.data;
+            }
+        }
+
+        try {
+            const leaderboardPath = `leaderboards/level${levelNumber}/shortestTimes`;
+            const scoresRef = collection(this.db, leaderboardPath);
+
+            const q = query(
+                scoresRef,
+                orderBy('time', 'asc'),
+                limit(limitCount)
+            );
+
+            const querySnapshot = await getDocs(q);
+            const leaderboard = [];
+            let rank = 1;
+
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                if (data.username && data.username !== 'Anonymous') {
+                    leaderboard.push({
+                        rank: rank++,
+                        userId: doc.id,
+                        username: data.username,
+                        time: data.time,
+                        score: data.score,
+                        grade: data.grade,
+                        timestamp: data.timestamp
+                    });
+                }
+            });
+
+            this.cache.set(cacheKey, {
+                data: leaderboard,
+                timestamp: Date.now()
+            });
+
+            return leaderboard;
+
+        } catch (error) {
+            console.error('Error fetching shortest time leaderboard:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Get lowest score leaderboard for a specific level
+     */
+    async getLowestScoreLeaderboard(levelNumber, limitCount = 50) {
+        if (!this.firebaseManager.isInitialized()) {
+            return [];
+        }
+
+        const cacheKey = `lowestScore_level${levelNumber}`;
+
+        if (this.cache.has(cacheKey)) {
+            const cached = this.cache.get(cacheKey);
+            if (Date.now() - cached.timestamp < this.cacheExpiry) {
+                return cached.data;
+            }
+        }
+
+        try {
+            const leaderboardPath = `leaderboards/level${levelNumber}/lowestScores`;
+            const scoresRef = collection(this.db, leaderboardPath);
+
+            const q = query(
+                scoresRef,
+                orderBy('score', 'asc'),
+                limit(limitCount)
+            );
+
+            const querySnapshot = await getDocs(q);
+            const leaderboard = [];
+            let rank = 1;
+
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                if (data.username && data.username !== 'Anonymous') {
+                    leaderboard.push({
+                        rank: rank++,
+                        userId: doc.id,
+                        username: data.username,
+                        score: data.score,
+                        time: data.time,
+                        grade: data.grade,
+                        timestamp: data.timestamp
+                    });
+                }
+            });
+
+            this.cache.set(cacheKey, {
+                data: leaderboard,
+                timestamp: Date.now()
+            });
+
+            return leaderboard;
+
+        } catch (error) {
+            console.error('Error fetching lowest score leaderboard:', error);
+            return [];
+        }
+    }
+
+    /**
      * Clear cache (useful for forcing refresh)
      */
     clearCache() {
