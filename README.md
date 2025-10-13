@@ -115,39 +115,6 @@ The game began as an experiment to explore PixiJS v8's new WebGPU capabilities. 
 
 The result is a production-quality game built in a fraction of the traditional development time, demonstrating the synergy between human creativity and AI execution.
 
-## 📦 Installation & Setup
-
-### Prerequisites
-
-- Node.js 18+ and npm
-- Modern browser with WebGPU support (Chrome 113+, Edge 113+, or WebGL2 fallback)
-
-### Quick Start
-
-```bash
-# Clone the repository
-git clone https://github.com/bobbyreed/one-jump.git
-cd one-jump
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-```
-
-The game will be available at `http://localhost:5173`
-
-### Build for Production
-
-```bash
-# Create optimized build
-npm run build
-
-# Preview production build
-npm run preview
-```
-
 ## 🗂️ Project Structure
 
 ```
@@ -239,10 +206,6 @@ one-jump/
 - Oklahoma City University for mascot inspiration
 - PixiJS community for documentation and examples
 - Firebase for backend infrastructure
-
-## 📄 License
-
-This project is private and proprietary.
 
 ## 🔗 Links
 
